@@ -1,0 +1,122 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { absoluteUrl } from '../lib/site';
+
+const analyticsEnabled = Boolean(import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN);
+const turnstileEnabled = Boolean(import.meta.env.PUBLIC_TURNSTILE_SITE_KEY);
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'WebPage',
+	name: 'Kebijakan Privasi Toolsman',
+	url: absoluteUrl('/privasi/'),
+	description:
+		'Data apa yang diproses Toolsman, di mana diproses, dan berapa lama disimpan.',
+	inLanguage: 'id-ID',
+};
+---
+
+<Layout
+	title="Kebijakan Privasi, Toolsman"
+	description="Data apa yang diproses Toolsman, di mana diproses, dan berapa lama disimpan."
+	jsonLd={jsonLd}
+>
+	<article class="container prose-page">
+		<h1>Kebijakan Privasi</h1>
+		<p>
+			Halaman ini menjelaskan data apa yang diproses Toolsman, di mana data itu
+			berada, dan berapa lama disimpan.
+		</p>
+
+		<h2>Alat yang berjalan di perangkatmu</h2>
+		<p>
+			Kanvas Gambar, Diagram Mermaid, Alat PDF, Pas Foto, Generator Teks, dan alat
+			Utilitas memproses isi berkas di browser. Isi berkas tidak dikirim ke server
+			Toolsman.
+		</p>
+		<p>
+			Kalau kamu memakai kamera di Pas Foto, gambar kamera hanya masuk ke halaman
+			di perangkatmu. Tidak ada rekaman yang diunggah.
+		</p>
+
+		<h2>Kirim File</h2>
+		<p>Kirim File memakai server karena link harus bisa dibuka orang lain.</p>
+		<ul>
+			<li>
+				Berkas disimpan di Cloudflare R2 sampai masa berlaku habis (1 jam, 24
+				jam, atau 7 hari) atau kuota unduhannya habis. Setelah itu cron menghapus
+				berkasnya.
+			</li>
+			<li>
+				Metadata disimpan di Cloudflare D1: nama berkas, ukuran, tipe, waktu,
+				jumlah unduhan, dan laporan. Isi berkas tidak dibaca.
+			</li>
+			<li>
+				Kata sandi link di-hash dengan PBKDF2-SHA256 dan salt acak. Kata sandi
+				asli tidak disimpan dan tidak bisa dipulihkan.
+			</li>
+			<li>
+				Laporan penyalahgunaan menyimpan alasan yang kamu tulis dan waktu laporan.
+			</li>
+			<li>
+				Siapa pun yang punya link bisa membuka halaman unduh, kecuali link diberi
+				kata sandi.
+			</li>
+		</ul>
+
+		<h2>Yang disimpan di browser</h2>
+		<p>
+			localStorage menyimpan pilihan tema, draf Draw dan Diagram, nama berkas Draw,
+			serta daftar favorit dan alat terakhir. Tidak ada cookie pelacak.
+		</p>
+
+		<h2>Analitik</h2>
+		{analyticsEnabled ? (
+			<p>
+				Situs ini memakai Plausible untuk menghitung kunjungan halaman. Plausible
+				tidak memakai cookie, tidak membuat profil pengunjung, dan tidak
+				mengumpulkan data pribadi. Yang dicatat hanya alamat halaman, referrer,
+				jenis peramban, dan negara.
+			</p>
+		) : (
+			<p>Situs ini tidak memasang analitik pihak ketiga.</p>
+		)}
+
+		<h2>Layanan pihak ketiga</h2>
+		<ul>
+			<li>Cloudflare: hosting, R2, D1, dan Turnstile kalau verifikasi aktif.</li>
+			<li>
+				staticimgly.com: model penghapus latar diunduh saat Pas Foto pertama kali
+				dipakai.
+			</li>
+			<li>
+				diagrams.net: hanya dimuat kalau kamu membuka editor visual di Diagram.
+			</li>
+			<li>img.shields.io: gambar badge lisensi di pratinjau README.</li>
+			{analyticsEnabled && <li>Plausible: analitik tanpa cookie.</li>}
+		</ul>
+		{turnstileEnabled && (
+			<p>
+				Saat kamu membuka Kirim File, widget Turnstile dari
+				challenges.cloudflare.com dimuat untuk memeriksa apakah permintaan datang
+				dari peramban sungguhan. Cloudflare memproses data widget itu menurut
+				kebijakan privasinya sendiri.
+			</p>
+		)}
+
+		<h2>Perubahan</h2>
+		<p>
+			Kalau cara kerja data berubah, halaman ini diperbarui sebelum perubahan itu
+			dipakai di produksi.
+		</p>
+
+		<h2>Kontak</h2>
+		<p>
+			Belum ada alamat surel resmi untuk Toolsman. Laporan berkas bisa dikirim
+			lewat tombol "Laporkan link ini" di halaman unduh. Alamat kontak akan
+			ditambahkan setelah ditetapkan.
+		</p>
+
+		<p><a href="/syarat/">Baca syarat penggunaan</a></p>
+	</article>
+</Layout>

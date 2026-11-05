@@ -1,0 +1,72 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+	id: string;
+	label: string;
+	accept?: string;
+	multiple?: boolean;
+	hint?: string;
+}
+
+const { id, label, accept, multiple = false, hint } = Astro.props;
+---
+
+<div class="dropzone" data-dropzone>
+	<Icon name="upload" size={24} />
+	<p>{label}</p>
+	<input
+		id={id}
+		type="file"
+		class="sr-only"
+		accept={accept}
+		multiple={multiple}
+		data-dropzone-input
+	/>
+	<label class="btn btn--secondary" for={id}>Pilih file</label>
+	{hint && <p class="field-hint">{hint}</p>}
+	<p class="field-hint" data-dropzone-file hidden></p>
+</div>
+
+<script>
+	const zones = document.querySelectorAll<HTMLElement>('[data-dropzone]');
+
+	zones.forEach((zone) => {
+		const input = zone.querySelector<HTMLInputElement>('[data-dropzone-input]');
+		const fileName = zone.querySelector<HTMLElement>('[data-dropzone-file]');
+
+		if (!input || !fileName) return;
+
+		const describe = () => {
+			const files = input.files;
+			if (!files || files.length === 0) {
+				fileName.hidden = true;
+				fileName.textContent = '';
+				return;
+			}
+			fileName.hidden = false;
+			fileName.textContent = Array.from(files)
+				.map((file) => file.name)
+				.join(', ');
+		};
+
+		input.addEventListener('change', describe);
+
+		zone.addEventListener('dragover', (event) => {
+			event.preventDefault();
+			zone.dataset.dragover = 'true';
+		});
+
+		zone.addEventListener('dragleave', () => {
+			delete zone.dataset.dragover;
+		});
+
+		zone.addEventListener('drop', (event) => {
+			event.preventDefault();
+			delete zone.dataset.dragover;
+			if (!event.dataTransfer) return;
+			input.files = event.dataTransfer.files;
+			input.dispatchEvent(new Event('change'));
+		});
+	});
+</script>

@@ -1,0 +1,172 @@
+---
+import type { ToolMeta } from '../lib/tool-types';
+import { categoryLabel } from '../lib/tool-types';
+import { normalize, searchableFields } from '../lib/search';
+import Icon from './ui/Icon.astro';
+import Modal from './ui/Modal.astro';
+
+interface Props {
+	tools: ToolMeta[];
+}
+
+const { tools } = Astro.props;
+---
+
+<Modal id="palette" labelledby="palette-title">
+	<div class="palette__head">
+		<label class="palette__label" id="palette-title" for="palette-input">Cari alat</label>
+		<kbd class="kbd">Esc</kbd>
+	</div>
+
+	<div class="palette__search">
+		<Icon name="search" size={18} />
+		<input
+			id="palette-input"
+			class="palette__input"
+			type="search"
+			placeholder="mis. gabung pdf, flowchart, pas foto"
+			autocomplete="off"
+			data-palette-input
+		/>
+	</div>
+
+	<ul class="palette__list" data-palette-list>
+		{
+			tools.map((tool) => (
+				<li data-palette-item data-search={normalize(searchableFields(tool).join(' '))}>
+					<a class="palette__link" href={`/tools/${tool.slug}/`}>
+						<span class="tool-tile" data-category={tool.category}>
+							<Icon name={tool.icon} size={18} />
+						</span>
+						<span class="palette__name">{tool.name}</span>
+						<span class="palette__cat">{categoryLabel(tool.category)}</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+
+	<p class="palette__empty" data-palette-empty hidden>
+		Belum ada alat yang cocok. Coba kata lain seperti "pdf", "foto", atau "json".
+	</p>
+
+	<div class="palette__foot">
+		<span>↑ ↓ untuk pilih</span>
+		<span>Enter untuk buka</span>
+	</div>
+</Modal>
+
+<style>
+	.palette__label {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.palette__search {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding-inline: var(--space-4);
+		border-bottom: 1px solid var(--border);
+		color: var(--text-muted);
+	}
+
+	.palette__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+		padding: var(--space-3) var(--space-4) 0;
+	}
+</style>
+
+<script>
+	import { matches } from '../lib/search';
+
+	const dialog = document.getElementById('palette') as HTMLDialogElement | null;
+
+	if (dialog) {
+		const input = dialog.querySelector<HTMLInputElement>('[data-palette-input]');
+		const items = Array.from(
+			dialog.querySelectorAll<HTMLElement>('[data-palette-item]'),
+		);
+		const empty = dialog.querySelector<HTMLElement>('[data-palette-empty]');
+
+		const visibleLinks = (): HTMLAnchorElement[] =>
+			items
+				.filter((item) => !item.hidden)
+				.map((item) => item.querySelector('a'))
+				.filter((link): link is HTMLAnchorElement => link !== null);
+
+		const filter = () => {
+			let shown = 0;
+			items.forEach((item) => {
+				const hit = matches([item.dataset.search ?? ''], input?.value ?? '');
+				item.hidden = !hit;
+				if (hit) shown += 1;
+			});
+			if (empty) empty.hidden = shown !== 0;
+		};
+
+		const open = () => {
+			if (dialog.open) return;
+			if (input) input.value = '';
+			filter();
+			dialog.showModal();
+			input?.focus();
+		};
+
+		document
+			.querySelectorAll<HTMLElement>('[data-open-palette]')
+			.forEach((trigger) => trigger.addEventListener('click', open));
+
+		document.addEventListener('keydown', (event) => {
+			const target = event.target as HTMLElement | null;
+			const typing =
+				target !== null &&
+				(target.tagName === 'INPUT' ||
+					target.tagName === 'TEXTAREA' ||
+					target.isContentEditable);
+
+			if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+				event.preventDefault();
+				if (dialog.open) {
+					dialog.close();
+				} else {
+					open();
+				}
+				return;
+			}
+
+			if (event.key === '/' && !typing && !dialog.open) {
+				event.preventDefault();
+				open();
+			}
+		});
+
+		input?.addEventListener('input', filter);
+
+		input?.addEventListener('keydown', (event) => {
+			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+			const links = visibleLinks();
+			if (links.length === 0) return;
+			event.preventDefault();
+			const target = event.key === 'ArrowDown' ? links[0] : links[links.length - 1];
+			target?.focus();
+		});
+
+		dialog.addEventListener('keydown', (event) => {
+			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+			const links = visibleLinks();
+			const current = links.indexOf(document.activeElement as HTMLAnchorElement);
+			if (current === -1) return;
+			event.preventDefault();
+			const step = event.key === 'ArrowDown' ? 1 : -1;
+			links[(current + step + links.length) % links.length]?.focus();
+		});
+	}
+</script>

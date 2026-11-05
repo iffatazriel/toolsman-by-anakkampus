@@ -1,0 +1,586 @@
+---
+import Tabs from '../../components/ui/Tabs.astro';
+import Dropzone from '../../components/ui/Dropzone.astro';
+import Progress from '../../components/ui/Progress.astro';
+
+const tabs = [
+	{ id: 'gabung', label: 'Gabung' },
+	{ id: 'pisah', label: 'Pisah' },
+	{ id: 'kompres', label: 'Kompres' },
+	{ id: 'gambar', label: 'Gambar → PDF' },
+];
+---
+
+<div class="tool-shell">
+	<Tabs label="Pilihan alat PDF" items={tabs}>
+		<div data-panel="gabung" class="tool-panel">
+			<div class="pdf-panel">
+				<Dropzone id="gabung-input" label="Seret beberapa PDF ke sini" accept="application/pdf" multiple hint="Maks. 100 MB per berkas · diproses di browser" />
+				<ol class="file-list" data-list="gabung" aria-label="Urutan berkas"></ol>
+				<p class="field-hint">Seret kartu untuk mengubah urutan, atau pakai tombol ▲ ▼. Urutan ini juga urutan halaman di hasil.</p>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--primary" data-run="gabung" disabled>Gabung dan unduh</button>
+				</div>
+				<div data-progress="gabung" hidden><Progress label="Menggabungkan" value={0} /></div>
+				<p class="alert" data-error="gabung" role="alert" hidden><span></span></p>
+			</div>
+		</div>
+
+		<div data-panel="pisah" class="tool-panel" hidden>
+			<div class="pdf-panel">
+				<Dropzone id="pisah-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<div class="pdf-meta" data-meta="pisah" hidden></div>
+				<label class="field-label" for="pisah-range">Halaman yang diambil</label>
+				<input id="pisah-range" class="field-input" type="text" inputmode="numeric" placeholder="mis. 1-3,5" aria-describedby="pisah-range-hint" />
+				<p class="field-hint" id="pisah-range-hint">Pisahkan dengan koma. Rentang pakai tanda hubung.</p>
+				<p class="field-error" data-range-error="pisah" hidden role="alert"></p>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--primary" data-run="pisah" disabled>Ambil halaman dan unduh</button>
+				</div>
+				<div data-progress="pisah" hidden><Progress label="Memisahkan" value={0} /></div>
+				<p class="alert" data-error="pisah" role="alert" hidden><span></span></p>
+			</div>
+		</div>
+
+		<div data-panel="kompres" class="tool-panel" hidden>
+			<div class="pdf-panel">
+				<Dropzone id="kompres-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<div class="pdf-meta" data-meta="kompres" hidden></div>
+				<fieldset class="fieldset">
+					<legend class="field-label">Tingkat kompresi</legend>
+					<div class="segmented" role="radiogroup" aria-label="Tingkat kompresi">
+						<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-level="ringan">Ringan</button>
+						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="sedang">Sedang</button>
+						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="maksimal">Maksimal</button>
+					</div>
+					<p class="field-hint">Ringan menjaga teks dan gambar paling tajam. Maksimal paling kecil, tapi gambar bisa buram.</p>
+				</fieldset>
+				<div class="compare" data-compare="kompres" hidden aria-live="polite">
+					<p class="compare__line"><span data-before></span> → <span data-after></span></p>
+					<p class="compare__delta" data-delta></p>
+					<p class="alert" data-warn="kompres" hidden><span>Hasil tidak lebih kecil dari berkas asli. Berkasnya tetap bisa diunduh, tapi kompres tidak membantu di sini.</span></p>
+				</div>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--primary" data-run="kompres" disabled>Kompres dan unduh</button>
+				</div>
+				<div data-progress="kompres" hidden><Progress label="Mengompres" value={0} /></div>
+				<p class="alert" data-error="kompres" role="alert" hidden><span></span></p>
+			</div>
+		</div>
+
+		<div data-panel="gambar" class="tool-panel" hidden>
+			<div class="pdf-panel">
+				<Dropzone id="gambar-input" label="Pilih JPG atau PNG" accept="image/jpeg,image/png" multiple hint="Maks. 100 MB per berkas · diproses di browser" />
+				<ol class="file-list" data-list="gambar" aria-label="Urutan gambar"></ol>
+				<div class="form-grid">
+					<div>
+						<span class="field-label">Orientasi</span>
+						<div class="segmented" role="radiogroup" aria-label="Orientasi halaman">
+							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-orientation="auto">Ikuti gambar</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-orientation="portrait">Tegak</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-orientation="landscape">Mendatar</button>
+						</div>
+					</div>
+					<div>
+						<span class="field-label">Margin</span>
+						<div class="segmented" role="radiogroup" aria-label="Margin halaman">
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-margin="none">Tanpa</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-margin="small">Kecil</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-margin="large">Besar</button>
+						</div>
+					</div>
+				</div>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--primary" data-run="gambar" disabled>Buat PDF dan unduh</button>
+				</div>
+				<div data-progress="gambar" hidden><Progress label="Membuat PDF" value={0} /></div>
+				<p class="alert" data-error="gambar" role="alert" hidden><span></span></p>
+			</div>
+		</div>
+	</Tabs>
+</div>
+
+<script>
+	import { formatBytes, parsePageRange, reductionPercent } from '../../lib/page-range';
+	import { toast } from '../../lib/toast';
+	import { runPdfTask } from './pdf-client';
+	import type { CompressLevel, Margin, Orientation } from './pdf-ops';
+	import { PDFDocument } from 'pdf-lib';
+
+	type Named = { file: File; id: string };
+
+	const $ = <T extends HTMLElement>(selector: string, root: ParentNode = document) =>
+		root.querySelector<T>(selector);
+
+	const setError = (name: string, message: string | null) => {
+		const box = $<HTMLElement>(`[data-error="${name}"]`);
+		if (!box) return;
+		box.hidden = message === null;
+		const span = box.querySelector('span');
+		if (span) span.textContent = message ?? '';
+	};
+
+	const setProgress = (name: string, done: number, total: number, label: string) => {
+		const wrap = $<HTMLElement>(`[data-progress="${name}"]`);
+		if (!wrap) return;
+		wrap.hidden = false;
+		const bar = wrap.querySelector<HTMLElement>('[role="progressbar"]');
+		const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+		bar?.setAttribute('aria-valuenow', String(percent));
+		const fill = wrap.querySelector<HTMLElement>('.progress__bar');
+		if (fill) fill.style.width = `${percent}%`;
+		const hint = wrap.querySelector<HTMLElement>('.text-ink-muted');
+		if (hint) hint.textContent = total > 0 ? `${done} / ${total} halaman` : label;
+	};
+
+	const hideProgress = (name: string) => {
+		const wrap = $<HTMLElement>(`[data-progress="${name}"]`);
+		if (wrap) wrap.hidden = true;
+	};
+
+	const readBytes = (file: File) => file.arrayBuffer();
+
+	const download = (name: string, bytes: Uint8Array, mime = 'application/pdf') => {
+		const blob = new Blob([bytes as BlobPart], { type: mime });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = name;
+		document.body.append(link);
+		link.click();
+		link.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 1000);
+	};
+
+	const renderList = (name: string, items: Named[], onChange: () => void) => {
+		const list = $<HTMLOListElement>(`[data-list="${name}"]`);
+		if (!list) return;
+		list.innerHTML = '';
+		items.forEach((item, index) => {
+			const li = document.createElement('li');
+			li.className = 'file-card';
+
+			if (name === 'gabung') {
+				li.draggable = true;
+				li.addEventListener('dragstart', (event) => {
+					if (!event.dataTransfer) return;
+					event.dataTransfer.effectAllowed = 'move';
+					event.dataTransfer.setData('text/plain', String(index));
+					li.classList.add('file-card--dragging');
+				});
+				li.addEventListener('dragend', () => {
+					li.classList.remove('file-card--dragging');
+				});
+				li.addEventListener('dragover', (event) => {
+					event.preventDefault();
+					if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+					li.classList.add('file-card--dragover');
+				});
+				li.addEventListener('dragleave', () => {
+					li.classList.remove('file-card--dragover');
+				});
+				li.addEventListener('drop', (event) => {
+					event.preventDefault();
+					li.classList.remove('file-card--dragover');
+					const raw = event.dataTransfer?.getData('text/plain') ?? '';
+					const from = Number(raw);
+					if (!Number.isInteger(from) || from === index) return;
+					const [moved] = items.splice(from, 1);
+					if (!moved) return;
+					items.splice(index, 0, moved);
+					renderList(name, items, onChange);
+					onChange();
+					toast('Urutan berkas diubah.');
+				});
+			}
+
+			const label = document.createElement('span');
+			label.className = 'file-card__name';
+			label.textContent = item.file.name;
+
+			const size = document.createElement('span');
+			size.className = 'file-card__size';
+			size.textContent = formatBytes(item.file.size);
+
+			const up = document.createElement('button');
+			up.type = 'button';
+			up.className = 'icon-button';
+			up.setAttribute('aria-label', `Naikkan ${item.file.name}`);
+			up.textContent = '▲';
+			up.disabled = index === 0;
+			up.addEventListener('click', () => {
+				[items[index - 1], items[index]] = [items[index]!, items[index - 1]!];
+				renderList(name, items, onChange);
+				onChange();
+			});
+
+			const down = document.createElement('button');
+			down.type = 'button';
+			down.className = 'icon-button';
+			down.setAttribute('aria-label', `Turunkan ${item.file.name}`);
+			down.textContent = '▼';
+			down.disabled = index === items.length - 1;
+			down.addEventListener('click', () => {
+				[items[index], items[index + 1]] = [items[index + 1]!, items[index]!];
+				renderList(name, items, onChange);
+				onChange();
+			});
+
+			const remove = document.createElement('button');
+			remove.type = 'button';
+			remove.className = 'icon-button';
+			remove.setAttribute('aria-label', `Hapus ${item.file.name}`);
+			remove.textContent = '×';
+			remove.addEventListener('click', () => {
+				items.splice(index, 1);
+				renderList(name, items, onChange);
+				onChange();
+			});
+
+			li.append(label, size, up, down, remove);
+			list.append(li);
+		});
+	};
+
+	const runButton = (name: string) => $<HTMLButtonElement>(`[data-run="${name}"]`);
+
+	let uid = 0;
+	const nextUid = () => `f${(uid += 1)}`;
+
+	const mergeItems: Named[] = [];
+	const imageItems: Named[] = [];
+	let splitFile: File | null = null;
+	let splitPageCount = 0;
+	let compressFile: File | null = null;
+	let compressLevel: CompressLevel = 'ringan';
+	let orientation: Orientation = 'auto';
+	let margin: Margin = 'small';
+	let compressResult: { before: number; after: number } | null = null;
+
+	const updateGabung = () => {
+		runButton('gabung')!.disabled = mergeItems.length < 2;
+	};
+
+	const updateGambar = () => {
+		runButton('gambar')!.disabled = imageItems.length === 0;
+	};
+
+	const updateSplit = () => {
+		const input = $<HTMLInputElement>('#pisah-range');
+		const err = $<HTMLElement>('[data-range-error="pisah"]');
+		if (!input || !err) return;
+		if (!splitFile || splitPageCount === 0) {
+			runButton('pisah')!.disabled = true;
+			err.hidden = true;
+			return;
+		}
+		const value = input.value.trim();
+		const result = parsePageRange(value, splitPageCount);
+		err.hidden = value === '' || result.ok;
+		if (!result.ok) err.textContent = result.message;
+		runButton('pisah')!.disabled = !result.ok;
+	};
+
+	const addMergeFiles = (files: FileList | null) => {
+		if (!files) return;
+		Array.from(files).forEach((file) => mergeItems.push({ file, id: nextUid() }));
+		renderList('gabung', mergeItems, updateGabung);
+		updateGabung();
+	};
+
+	const addImageFiles = (files: FileList | null) => {
+		if (!files) return;
+		Array.from(files).forEach((file) => imageItems.push({ file, id: nextUid() }));
+		renderList('gambar', imageItems, updateGambar);
+		updateGambar();
+	};
+
+	const countPages = async (file: File): Promise<number> => {
+		const doc = await PDFDocument.load(await readBytes(file), { ignoreEncryption: true });
+		return doc.getPageCount();
+	};
+
+	const showPdfMeta = (name: string, file: File, pages: number) => {
+		const meta = $<HTMLElement>(`[data-meta="${name}"]`);
+		if (!meta) return;
+		meta.hidden = false;
+		meta.innerHTML = '';
+		const line = document.createElement('p');
+		line.className = 'file-card__name';
+		line.textContent = file.name;
+		const sub = document.createElement('p');
+		sub.className = 'field-hint';
+		sub.textContent = `${pages} halaman · ${formatBytes(file.size)}`;
+		meta.append(line, sub);
+	};
+
+	document.querySelector<HTMLInputElement>('#gabung-input')?.addEventListener('change', (event) => {
+		addMergeFiles((event.target as HTMLInputElement).files);
+		(event.target as HTMLInputElement).value = '';
+	});
+
+	document.querySelector<HTMLInputElement>('#gambar-input')?.addEventListener('change', (event) => {
+		addImageFiles((event.target as HTMLInputElement).files);
+		(event.target as HTMLInputElement).value = '';
+	});
+
+	document.querySelector<HTMLInputElement>('#pisah-input')?.addEventListener('change', async (event) => {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0] ?? null;
+		input.value = '';
+		if (!file) return;
+		try {
+			const pages = await countPages(file);
+			splitFile = file;
+			splitPageCount = pages;
+			showPdfMeta('pisah', file, pages);
+			setError('pisah', null);
+			updateSplit();
+		} catch {
+			splitFile = null;
+			splitPageCount = 0;
+			setError('pisah', 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.');
+			updateSplit();
+		}
+	});
+
+	document.querySelector<HTMLInputElement>('#pisah-range')?.addEventListener('input', updateSplit);
+
+	document.querySelector<HTMLInputElement>('#kompres-input')?.addEventListener('change', async (event) => {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0] ?? null;
+		input.value = '';
+		if (!file) return;
+		try {
+			const pages = await countPages(file);
+			compressFile = file;
+			compressResult = null;
+			showPdfMeta('kompres', file, pages);
+			setError('kompres', null);
+			runButton('kompres')!.disabled = false;
+			renderCompare();
+		} catch {
+			compressFile = null;
+			setError('kompres', 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.');
+		}
+	});
+
+	const renderCompare = () => {
+		const box = $<HTMLElement>('[data-compare="kompres"]');
+		if (!box || !compressResult || !compressFile) {
+			if (box) box.hidden = true;
+			return;
+		}
+		box.hidden = false;
+		const { before, after } = compressResult;
+		$<HTMLElement>('[data-before]')!.textContent = formatBytes(before);
+		$<HTMLElement>('[data-after]')!.textContent = formatBytes(after);
+		const saved = reductionPercent(before, after);
+		$<HTMLElement>('[data-delta]')!.textContent =
+			saved > 0
+				? `Hemat ${saved}%`
+				: saved === 0
+					? 'Ukurannya sama'
+					: `${Math.abs(saved)}% lebih besar dari aslinya`;
+		const warn = $<HTMLElement>('[data-warn="kompres"]');
+		if (warn) warn.hidden = after < before;
+	};
+
+	document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((button) => {
+		button.addEventListener('click', () => {
+			compressLevel = button.dataset.level as CompressLevel;
+			document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+			compressResult = null;
+			renderCompare();
+		});
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-orientation]').forEach((button) => {
+		button.addEventListener('click', () => {
+			orientation = button.dataset.orientation as Orientation;
+			document.querySelectorAll<HTMLButtonElement>('[data-orientation]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+		});
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-margin]').forEach((button) => {
+		button.addEventListener('click', () => {
+			margin = button.dataset.margin as Margin;
+			document.querySelectorAll<HTMLButtonElement>('[data-margin]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+		});
+	});
+
+	const busy = new Set<string>();
+
+	const run = async (name: string, request: Parameters<typeof runPdfTask>[0], filename: string) => {
+		if (busy.has(name)) return;
+		busy.add(name);
+		const button = runButton(name);
+		if (button) button.disabled = true;
+		setError(name, null);
+		setProgress(name, 0, 0, 'Menyiapkan…');
+
+		const task = runPdfTask(request, (done, total) => setProgress(name, done, total, ''));
+		try {
+			const result = await task.promise;
+			download(filename, result.bytes);
+			toast('PDF siap diunduh.');
+			return result;
+		} catch (error) {
+			setError(name, error instanceof Error ? error.message : 'Gagal memproses PDF.');
+			return null;
+		} finally {
+			hideProgress(name);
+			busy.delete(name);
+			if (button) button.disabled = false;
+		}
+	};
+
+	runButton('gabung')?.addEventListener('click', async () => {
+		const files = await Promise.all(mergeItems.map((item) => readBytes(item.file)));
+		await run('gabung', { op: 'merge', files }, 'gabungan.pdf');
+	});
+
+	runButton('pisah')?.addEventListener('click', async () => {
+		if (!splitFile) return;
+		const input = $<HTMLInputElement>('#pisah-range');
+		const parsed = parsePageRange(input?.value ?? '', splitPageCount);
+		if (!parsed.ok) return;
+		const file = await readBytes(splitFile);
+		await run('pisah', { op: 'split', file, pages: parsed.pages }, 'hasil-pisah.pdf');
+	});
+
+	runButton('gambar')?.addEventListener('click', async () => {
+		const images = await Promise.all(
+			imageItems.map(async (item) => ({
+				bytes: await readBytes(item.file),
+				type: item.file.type === 'image/png' ? ('png' as const) : ('jpg' as const),
+			})),
+		);
+		await run('gambar', { op: 'images', images, orientation, margin }, 'gambar.pdf');
+	});
+
+	runButton('kompres')?.addEventListener('click', async () => {
+		if (!compressFile) return;
+		const file = compressFile;
+		const bytes = await readBytes(file);
+		const result = await run(
+			'kompres',
+			{ op: 'compress', file: bytes, level: compressLevel },
+			`${file.name.replace(/\.pdf$/i, '')}-kompres.pdf`,
+		);
+		if (result) {
+			compressResult = { before: file.size, after: result.bytes.byteLength };
+			renderCompare();
+		}
+	});
+</script>
+
+<style>
+	.pdf-panel {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.file-list {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.file-card {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto 44px 44px 44px;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.file-card[draggable='true'] {
+		cursor: grab;
+	}
+
+	.file-card--dragging {
+		opacity: 0.55;
+	}
+
+	.file-card--dragover {
+		border-color: var(--accent);
+		background: var(--accent-soft);
+	}
+
+	.file-card__name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.9375rem;
+	}
+
+	.file-card__size {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.file-card .icon-button {
+		width: 44px;
+		height: 44px;
+	}
+
+	.pdf-meta {
+		padding: var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.fieldset {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		min-width: 0;
+	}
+
+	.fieldset .segmented {
+		display: flex;
+		width: 100%;
+	}
+
+	.fieldset .segmented__btn {
+		flex: 1;
+	}
+
+	.compare {
+		padding: var(--space-4);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.compare__line {
+		font-family: var(--font-mono);
+		font-size: 1.125rem;
+		color: var(--text);
+	}
+
+	.compare__delta {
+		margin-top: var(--space-1);
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.pdf-panel .alert {
+		margin: 0;
+	}
+</style>

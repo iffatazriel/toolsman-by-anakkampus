@@ -1,0 +1,64 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { tools } from '../lib/tools';
+
+const ready = tools.filter((tool) => tool.status === 'siap').length;
+---
+
+<Layout
+	title="Tentang Toolsman"
+	description="Apa itu Toolsman, sampai mana pembangunannya, dan bagaimana file kamu diperlakukan."
+>
+	<article class="container prose-page">
+		<h1>Tentang Toolsman</h1>
+
+		<p>
+			Toolsman adalah kumpulan alat untuk mahasiswa informatika dan developer
+			pemula: gambar di kanvas, diagram, olah PDF, pas foto, kirim file, dan
+			generator teks. Gratis, tanpa akun, dan sebagian besar diproses di browser.
+		</p>
+
+		<h2>Sampai mana pembangunannya</h2>
+		<p>
+			{ready} dari {tools.length} modul MVP sudah bisa dipakai: Kanvas Gambar, Diagram
+			Mermaid, Alat PDF (gabung, pisah, kompres, gambar ke PDF), Pas Foto, Kirim File,
+			dan Generator Teks.
+		</p>
+		<p>
+			Yang belum dikerjakan adalah fitur P1 di PRD: PDF ke gambar, putar atau hapus
+			halaman, embed draw.io di dalam halaman, lembar cetak pas foto, generator
+			.gitignore dan LICENSE, utilitas Base64/JWT/Regex, QR code terpisah, serta
+			penanda alat terakhir dan favorit.
+		</p>
+
+		<h2 id="privasi">Privasi</h2>
+		<p>
+			Draw, diagram, PDF, pas foto, dan generator memproses file di browser. Isi file
+			tidak diunggah ke server.
+		</p>
+		<ul>
+			<li>
+				Kirim File memakai server karena link harus bisa dibuka orang lain. Berkas
+				disimpan sementara di Cloudflare R2, lalu dihapus otomatis saat link
+				kedaluwarsa atau kuota unduhannya habis.
+			</li>
+			<li>Kata sandi link disimpan sebagai hash PBKDF2, bukan teks biasa.</li>
+			<li>Tidak ada akun, tidak ada cookie pelacak, dan tidak ada iklan.</li>
+		</ul>
+
+		<h2 id="syarat">Aturan pakai Kirim File</h2>
+		<p>
+			Jangan mengunggah berkas yang ilegal, berisi malware, atau melanggar hak cipta.
+			Link yang melanggar bisa dilaporkan lewat tombol "Laporkan link ini" di halaman
+			unduh. Laporan ditinjau, dan link bisa dihapus tanpa pemberitahuan.
+		</p>
+
+		<h2>Yang berikutnya</h2>
+		<p>
+			Setelah fitur P1 di atas, urutan v2 mengikuti PRD: PWA untuk alat client-side,
+			akun opsional, dan berbagi sesi Draw atau Diagram lewat link.
+		</p>
+
+		<p><a href="/#katalog">Lihat katalog alat</a></p>
+	</article>
+</Layout>

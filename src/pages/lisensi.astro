@@ -1,0 +1,93 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { absoluteUrl } from '../lib/site';
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'WebPage',
+	name: 'Lisensi dan Atribusi Toolsman',
+	url: absoluteUrl('/lisensi/'),
+	description: 'Lisensi pustaka dan layanan pihak ketiga yang dipakai Toolsman.',
+	inLanguage: 'id-ID',
+};
+
+const libraries = [
+	{ name: 'Excalidraw', version: '0.18.1', license: 'MIT' },
+	{ name: 'Mermaid', version: '12.3.0', license: 'MIT' },
+	{ name: 'pdf-lib', version: '1.17.1', license: 'MIT' },
+	{ name: 'pdfjs-dist', version: '6.5.438', license: 'Apache-2.0' },
+	{ name: '@imgly/background-removal', version: '1.7.0', license: 'AGPL-3.0' },
+	{ name: 'qrcode', version: '1.5.4', license: 'MIT' },
+	{ name: 'marked', version: '18.1.3', license: 'MIT' },
+	{ name: 'DOMPurify', version: '3.4.17', license: 'MPL-2.0 atau Apache-2.0' },
+	{ name: 'highlight.js', version: '11.12.0', license: 'BSD-3-Clause' },
+	{ name: 'aws4fetch', version: '1.0.20', license: 'MIT' },
+	{ name: 'Astro', version: '7.4.5', license: 'MIT' },
+	{ name: 'React dan React DOM', version: '18.3.1', license: 'MIT' },
+	{ name: 'Tailwind CSS', version: '4.3.4', license: 'MIT' },
+	{
+		name: 'Inter, Plus Jakarta Sans, JetBrains Mono',
+		version: '5.3.0',
+		license: 'SIL Open Font License 1.1',
+	},
+];
+---
+
+<Layout
+	title="Lisensi dan Atribusi, Toolsman"
+	description="Lisensi pustaka dan layanan pihak ketiga yang dipakai Toolsman."
+	jsonLd={jsonLd}
+>
+	<article class="container prose-page">
+		<h1>Lisensi dan Atribusi</h1>
+		<p>
+			Toolsman memakai pustaka dan layanan pihak ketiga berikut. Versi mengikuti
+			package-lock saat halaman ini dibuat.
+		</p>
+
+		<h2>Pustaka yang dibundel</h2>
+		<div class="table-wrap">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Pustaka</th>
+						<th scope="col">Versi</th>
+						<th scope="col">Lisensi</th>
+					</tr>
+				</thead>
+				<tbody>
+					{libraries.map((item) => (
+						<tr>
+							<td>{item.name}</td>
+							<td>{item.version}</td>
+							<td>{item.license}</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
+
+		<h2>Layanan luar</h2>
+		<ul>
+			<li>
+				diagrams.net (draw.io) berlisensi Apache-2.0. Editor visual dimuat dari
+				embed.diagrams.net hanya saat kamu membukanya.
+			</li>
+			<li>Cloudflare menyediakan hosting, R2, D1, dan Turnstile.</li>
+			<li>staticimgly.com menyediakan model penghapus latar.</li>
+			<li>Plausible menyediakan analitik kalau diaktifkan.</li>
+			<li>img.shields.io menyediakan badge lisensi untuk pratinjau README.</li>
+		</ul>
+
+		<h2>Catatan lisensi AGPL</h2>
+		<p>
+			Paket @imgly/background-removal berlisensi AGPL-3.0. Kalau Toolsman dipakai
+			publik, pemilik perlu memenuhi kewajiban lisensi itu atau memakai lisensi
+			komersial dari pembuat paket. Keputusan ini belum ditetapkan di proyek.
+		</p>
+		<p>
+			Lisensi kode Toolsman sendiri belum ditetapkan. Halaman ini menjelaskan
+			atribusi pustaka, bukan nasihat hukum.
+		</p>
+	</article>
+</Layout>

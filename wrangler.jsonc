@@ -1,0 +1,36 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "toolsman",
+	"compatibility_date": "2026-01-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"assets": {
+		"directory": "./dist/client",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "toolsman-shares",
+			"database_id": "b69e6752-f588-444a-86b8-ebc23166099e"
+		}
+	],
+	"ratelimits": [
+		{
+			"name": "UPLOAD_LIMIT",
+			"namespace_id": "1001",
+			"simple": { "limit": 10, "period": 60 }
+		},
+		{
+			"name": "REPORT_LIMIT",
+			"namespace_id": "1002",
+			"simple": { "limit": 5, "period": 60 }
+		},
+		{
+			"name": "PASSWORD_LIMIT",
+			"namespace_id": "1003",
+			"simple": { "limit": 10, "period": 60 }
+		}
+	]
+}
+

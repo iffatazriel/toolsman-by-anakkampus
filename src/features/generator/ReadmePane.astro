@@ -1,0 +1,187 @@
+---
+const licenses = [
+	{ value: '', label: 'Tanpa lisensi' },
+	{ value: 'MIT', label: 'MIT' },
+	{ value: 'Apache-2.0', label: 'Apache-2.0' },
+	{ value: 'GPL-3.0', label: 'GPL-3.0' },
+];
+---
+
+<div class="pane-grid pane-grid--split">
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Isian</h2>
+		</div>
+
+		<form class="form-grid" id="readme-form" autocomplete="off">
+			<div>
+				<label class="field-label" for="readme-name">Nama proyek</label>
+				<input
+					class="field-input"
+					id="readme-name"
+					name="name"
+					type="text"
+					placeholder="alat-pdf"
+				/>
+				<p class="field-hint">Dipakai sebagai judul README. Wajib diisi.</p>
+			</div>
+
+			<div>
+				<label class="field-label" for="readme-description">Deskripsi singkat</label>
+				<textarea
+					class="field-input field-textarea"
+					id="readme-description"
+					name="description"
+					rows="2"
+					placeholder="Gabung, pisah, dan kompres PDF langsung di browser."
+				></textarea>
+			</div>
+
+			<div>
+				<label class="field-label" for="readme-features">Fitur</label>
+				<textarea
+					class="field-input field-textarea"
+					id="readme-features"
+					name="features"
+					rows="4"
+					placeholder="Gabung beberapa PDF&#10;Pisah halaman tertentu&#10;Kompres tiga tingkat"
+				></textarea>
+				<p class="field-hint">Satu fitur per baris.</p>
+			</div>
+
+			<div>
+				<label class="field-label" for="readme-install">Perintah instalasi</label>
+				<textarea
+					class="field-input field-textarea"
+					id="readme-install"
+					name="install"
+					rows="3"
+					placeholder="npm install&#10;npm run dev"
+				></textarea>
+				<p class="field-hint">Satu perintah per baris, ditulis sebagai blok kode bash.</p>
+			</div>
+
+			<div>
+				<label class="field-label" for="readme-usage">Cara pakai</label>
+				<textarea
+					class="field-input field-textarea"
+					id="readme-usage"
+					name="usage"
+					rows="3"
+					placeholder="Buka halaman alat, lalu pilih berkas PDF."
+				></textarea>
+			</div>
+
+			<div>
+				<label class="field-label" for="readme-license">Lisensi</label>
+				<select class="field-input" id="readme-license" name="license">
+					{licenses.map((item) => <option value={item.value}>{item.label}</option>)}
+				</select>
+			</div>
+
+			<div class="check-row">
+				<input type="checkbox" id="readme-badge" name="badge" />
+				<label for="readme-badge">Sertakan badge lisensi</label>
+			</div>
+			<p class="field-hint check-hint">
+				Badge memakai gambar dari shields.io. Tanpa lisensi, badge tidak ditambahkan.
+			</p>
+
+			<p class="field-hint">
+				README ini kerangka awal. Periksa lagi isinya sebelum ditempel ke repo.
+			</p>
+		</form>
+	</div>
+
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Pratinjau README</h2>
+			<div class="pane-actions">
+				<button type="button" class="btn btn--secondary" id="readme-copy" disabled>
+					Salin .md
+				</button>
+				<button type="button" class="btn btn--primary" id="readme-download" disabled>
+					Unduh .md
+				</button>
+			</div>
+		</div>
+		<div class="preview prose" id="readme-preview" hidden></div>
+		<p class="preview-empty" id="readme-preview-empty">
+			Isi nama proyek dulu, README-nya muncul di sini.
+		</p>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { markdownFilename } from '../../lib/files';
+	import { toast } from '../../lib/toast';
+	import { generateReadme, type ReadmeLicense } from '../../lib/readme';
+	import { renderMarkdown } from './render-markdown';
+
+	const form = document.getElementById('readme-form') as HTMLFormElement | null;
+	const name = document.getElementById('readme-name') as HTMLInputElement | null;
+	const description = document.getElementById('readme-description') as HTMLTextAreaElement | null;
+	const features = document.getElementById('readme-features') as HTMLTextAreaElement | null;
+	const install = document.getElementById('readme-install') as HTMLTextAreaElement | null;
+	const usage = document.getElementById('readme-usage') as HTMLTextAreaElement | null;
+	const license = document.getElementById('readme-license') as HTMLSelectElement | null;
+	const badge = document.getElementById('readme-badge') as HTMLInputElement | null;
+	const preview = document.getElementById('readme-preview');
+	const empty = document.getElementById('readme-preview-empty');
+	const copy = document.getElementById('readme-copy') as HTMLButtonElement | null;
+	const download = document.getElementById('readme-download') as HTMLButtonElement | null;
+
+	if (
+		form &&
+		name &&
+		description &&
+		features &&
+		install &&
+		usage &&
+		license &&
+		badge &&
+		preview &&
+		empty &&
+		copy &&
+		download
+	) {
+		let markdown = '';
+
+		const update = () => {
+			markdown = generateReadme({
+				name: name.value,
+				description: description.value,
+				features: features.value,
+				install: install.value,
+				usage: usage.value,
+				license: license.value as ReadmeLicense | '',
+				showLicenseBadge: badge.checked,
+			});
+
+			const blank = markdown === '';
+			preview.innerHTML = blank ? '' : renderMarkdown(markdown);
+			preview.hidden = blank;
+			empty.hidden = !blank;
+			copy.disabled = blank;
+			download.disabled = blank;
+		};
+
+		form.addEventListener('input', update);
+		form.addEventListener('change', update);
+		form.addEventListener('submit', (event) => event.preventDefault());
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(markdown);
+			toast(copied ? 'README disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		download.addEventListener('click', () => {
+			downloadText(markdownFilename(markdown), markdown);
+			toast('File README diunduh.');
+		});
+
+		update();
+	}
+</script>

@@ -1,0 +1,17 @@
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "toolsman-cleanup",
+	"main": "index.ts",
+	"compatibility_date": "2026-01-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "toolsman-shares",
+			"database_id": "b69e6752-f588-444a-86b8-ebc23166099e"
+		}
+	],
+	"triggers": {
+		"crons": ["0 * * * *"]
+	}
+}

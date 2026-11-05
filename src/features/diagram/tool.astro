@@ -1,0 +1,345 @@
+<div class="tool-shell diagram-shell">
+	<div class="diagram-bar">
+		<label class="field-label" for="diagram-template">Template</label>
+		<select id="diagram-template" class="field-input diagram-select">
+			<option value="">Pilih template…</option>
+			<option value="flowchart">Flowchart</option>
+			<option value="sequence">Sequence</option>
+			<option value="erd">ERD</option>
+			<option value="class">Class</option>
+			<option value="gantt">Gantt</option>
+			<option value="state">State</option>
+		</select>
+		<div class="pane-actions">
+			<button type="button" class="btn btn--secondary" id="diagram-copy">Salin kode</button>
+			<button type="button" class="btn btn--secondary" id="diagram-png" disabled>Unduh PNG</button>
+			<button type="button" class="btn btn--secondary" id="diagram-svg" disabled>Unduh SVG</button>
+			<a
+				class="btn btn--ghost"
+				href="https://app.diagrams.net/"
+				target="_blank"
+				rel="noopener noreferrer"
+				title="Membuka editor diagrams.net di tab baru. Diagram di sana tidak disimpan ke Toolsman."
+			>
+				Editor Visual (draw.io)
+				<span class="sr-only">(membuka tab baru)</span>
+			</a>
+		</div>
+	</div>
+
+	<div class="segmented diagram-mobile-tabs" role="tablist" aria-label="Panel diagram">
+		<button
+			type="button"
+			class="segmented__btn"
+			role="tab"
+			id="diagram-tab-code"
+			aria-controls="diagram-pane-code"
+			aria-selected="true"
+			tabindex="0"
+			data-diagram-tab="code"
+		>
+			Kode
+		</button>
+		<button
+			type="button"
+			class="segmented__btn"
+			role="tab"
+			id="diagram-tab-preview"
+			aria-controls="diagram-pane-preview"
+			aria-selected="false"
+			tabindex="-1"
+			data-diagram-tab="preview"
+		>
+			Pratinjau
+		</button>
+	</div>
+
+	<div class="diagram-split" id="diagram-split">
+		<div class="pane" id="diagram-pane-code" data-diagram-pane="code">
+			<div class="pane__head">
+				<h2 class="pane__title" id="diagram-editor-title">Kode</h2>
+				<p class="field-hint" id="diagram-status" aria-live="polite">Tersimpan otomatis</p>
+			</div>
+			<label class="sr-only" for="diagram-input">Kode Mermaid</label>
+			<textarea
+				id="diagram-input"
+				class="code-area"
+				spellcheck="false"
+				aria-labelledby="diagram-editor-title"
+				aria-describedby="diagram-error"
+			></textarea>
+			<div class="alert" id="diagram-error" role="alert" hidden>
+				<p id="diagram-error-text"></p>
+			</div>
+		</div>
+
+		<div class="pane" id="diagram-pane-preview" data-diagram-pane="preview">
+			<div class="pane__head">
+				<h2 class="pane__title">Pratinjau</h2>
+			</div>
+			<div class="preview diagram-preview" id="diagram-preview" aria-live="polite"></div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { toast } from '../../lib/toast';
+	import { copyText } from '../../lib/clipboard';
+	import { getTemplate } from './templates';
+	import { extractLineFromMermaidError } from './error-line';
+
+	const STORAGE_KEY = 'toolsman-diagram-draft';
+	const isDark = () => {
+		const forced = document.documentElement.dataset.theme;
+		if (forced === 'dark' || forced === 'light') return forced === 'dark';
+		return matchMedia('(prefers-color-scheme: dark)').matches;
+	};
+	const DEFAULT_CODE = 'flowchart TD\n  A[Mulai] --> B[Selesai]';
+
+	const input = document.getElementById('diagram-input') as HTMLTextAreaElement | null;
+	const preview = document.getElementById('diagram-preview');
+	const select = document.getElementById('diagram-template') as HTMLSelectElement | null;
+	const status = document.getElementById('diagram-status');
+	const errorBox = document.getElementById('diagram-error');
+	const errorText = document.getElementById('diagram-error-text');
+	const copyButton = document.getElementById('diagram-copy');
+	const pngButton = document.getElementById('diagram-png') as HTMLButtonElement | null;
+	const svgButton = document.getElementById('diagram-svg') as HTMLButtonElement | null;
+
+	if (input && preview && select && status && errorBox && errorText && copyButton && pngButton && svgButton) {
+		let mermaidPromise: Promise<typeof import('mermaid').default> | null = null;
+		let svgText = '';
+		let renderId = 0;
+		let saveTimer: number | undefined;
+
+		const loadMermaid = () => {
+			mermaidPromise ??= import('mermaid').then((module) => {
+				module.default.initialize({
+					startOnLoad: false,
+					securityLevel: 'strict',
+					theme: isDark() ? 'dark' : 'default',
+				});
+				return module.default;
+			});
+			return mermaidPromise;
+		};
+
+		const setError = (message: string | null, line?: number) => {
+			if (message === null) {
+				errorBox.hidden = true;
+				errorText.textContent = '';
+				input.removeAttribute('aria-invalid');
+				return;
+			}
+			errorBox.hidden = false;
+			errorText.textContent = line ? `Baris ${line}: ${message}` : message;
+			input.setAttribute('aria-invalid', 'true');
+		};
+
+		const setButtons = (enabled: boolean) => {
+			pngButton.disabled = !enabled;
+			svgButton.disabled = !enabled;
+		};
+
+		const render = async () => {
+			const code = input.value;
+			const current = ++renderId;
+
+			if (code.trim() === '') {
+				preview.innerHTML = '';
+				setError(null);
+				setButtons(false);
+				return;
+			}
+
+			try {
+				const mermaid = await loadMermaid();
+				await mermaid.parse(code);
+				const { svg } = await mermaid.render(`diagram-${current}`, code);
+				if (current !== renderId) return;
+				svgText = svg;
+				preview.innerHTML = svg;
+				setError(null);
+				setButtons(true);
+			} catch (error) {
+				if (current !== renderId) return;
+				const issue = extractLineFromMermaidError(error, code);
+				setError(issue.message, issue.line);
+				setButtons(false);
+			}
+		};
+
+		const save = () => {
+			status.textContent = 'Menyimpan…';
+			window.clearTimeout(saveTimer);
+			saveTimer = window.setTimeout(() => {
+				try {
+					localStorage.setItem(STORAGE_KEY, input.value);
+					status.textContent = 'Tersimpan otomatis';
+				} catch {
+					status.textContent = 'Draf tidak bisa disimpan di tab ini.';
+				}
+			}, 400);
+		};
+
+		input.addEventListener('input', () => {
+			select.value = '';
+			save();
+			void render();
+		});
+
+		select.addEventListener('change', () => {
+			const template = getTemplate(select.value);
+			if (!template) return;
+			input.value = template.code;
+			save();
+			void render();
+			input.focus();
+		});
+
+		copyButton.addEventListener('click', async () => {
+			const copied = await copyText(input.value);
+			toast(copied ? 'Kode Mermaid disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		const download = (name: string, blob: Blob) => {
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = name;
+			document.body.append(link);
+			link.click();
+			link.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 1000);
+		};
+
+		svgButton.addEventListener('click', () => {
+			if (!svgText) return;
+			download('diagram.svg', new Blob([svgText], { type: 'image/svg+xml' }));
+		});
+
+		pngButton.addEventListener('click', async () => {
+			if (!svgText) return;
+			const svgEl = preview.querySelector('svg');
+			const box = svgEl?.getBoundingClientRect();
+			const width = Math.max(1, Math.round(box?.width ?? 800));
+			const height = Math.max(1, Math.round(box?.height ?? 600));
+			const image = new Image();
+			const url = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' }));
+			image.src = url;
+			await image.decode();
+			const canvas = document.createElement('canvas');
+			canvas.width = width * 2;
+			canvas.height = height * 2;
+			const context = canvas.getContext('2d');
+			if (!context) return;
+			context.fillStyle = '#ffffff';
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.drawImage(image, 0, 0, canvas.width, canvas.height);
+			URL.revokeObjectURL(url);
+			canvas.toBlob((blob) => {
+				if (blob) download('diagram.png', blob);
+			}, 'image/png');
+		});
+
+		const saved = localStorage.getItem(STORAGE_KEY);
+		input.value = saved && saved.trim() !== '' ? saved : DEFAULT_CODE;
+		status.textContent = 'Tersimpan otomatis';
+		void render();
+	}
+
+	const mobileTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-diagram-tab]'));
+	const mobilePanes = Array.from(document.querySelectorAll<HTMLElement>('[data-diagram-pane]'));
+	const mobileTablist = document.querySelector<HTMLElement>('.diagram-mobile-tabs');
+
+	const selectMobilePane = (name: string, focus = false) => {
+		mobileTabs.forEach((tab) => {
+			const active = tab.dataset.diagramTab === name;
+			tab.setAttribute('aria-selected', active ? 'true' : 'false');
+			tab.tabIndex = active ? 0 : -1;
+			if (active && focus) tab.focus();
+		});
+		mobilePanes.forEach((pane) => {
+			pane.dataset.mobileActive = pane.dataset.diagramPane === name ? 'true' : 'false';
+		});
+	};
+
+	mobileTabs.forEach((tab) => {
+		tab.addEventListener('click', () => {
+			selectMobilePane(tab.dataset.diagramTab ?? 'code');
+		});
+	});
+
+	mobileTablist?.addEventListener('keydown', (event) => {
+		if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+		const current = mobileTabs.findIndex((tab) => tab === document.activeElement);
+		if (current === -1) return;
+		event.preventDefault();
+		const step = event.key === 'ArrowRight' ? 1 : -1;
+		const next = mobileTabs[(current + step + mobileTabs.length) % mobileTabs.length];
+		if (next?.dataset.diagramTab) selectMobilePane(next.dataset.diagramTab, true);
+	});
+
+	selectMobilePane('code');
+</script>
+
+<style>
+	.diagram-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--space-3);
+		padding: var(--space-3) var(--space-4);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.diagram-select {
+		width: auto;
+		min-width: 200px;
+	}
+
+	.diagram-mobile-tabs {
+		display: none;
+		margin: var(--space-3) var(--space-4) 0;
+	}
+
+	@media (max-width: 767px) {
+		.diagram-mobile-tabs {
+			display: inline-flex;
+		}
+
+		.diagram-split {
+			padding-top: var(--space-3);
+		}
+
+		.diagram-split .pane[data-diagram-pane]:not([data-mobile-active='true']) {
+			display: none;
+		}
+	}
+
+	.diagram-split {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4);
+		padding: var(--space-4);
+	}
+
+	@media (min-width: 900px) {
+		.diagram-split {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		}
+	}
+
+	.diagram-preview {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 360px;
+		overflow: auto;
+	}
+
+	.diagram-preview svg {
+		max-width: 100%;
+		height: auto;
+	}
+</style>

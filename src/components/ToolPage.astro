@@ -1,0 +1,123 @@
+---
+import type { ToolMeta } from '../lib/tool-types';
+import {
+	categoryLabel,
+	privacyLabel,
+	privacyNote,
+	statusLabel,
+} from '../lib/tool-types';
+import { getToolUI, relatedTools } from '../lib/tools';
+import Icon from './ui/Icon.astro';
+import ToolCard from './ToolCard.astro';
+
+interface Props {
+	tool: ToolMeta;
+}
+
+const { tool } = Astro.props;
+const related = relatedTools(tool);
+const category = categoryLabel(tool.category);
+const LiveTool = getToolUI(tool.slug);
+const isLive = tool.status === 'siap' && LiveTool !== null;
+---
+
+<div class="container">
+	<nav class="breadcrumb" aria-label="Breadcrumb">
+		<a href="/">Beranda</a>
+		<span aria-hidden="true">/</span>
+		<a href="/#katalog">{category}</a>
+		<span aria-hidden="true">/</span>
+		<span aria-current="page">{tool.name}</span>
+	</nav>
+
+	<header class="tool-head" data-category={tool.category}>
+		<span class="tool-tile"><Icon name={tool.icon} size={24} /></span>
+		<h1 class="tool-title">{tool.name}</h1>
+		<span class="privacy-label">
+			<Icon name={tool.privacy === 'lokal' ? 'laptop' : 'server'} size={16} />
+			{privacyLabel[tool.privacy]}
+		</span>
+		<span class="status-label">{statusLabel[tool.status]}</span>
+	</header>
+
+	<p class="tool-lede">{tool.tagline}</p>
+
+	<div class:list={['tool-body', isLive && 'tool-body--live']}>
+		{
+			isLive && LiveTool ? (
+				<section class="live-tool" aria-label={tool.name}>
+					<LiveTool />
+				</section>
+			) : (
+				<section class="workspace" aria-labelledby="workspace-title">
+					<span class="tool-tile" data-category={tool.category}>
+						<Icon name={tool.icon} size={24} />
+					</span>
+					<h2 class="text-lg font-semibold" id="workspace-title">
+						Alat ini belum jadi
+					</h2>
+					<p class="empty-state__body">
+						{tool.name} masuk daftar PRD dan akan muncul di sini setelah selesai.
+						Tidak ada tombol unggah di halaman ini supaya kamu tidak mengira
+						alatnya sudah jalan.
+					</p>
+					<a class="btn btn--primary" href="/#katalog">Buka katalog alat</a>
+				</section>
+			)
+		}
+
+		<aside class="panel" aria-labelledby="rencana-title">
+			{
+				isLive && tool.usage ? (
+					<>
+						<h2 class="panel__title" id="rencana-title">Cara pakai</h2>
+						<ul class="plan-list">
+							{tool.usage.map((step) => (
+								<li>
+									<span>{step}</span>
+								</li>
+							))}
+						</ul>
+					</>
+				) : (
+					<>
+						<h2 class="panel__title" id="rencana-title">Yang direncanakan</h2>
+						<p class="field-hint">Diambil dari PRD v1.0, modul {tool.name}.</p>
+						<ul class="plan-list">
+							{(tool.plans ?? []).map((plan) => (
+								<li>
+									<span>{plan}</span>
+									<span>Rencana</span>
+								</li>
+							))}
+						</ul>
+					</>
+				)
+			}
+			<p class="field-hint">{tool.privacyDetail ?? privacyNote[tool.privacy]}</p>
+		</aside>
+	</div>
+</div>
+
+<section class="related" aria-labelledby="lain-title">
+	<div class="container">
+		<h2 class="section-title" id="lain-title">Alat lain di daftar</h2>
+		<ul class="related__grid">
+			{
+				related.map((item) => (
+					<li>
+						<ToolCard tool={item} />
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>
+
+<style>
+	.related__grid {
+		margin: var(--space-4) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+</style>

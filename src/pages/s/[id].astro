@@ -1,0 +1,369 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Modal from '../../components/ui/Modal.astro';
+import type { ShareFileRow, ShareRow } from '../../features/kirim-file/db';
+import { presignDownload, hasR2Config } from '../../features/kirim-file/r2';
+import { viewShare } from '../../features/kirim-file/share-view';
+import { formatBytes, formatRemaining } from '../../features/kirim-file/format';
+import { shareEnv } from '../../features/kirim-file/bindings';
+import { verifyPassword } from '../../features/kirim-file/password';
+import { allowPasswordAttempt, clientIp } from '../../features/kirim-file/rate-limit';
+
+export const prerender = false;
+
+const ID_PATTERN = /^[0-9a-f]{32}$/;
+const id = Astro.params.id ?? '';
+
+// Halaman terbuka bisa memuat kata sandi di form unduh, jadi jangan disimpan
+// di cache peramban atau proxy.
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const env = ID_PATTERN.test(id) ? shareEnv() : null;
+
+let row: ShareRow | null = null;
+if (env) {
+	try {
+		row = await env.DB.prepare('SELECT * FROM shares WHERE id = ?').bind(id).first<ShareRow>();
+	} catch {
+		row = null;
+	}
+}
+
+const view = viewShare(row, Date.now());
+const r2Ready = hasR2Config(env);
+const locked = Boolean(row?.password_hash);
+const maxDownloads = row?.max_downloads ?? null;
+
+let password = '';
+let passwordError: string | null = null;
+
+if (Astro.request.method === 'POST' && locked && row && view.state === 'ok') {
+	const allowed = await allowPasswordAttempt(
+		env?.PASSWORD_LIMIT,
+		clientIp(Astro.request),
+		id,
+	);
+
+	if (!allowed) {
+		passwordError = 'Terlalu banyak percobaan. Tunggu sebentar, lalu coba lagi.';
+	} else {
+		try {
+			const form = await Astro.request.formData();
+			password = String(form.get('password') ?? '');
+		} catch {
+			password = '';
+		}
+		if (!(await verifyPassword(password, row.password_hash ?? ''))) {
+			password = '';
+			passwordError = 'Kata sandi salah. Coba lagi.';
+		}
+	}
+}
+
+const unlocked = !locked || password !== '';
+
+interface FileView {
+	name: string;
+	size: number;
+	url: string | null;
+	downloadForm: boolean;
+	remaining: number | null;
+}
+
+const files: FileView[] =
+	env && r2Ready && view.state === 'ok' && unlocked
+		? await env.DB.prepare('SELECT * FROM share_files WHERE share_id = ? ORDER BY rowid')
+				.bind(id)
+				.all<ShareFileRow>()
+				.then(({ results }) =>
+					Promise.all(
+						results.map(async (file) => {
+							const downloadForm = locked || maxDownloads !== null;
+							return {
+								name: file.name,
+								size: file.size,
+								downloadForm,
+								remaining:
+									maxDownloads === null
+										? null
+										: file.purged
+											? 0
+											: Math.max(0, maxDownloads - file.downloads),
+								url:
+									downloadForm || !env
+										? null
+										: await presignDownload(env, file.object_key),
+							};
+						}),
+					),
+				)
+				.catch(() => [])
+		: [];
+
+if (view.state === 'expired') Astro.response.status = 410;
+else if (view.state === 'missing') Astro.response.status = 404;
+---
+
+<Layout
+	title={view.state === 'ok' ? `Unduh berkas, Toolsman` : 'Link tidak tersedia, Toolsman'}
+	description="Halaman unduh berkas yang dibagikan lewat Toolsman. Link hilang sendiri sesuai masa berlakunya."
+	noindex
+>
+	<section class="container prose-page share-page" data-share-id={id}>
+		{
+			view.state === 'missing' && (
+				<>
+					<h1>Link tidak ditemukan</h1>
+					<p>
+						Alamat ini salah, link-nya sudah dihapus, atau berkasnya belum selesai diunggah.
+						Minta pengirim membuat link baru.
+					</p>
+					<p>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
+							Buat link sendiri
+						</a>
+					</p>
+				</>
+			)
+		}
+
+		{
+			view.state === 'expired' && (
+				<>
+					<h1>Link sudah kedaluwarsa</h1>
+					<p>
+						Berkas dan link ini sudah dihapus otomatis. Kalau masih perlu, minta pengirim
+						mengunggah ulang dengan masa berlaku lebih lama.
+					</p>
+					<p>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
+							Kirim berkas
+						</a>
+					</p>
+				</>
+			)
+		}
+
+		{
+			view.state === 'ok' && !r2Ready && (
+				<>
+					<h1>Layanan unduh belum siap</h1>
+					<p>
+						Link ini valid, tapi penyimpanan berkas di server belum diatur. Hubungi pemilik
+						situs, atau minta pengirim membuat link baru nanti.
+					</p>
+				</>
+			)
+		}
+
+		{
+			view.state === 'ok' && r2Ready && !unlocked && (
+				<form method="post" class="share-lock">
+					<h1>Link ini dikunci</h1>
+					<p>Masukkan kata sandi dari pengirim untuk melihat daftar berkas.</p>
+					<div>
+						<label class="field-label" for="share-password">Kata sandi</label>
+						<input
+							class="field-input"
+							id="share-password"
+							name="password"
+							type="password"
+							autocomplete="off"
+							required
+							aria-invalid={passwordError ? 'true' : undefined}
+							aria-describedby={passwordError ? 'share-password-error' : undefined}
+						/>
+						{passwordError && (
+							<p class="field-error" id="share-password-error" role="alert">
+								{passwordError}
+							</p>
+						)}
+					</div>
+					<button class="btn btn--primary" type="submit">Buka link</button>
+				</form>
+			)
+		}
+
+		{
+			view.state === 'ok' && r2Ready && unlocked && (
+				<>
+					<h1>Berkas siap diunduh</h1>
+					<p data-countdown>{formatRemaining(view.remainingMs)}.</p>
+
+					{files.length === 0 ? (
+						<p class="empty-state__body">
+							Daftar berkas belum bisa dibaca. Muat ulang halaman ini sebentar lagi.
+						</p>
+					) : (
+						<ul class="share-page__list">
+							{files.map((file, index) => (
+								<li class="share-page__item">
+									<span>
+										{file.name}
+										<span class="share-page__size">
+											{formatBytes(file.size)}
+											{file.remaining !== null &&
+												` · ${file.remaining > 0 ? `sisa ${file.remaining} unduhan` : 'sudah diunduh'}`}
+										</span>
+									</span>
+									{file.downloadForm ? (
+										file.remaining === 0 ? (
+											<button type="button" class="btn btn--secondary" disabled>
+												Sudah diunduh
+											</button>
+										) : (
+											<form
+												method="post"
+												action={`/api/shares/${id}/download/${index}`}>
+												{password !== '' && (
+													<input type="hidden" name="password" value={password} />
+												)}
+												<button type="submit" class="btn btn--primary">
+													Unduh
+												</button>
+											</form>
+										)
+									) : (
+										<a class="btn btn--primary" href={file.url ?? '#'} rel="noreferrer">
+											Unduh
+										</a>
+									)}
+								</li>
+							))}
+						</ul>
+					)}
+
+					{maxDownloads !== null && (
+						<p class="field-hint">
+							{maxDownloads === 1
+								? files.length === 1
+									? 'Berkas ini hanya bisa diunduh sekali. Setelah diunduh, link hangus.'
+									: 'Tiap berkas hanya bisa diunduh sekali. Link hangus setelah semua berkas terunduh.'
+								: `Tiap berkas bisa diunduh sampai ${maxDownloads} kali.`}
+						</p>
+					)}
+
+					{files.length > 0 && !files[0]!.downloadForm && (
+						<p class="field-hint">
+							Tombol unduh berlaku 15 menit. Muat ulang halaman ini kalau sudah lewat.
+						</p>
+					)}
+
+					<button type="button" class="btn btn--ghost" data-report-open>
+						Laporkan link ini
+					</button>
+
+					<Modal id="report-modal" labelledby="report-title">
+						<h2 id="report-title">Laporkan link</h2>
+						<p class="field-hint">
+							Tulis alasan singkat, misalnya isinya berbahaya atau bukan untuk dibagikan.
+						</p>
+						<form data-report-form class="share-page__report">
+							<label class="field-label" for="report-reason">Alasan</label>
+							<textarea
+								id="report-reason"
+								class="field-input"
+								rows="3"
+								maxlength="500"
+								required></textarea>
+							<div class="pane-actions">
+								<button type="submit" class="btn btn--primary">Kirim laporan</button>
+								<button type="button" class="btn btn--secondary" data-report-close>
+									Batal
+								</button>
+							</div>
+							<p class="field-hint" data-report-status aria-live="polite"></p>
+						</form>
+					</Modal>
+				</>
+			)
+		}
+	</section>
+</Layout>
+
+<script>
+	const page = document.querySelector<HTMLElement>('[data-share-id]');
+	const shareId = page?.dataset.shareId ?? '';
+	const openButton = document.querySelector<HTMLButtonElement>('[data-report-open]');
+	const dialog = document.getElementById('report-modal') as HTMLDialogElement | null;
+	const closeButton = document.querySelector<HTMLButtonElement>('[data-report-close]');
+	const form = document.querySelector<HTMLFormElement>('[data-report-form]');
+	const status = document.querySelector<HTMLElement>('[data-report-status]');
+
+	openButton?.addEventListener('click', () => dialog?.showModal());
+	closeButton?.addEventListener('click', () => dialog?.close());
+
+	form?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		if (!status || shareId === '') return;
+		status.textContent = 'Mengirim laporan…';
+		try {
+			const reason = (document.getElementById('report-reason') as HTMLTextAreaElement).value;
+			const response = await fetch(`/api/shares/${shareId}/report`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ reason }),
+			});
+			if (!response.ok) throw new Error('Gagal mengirim laporan.');
+			status.textContent = 'Laporan terkirim. Terima kasih.';
+			form.reset();
+		} catch {
+			status.textContent = 'Laporan gagal dikirim. Coba lagi nanti.';
+		}
+	});
+</script>
+
+<style>
+	.share-lock {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-3);
+		max-width: 26rem;
+	}
+
+	.share-page__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		margin: var(--space-4) 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.share-page__item {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		padding: var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.share-page__item > span {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.share-page__item form {
+		margin: 0;
+	}
+
+	.share-page__size {
+		color: var(--text-muted);
+		font-size: 0.875rem;
+	}
+
+	.share-page__report {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		margin-top: var(--space-3);
+	}
+</style>

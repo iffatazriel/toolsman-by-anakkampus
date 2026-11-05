@@ -1,0 +1,75 @@
+---
+import Icon from './ui/Icon.astro';
+---
+
+<button
+	type="button"
+	class="icon-button theme-toggle"
+	data-theme-toggle
+	aria-label="Ganti ke tema gelap"
+>
+	<span class="theme-icon theme-icon--moon"><Icon name="moon" /></span>
+	<span class="theme-icon theme-icon--sun"><Icon name="sun" /></span>
+</button>
+
+<style>
+	.theme-icon--sun {
+		display: none;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:global(:root:not([data-theme='light'])) .theme-icon--sun {
+			display: block;
+		}
+
+		:global(:root:not([data-theme='light'])) .theme-icon--moon {
+			display: none;
+		}
+	}
+
+	:global(:root[data-theme='dark']) .theme-icon--sun {
+		display: block;
+	}
+
+	:global(:root[data-theme='dark']) .theme-icon--moon {
+		display: none;
+	}
+</style>
+
+<script>
+	const storageKey = 'toolsman-theme';
+	const root = document.documentElement;
+	const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+	const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+	const activeTheme = (): 'light' | 'dark' => {
+		if (root.dataset.theme === 'light' || root.dataset.theme === 'dark') {
+			return root.dataset.theme;
+		}
+		return systemDark.matches ? 'dark' : 'light';
+	};
+
+	const syncLabel = () => {
+		button?.setAttribute(
+			'aria-label',
+			activeTheme() === 'dark' ? 'Ganti ke tema terang' : 'Ganti ke tema gelap',
+		);
+	};
+
+	syncLabel();
+
+	button?.addEventListener('click', () => {
+		const next = activeTheme() === 'dark' ? 'light' : 'dark';
+		root.dataset.theme = next;
+		try {
+			localStorage.setItem(storageKey, next);
+		} catch {
+			/* penyimpanan bisa diblokir, tema tetap berlaku untuk sesi ini */
+		}
+		syncLabel();
+	});
+
+	systemDark.addEventListener('change', () => {
+		if (!root.dataset.theme) syncLabel();
+	});
+</script>

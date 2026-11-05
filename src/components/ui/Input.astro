@@ -1,0 +1,65 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+	id: string;
+	label: string;
+	type?: 'text' | 'search' | 'email' | 'password' | 'url' | 'number';
+	name?: string;
+	placeholder?: string;
+	value?: string;
+	hint?: string;
+	error?: string;
+	required?: boolean;
+	autocomplete?: string;
+	class?: string;
+}
+
+const {
+	id,
+	label,
+	type = 'text',
+	name,
+	placeholder,
+	value,
+	hint,
+	error,
+	required = false,
+	autocomplete,
+	class: className,
+} = Astro.props;
+
+const describedBy = [
+	hint ? `${id}-hint` : null,
+	error ? `${id}-error` : null,
+]
+	.filter(Boolean)
+	.join(' ');
+---
+
+<div class={className}>
+	<label class="field-label" for={id}>
+		{label}{required && <><span class="sr-only"> (wajib diisi)</span><span aria-hidden="true"> *</span></>}
+	</label>
+	<input
+		id={id}
+		type={type}
+		name={name}
+		placeholder={placeholder}
+		value={value}
+		required={required}
+		autocomplete={autocomplete}
+		class="field-input"
+		aria-invalid={error ? 'true' : undefined}
+		aria-describedby={describedBy || undefined}
+	/>
+	{hint && <p class="field-hint" id={`${id}-hint`}>{hint}</p>}
+	{
+		error && (
+			<p class="field-error" id={`${id}-error`}>
+				<Icon name="alert" size={16} />
+				{error}
+			</p>
+		)
+	}
+</div>

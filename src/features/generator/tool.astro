@@ -1,0 +1,26 @@
+---
+import Tabs from '../../components/ui/Tabs.astro';
+import JsonPane from './JsonPane.astro';
+import MarkdownPane from './MarkdownPane.astro';
+import ReadmePane from './ReadmePane.astro';
+
+const tabs = [
+	{ id: 'markdown', label: 'Markdown' },
+	{ id: 'readme', label: 'README' },
+	{ id: 'json', label: 'JSON' },
+];
+---
+
+<div class="tool-shell">
+	<Tabs label="Pilihan Generator" items={tabs}>
+		<div data-panel="markdown" class="tool-panel">
+			<MarkdownPane />
+		</div>
+		<div data-panel="readme" class="tool-panel" hidden>
+			<ReadmePane />
+		</div>
+		<div data-panel="json" class="tool-panel" hidden>
+			<JsonPane />
+		</div>
+	</Tabs>
+</div>

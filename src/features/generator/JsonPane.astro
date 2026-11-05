@@ -1,0 +1,179 @@
+---
+import Icon from '../../components/ui/Icon.astro';
+---
+
+<div class="pane-grid pane-grid--split">
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title" id="json-input-title">Input</h2>
+			<div class="pane-actions">
+				<button type="button" class="btn btn--secondary" data-json="format">Format</button>
+				<button type="button" class="btn btn--secondary" data-json="minify">Minify</button>
+			</div>
+		</div>
+
+		<label class="sr-only" for="json-input">Teks JSON</label>
+		<textarea
+			id="json-input"
+			class="code-area"
+			spellcheck="false"
+			aria-labelledby="json-input-title"
+			placeholder='{"proyek": "toolsman", "alat": 6}'
+		></textarea>
+
+		<div class="alert" id="json-error" role="alert" hidden>
+			<Icon name="alert" size={16} />
+			<p id="json-error-text"></p>
+		</div>
+	</div>
+
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Hasil</h2>
+			<div class="pane-actions">
+				<div class="segmented" role="group" aria-label="Tampilan hasil">
+					<button type="button" class="segmented__btn" data-view="teks" aria-pressed="true">
+						Teks
+					</button>
+					<button type="button" class="segmented__btn" data-view="pohon" aria-pressed="false">
+						Pohon
+					</button>
+				</div>
+				<button type="button" class="btn btn--primary" id="json-copy" disabled>Salin</button>
+			</div>
+		</div>
+
+		<pre class="code-block" id="json-output" hidden><code id="json-output-code"></code></pre>
+		<div class="json-tree-wrap" id="json-tree" hidden></div>
+
+		<div class="preview-empty" id="json-empty">
+			<p>Tempel JSON di kiri, hasilnya muncul di sini.</p>
+			<button type="button" class="btn btn--secondary mt-3" id="json-sample">
+				Isi contoh
+			</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import {
+		formatJson,
+		highlightJson,
+		minifyJson,
+		renderJsonTree,
+		type JsonError,
+	} from '../../lib/json-tools';
+	import { toast } from '../../lib/toast';
+
+	const input = document.getElementById('json-input') as HTMLTextAreaElement | null;
+	const errorBox = document.getElementById('json-error');
+	const errorText = document.getElementById('json-error-text');
+	const output = document.getElementById('json-output');
+	const outputCode = document.getElementById('json-output-code');
+	const tree = document.getElementById('json-tree');
+	const empty = document.getElementById('json-empty');
+	const copy = document.getElementById('json-copy') as HTMLButtonElement | null;
+	const sample = document.getElementById('json-sample');
+	const viewButtons = Array.from(
+		document.querySelectorAll<HTMLButtonElement>('[data-view]'),
+	);
+
+	if (
+		input &&
+		errorBox &&
+		errorText &&
+		output &&
+		outputCode &&
+		tree &&
+		empty &&
+		copy &&
+		sample
+	) {
+		let currentText = '';
+		let view: 'teks' | 'pohon' = 'teks';
+
+		const paint = () => {
+			const blank = currentText === '';
+			empty.hidden = !blank;
+			output.hidden = blank || view !== 'teks';
+			tree.hidden = blank || view !== 'pohon';
+		};
+
+		const clearError = () => {
+			errorBox.hidden = true;
+			errorText.textContent = '';
+			input.removeAttribute('aria-invalid');
+			input.removeAttribute('aria-describedby');
+		};
+
+		const showError = (error: JsonError) => {
+			errorText.textContent = `Baris ${error.line}, kolom ${error.column}: ${error.message}`;
+			errorBox.hidden = false;
+			input.setAttribute('aria-invalid', 'true');
+			input.setAttribute('aria-describedby', 'json-error-text');
+			input.focus();
+			const at = Math.min(error.index, input.value.length);
+			input.setSelectionRange(at, at);
+		};
+
+		const reset = () => {
+			currentText = '';
+			outputCode.textContent = '';
+			tree.innerHTML = '';
+			copy.disabled = true;
+			paint();
+		};
+
+		const run = (mode: 'format' | 'minify') => {
+			clearError();
+			const result = mode === 'format' ? formatJson(input.value) : minifyJson(input.value);
+
+			if (!result.ok) {
+				reset();
+				showError(result.error);
+				return;
+			}
+
+			currentText = result.text;
+			outputCode.innerHTML = highlightJson(result.text);
+			tree.innerHTML = renderJsonTree(result.data, { openDepth: 1 });
+			copy.disabled = false;
+			paint();
+		};
+
+		document.querySelectorAll<HTMLButtonElement>('[data-json]').forEach((button) => {
+			button.addEventListener('click', () => {
+				run(button.dataset.json === 'minify' ? 'minify' : 'format');
+			});
+		});
+
+		viewButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				view = button.dataset.view === 'pohon' ? 'pohon' : 'teks';
+				viewButtons.forEach((other) =>
+					other.setAttribute('aria-pressed', other === button ? 'true' : 'false'),
+				);
+				paint();
+			});
+		});
+
+		input.addEventListener('input', () => {
+			clearError();
+			reset();
+		});
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(currentText);
+			toast(copied ? 'JSON disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		sample.addEventListener('click', () => {
+			input.value = '{\n  "proyek": "toolsman",\n  "alat": 6,\n  "gratis": true\n}';
+			input.focus();
+			run('format');
+		});
+
+		paint();
+	}
+</script>

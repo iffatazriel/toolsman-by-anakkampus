@@ -1,0 +1,27 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ToolPage from '../../components/ToolPage.astro';
+import { tools } from '../../lib/tools';
+import type { ToolMeta } from '../../lib/tool-types';
+import { toolJsonLd } from '../../lib/tool-seo';
+
+export function getStaticPaths() {
+	return tools
+		.filter((tool) => tool.slug !== 'pas-foto')
+		.map((tool) => ({
+			params: { slug: tool.slug },
+			props: { tool },
+		}));
+}
+
+interface Props {
+	tool: ToolMeta;
+}
+
+const { tool } = Astro.props;
+const jsonLd = toolJsonLd(tool);
+---
+
+<Layout title={`${tool.name}, Toolsman`} description={tool.tagline} jsonLd={jsonLd}>
+	<ToolPage tool={tool} />
+</Layout>

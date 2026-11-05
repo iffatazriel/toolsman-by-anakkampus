@@ -1,0 +1,131 @@
+---
+import Icon from '../../components/ui/Icon.astro';
+import type { IconName } from '../../lib/icons';
+import type { ToolbarAction } from '../../lib/markdown-toolbar';
+
+const toolbarItems: { action: ToolbarAction; label: string; icon: IconName }[] = [
+	{ action: 'bold', label: 'Tebal', icon: 'bold' },
+	{ action: 'italic', label: 'Miring', icon: 'italic' },
+	{ action: 'heading', label: 'Judul', icon: 'heading' },
+	{ action: 'list', label: 'Daftar', icon: 'list' },
+	{ action: 'code', label: 'Kode', icon: 'code' },
+	{ action: 'link', label: 'Tautan', icon: 'link' },
+	{ action: 'table', label: 'Tabel', icon: 'table' },
+];
+---
+
+<div class="pane-grid pane-grid--split">
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title" id="md-editor-title">Editor</h2>
+			<div class="pane-actions">
+				<button type="button" class="btn btn--secondary" id="md-copy" disabled>
+					Salin
+				</button>
+				<button type="button" class="btn btn--primary" id="md-download" disabled>
+					Unduh .md
+				</button>
+			</div>
+		</div>
+
+		<div class="toolbar" role="toolbar" aria-label="Format Markdown" id="md-toolbar">
+			{
+				toolbarItems.map((item) => (
+					<button
+						type="button"
+						class="toolbar__btn"
+						data-action={item.action}
+						aria-label={item.label}
+					>
+						<Icon name={item.icon} size={18} />
+					</button>
+				))
+			}
+		</div>
+
+		<label class="sr-only" for="md-input">Teks Markdown</label>
+		<textarea
+			id="md-input"
+			class="code-area"
+			spellcheck="false"
+			aria-labelledby="md-editor-title"
+			placeholder={'# Judul\n\nTulis Markdown di sini. Tabel, daftar tugas, dan blok kode ikut tampil di pratinjau.'}
+		></textarea>
+	</div>
+
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Pratinjau</h2>
+		</div>
+		<div class="preview prose" id="md-preview" hidden></div>
+		<p class="preview-empty" id="md-preview-empty">
+			Pratinjau muncul di sini setelah kamu menulis.
+		</p>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { markdownFilename } from '../../lib/files';
+	import { applyToolbar, type ToolbarAction } from '../../lib/markdown-toolbar';
+	import { toast } from '../../lib/toast';
+	import { renderMarkdown } from './render-markdown';
+
+	const input = document.getElementById('md-input') as HTMLTextAreaElement | null;
+	const preview = document.getElementById('md-preview');
+	const empty = document.getElementById('md-preview-empty');
+	const toolbar = document.getElementById('md-toolbar');
+	const copy = document.getElementById('md-copy') as HTMLButtonElement | null;
+	const download = document.getElementById('md-download') as HTMLButtonElement | null;
+
+	if (input && preview && empty && toolbar && copy && download) {
+		let queued = false;
+
+		const render = () => {
+			queued = false;
+			const value = input.value;
+			const blank = value.trim() === '';
+			preview.innerHTML = blank ? '' : renderMarkdown(value);
+			preview.hidden = blank;
+			empty.hidden = !blank;
+			copy.disabled = blank;
+			download.disabled = blank;
+		};
+
+		const schedule = () => {
+			if (queued) return;
+			queued = true;
+			requestAnimationFrame(render);
+		};
+
+		input.addEventListener('input', schedule);
+
+		toolbar.addEventListener('click', (event) => {
+			const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-action]');
+			if (!button?.dataset.action) return;
+
+			const next = applyToolbar(
+				{ value: input.value, start: input.selectionStart, end: input.selectionEnd },
+				button.dataset.action as ToolbarAction,
+			);
+
+			input.value = next.value;
+			input.focus();
+			input.setSelectionRange(next.start, next.end);
+			render();
+		});
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(input.value);
+			toast(copied ? 'Markdown disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		download.addEventListener('click', () => {
+			downloadText(markdownFilename(input.value), input.value);
+			toast('File .md diunduh.');
+		});
+
+		render();
+	}
+</script>

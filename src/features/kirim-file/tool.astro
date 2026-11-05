@@ -1,0 +1,623 @@
+---
+import Dropzone from '../../components/ui/Dropzone.astro';
+---
+
+<div class="tool-shell share-shell">
+	<Dropzone
+		id="kirim-input"
+		label="Pilih satu atau beberapa berkas"
+		multiple
+		hint="Maks. 10 berkas, 100 MB per berkas. File ekstensi .exe, .bat, dan sejenisnya tidak diizinkan."
+	/>
+
+	<ul class="share-list" data-list aria-label="Daftar berkas"></ul>
+
+	<fieldset class="share-expiry">
+		<legend class="field-label">Masa berlaku link</legend>
+		<div class="segmented" role="radiogroup">
+			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-expiry="1h">1 jam</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-expiry="24h">24 jam</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-expiry="7d">7 hari</button>
+		</div>
+	</fieldset>
+
+	<fieldset class="share-options">
+		<legend class="field-label">Opsi tambahan</legend>
+		<label class="check-row">
+			<input type="checkbox" data-password-toggle />
+			<span>Kunci dengan kata sandi</span>
+		</label>
+		<div data-password-field hidden>
+			<label class="field-label" for="share-password">Kata sandi</label>
+			<input
+				class="field-input"
+				id="share-password"
+				type="password"
+				autocomplete="off"
+				maxlength="64"
+			/>
+			<p class="field-hint">Minimal 4 karakter. Penerima harus mengetiknya sebelum melihat daftar berkas.</p>
+		</div>
+		<label class="check-row">
+			<input type="checkbox" data-onetime-toggle />
+			<span>Sekali unduh (per berkas)</span>
+		</label>
+		<p class="field-hint check-hint">Tiap berkas hanya bisa diunduh sekali. Link hangus setelah semua berkas terunduh.</p>
+	</fieldset>
+
+	<div class="share-turnstile" data-turnstile-wrap hidden>
+		<span class="field-label">Verifikasi keamanan</span>
+		<div data-turnstile></div>
+		<p class="field-hint" data-turnstile-status role="status"></p>
+	</div>
+
+	<div class="pane-actions">
+		<button type="button" class="btn btn--primary" id="kirim-start" disabled>Unggah dan buat link</button>
+		<button type="button" class="btn btn--secondary" data-cancel hidden>Batalkan</button>
+		<button type="button" class="btn btn--secondary" data-retry hidden>Ulangi unggahan</button>
+	</div>
+
+	<p class="field-hint">
+		Kalau koneksi putus, unggahan berkas yang gagal diulang dari awal. Untuk berkas besar,
+		pakai koneksi stabil atau pecah jadi beberapa berkas.
+	</p>
+
+	<p class="field-hint" data-status aria-live="polite"></p>
+
+	<section class="share-result" data-result hidden aria-labelledby="result-title">
+		<h2 id="result-title" class="pane__title">Link siap dibagikan</h2>
+		<div class="share-link-row">
+			<input class="field-input" id="share-url" readonly />
+			<button type="button" class="btn btn--secondary" id="share-copy">Salin link</button>
+		</div>
+		<div class="share-meta">
+			<img id="share-qr" alt="QR code untuk link" width="180" height="180" />
+			<p class="field-hint" data-countdown></p>
+		</div>
+		<p class="field-hint" data-result-note hidden></p>
+	</section>
+</div>
+
+<script>
+	import { toast } from '../../lib/toast';
+	import { copyText } from '../../lib/clipboard';
+	import {
+		putWithProgress,
+		UploadError,
+		formatBytes,
+		formatRemaining,
+	} from './upload-client';
+	import { validateFile, validatePassword } from './share-rules';
+	import { qrDataUrl } from './qr';
+
+	type Expiry = '1h' | '24h' | '7d';
+	type FileState = 'idle' | 'uploading' | 'done' | 'failed';
+
+	interface UploadTarget {
+		name: string;
+		uploadUrl: string;
+	}
+
+	interface ShareSession {
+		id: string;
+		expiresAt: number;
+		uploads: UploadTarget[];
+		protected: boolean;
+		oneTime: boolean;
+	}
+
+	const PRESIGN_WINDOW_MS = 13 * 60 * 1000;
+
+	const input = document.getElementById('kirim-input') as HTMLInputElement | null;
+	const list = document.querySelector<HTMLUListElement>('[data-list]');
+	const startButton = document.getElementById('kirim-start') as HTMLButtonElement | null;
+	const status = document.querySelector<HTMLElement>('[data-status]');
+	const result = document.querySelector<HTMLElement>('[data-result]');
+	const urlField = document.getElementById('share-url') as HTMLInputElement | null;
+	const copyButton = document.getElementById('share-copy');
+	const qrImage = document.getElementById('share-qr') as HTMLImageElement | null;
+	const countdown = document.querySelector<HTMLElement>('[data-countdown]');
+	const expiryButtons = document.querySelectorAll<HTMLButtonElement>('[data-expiry]');
+	const passwordToggle = document.querySelector<HTMLInputElement>('[data-password-toggle]');
+	const passwordField = document.querySelector<HTMLElement>('[data-password-field]');
+	const passwordInput = document.getElementById('share-password') as HTMLInputElement | null;
+	const oneTimeToggle = document.querySelector<HTMLInputElement>('[data-onetime-toggle]');
+	const cancelButton = document.querySelector<HTMLButtonElement>('[data-cancel]');
+	const retryButton = document.querySelector<HTMLButtonElement>('[data-retry]');
+	const resultNote = document.querySelector<HTMLElement>('[data-result-note]');
+	const turnstileWrap = document.querySelector<HTMLElement>('[data-turnstile-wrap]');
+	const turnstileBox = document.querySelector<HTMLElement>('[data-turnstile]');
+	const turnstileStatus = document.querySelector<HTMLElement>('[data-turnstile-status]');
+	const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+
+	if (input && list && startButton && status && result && urlField && copyButton && qrImage && countdown) {
+		const makeQr = (text: string) => qrDataUrl(text);
+
+		let turnstileToken = '';
+		let turnstileWidget: string | null = null;
+
+		const resetTurnstile = () => {
+			turnstileToken = '';
+			if (window.turnstile && turnstileWidget) {
+				window.turnstile.reset(turnstileWidget);
+				if (turnstileStatus) {
+					turnstileStatus.textContent = 'Selesaikan verifikasi sebelum mengunggah.';
+				}
+			}
+		};
+
+		const setupTurnstile = () => {
+			const wrap = turnstileWrap;
+			const box = turnstileBox;
+			const note = turnstileStatus;
+			if (TURNSTILE_SITE_KEY === '' || !wrap || !box || !note) return;
+
+			wrap.hidden = false;
+			note.textContent = 'Memuat verifikasi keamanan…';
+
+			const script = document.createElement('script');
+			script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+			script.async = true;
+			script.addEventListener('load', () => {
+				if (!window.turnstile) {
+					note.textContent = 'Verifikasi tidak bisa dimuat. Muat ulang halaman.';
+					return;
+				}
+				try {
+					turnstileWidget = window.turnstile.render(box, {
+						sitekey: TURNSTILE_SITE_KEY,
+						theme: 'auto',
+						callback: (token: string) => {
+							turnstileToken = token;
+							note.textContent = 'Verifikasi selesai.';
+						},
+						'expired-callback': () => {
+							turnstileToken = '';
+							note.textContent = 'Verifikasi kedaluwarsa. Selesaikan lagi.';
+						},
+						'error-callback': () => {
+							turnstileToken = '';
+							note.textContent = 'Verifikasi gagal. Muat ulang halaman.';
+						},
+					});
+					note.textContent = 'Selesaikan verifikasi sebelum mengunggah.';
+				} catch {
+					note.textContent = 'Verifikasi tidak bisa dimulai. Muat ulang halaman.';
+				}
+			});
+			script.addEventListener('error', () => {
+				note.textContent = 'Verifikasi tidak bisa dimuat. Muat ulang halaman.';
+			});
+			document.head.append(script);
+		};
+
+		let files: File[] = [];
+		let expiry: Expiry = '24h';
+		let timer: number | undefined;
+		let session: ShareSession | null = null;
+		let createdAt = 0;
+		let states: FileState[] = [];
+		let progress: number[] = [];
+		let attempts: number[] = [];
+		let current: { abort: () => void } | null = null;
+		let running = false;
+		let cancelled = false;
+		let retryable = false;
+
+		const resetSession = () => {
+			session = null;
+			createdAt = 0;
+			attempts = files.map(() => 0);
+			retryable = false;
+		};
+
+		const setBusy = (busy: boolean) => {
+			running = busy;
+			startButton.disabled = busy || files.length === 0;
+			if (cancelButton) cancelButton.hidden = !busy;
+			if (retryButton) retryButton.hidden = busy || !retryable;
+			input.disabled = busy;
+			if (passwordToggle) passwordToggle.disabled = busy;
+			if (passwordInput) passwordInput.disabled = busy;
+			if (oneTimeToggle) oneTimeToggle.disabled = busy;
+		};
+
+		const stateLabel = (index: number) => {
+			if (states[index] === 'done') return 'Selesai';
+			if (states[index] === 'failed') return 'Gagal';
+			if (states[index] === 'uploading') return `${progress[index] ?? 0}%`;
+			return 'Menunggu';
+		};
+
+		const renderList = () => {
+			list.innerHTML = '';
+			files.forEach((file, index) => {
+				const item = document.createElement('li');
+				item.className = 'share-item';
+
+				const name = document.createElement('span');
+				name.className = 'share-item__name';
+				name.textContent = `${file.name} · ${formatBytes(file.size)}`;
+
+				const state = document.createElement('span');
+				state.className = 'share-item__state';
+				state.textContent = stateLabel(index);
+
+				item.append(name, state);
+
+				if (states[index] === 'uploading' || states[index] === 'done') {
+					const bar = document.createElement('progress');
+					bar.max = 100;
+					bar.value = states[index] === 'done' ? 100 : (progress[index] ?? 0);
+					bar.setAttribute('aria-label', `Kemajuan ${file.name}`);
+					item.append(bar);
+				}
+
+				list.append(item);
+			});
+			startButton.disabled = running || files.length === 0;
+		};
+
+		const resetFiles = () => {
+			states = files.map(() => 'idle');
+			progress = files.map(() => 0);
+			renderList();
+		};
+
+		input.addEventListener('change', () => {
+			if (running) return;
+			const picked = Array.from(input.files ?? []);
+			const problems = picked.map(validateFile).filter((item): item is string => item !== null);
+			files = picked.filter((file) => validateFile(file) === null);
+			status.textContent = problems[0] ?? '';
+			result.hidden = true;
+			resetSession();
+			resetFiles();
+		});
+
+		expiryButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				if (running) return;
+				expiry = button.dataset.expiry as Expiry;
+				expiryButtons.forEach((other) => {
+					other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+				});
+			});
+		});
+
+		passwordToggle?.addEventListener('change', () => {
+			if (!passwordField) return;
+			passwordField.hidden = !passwordToggle.checked;
+			if (passwordToggle.checked) passwordInput?.focus();
+		});
+
+		const showResult = async (active: ShareSession) => {
+			const url = `${location.origin}/s/${active.id}`;
+			urlField.value = url;
+			qrImage.src = await makeQr(url);
+			result.hidden = false;
+
+			const notes: string[] = [];
+			if (active.protected) notes.push('Penerima perlu kata sandi untuk membuka link ini.');
+			if (active.oneTime) {
+				notes.push(
+					'Tiap berkas hanya bisa diunduh sekali. Link hangus setelah semua berkas terunduh.',
+				);
+			}
+			if (resultNote) {
+				resultNote.textContent = notes.join(' ');
+				resultNote.hidden = notes.length === 0;
+			}
+
+			const tick = () => {
+				countdown.textContent = `Berlaku ${formatRemaining(active.expiresAt - Date.now())}.`;
+			};
+			tick();
+			window.clearInterval(timer);
+			timer = window.setInterval(tick, 30_000);
+		};
+
+		const createSession = async (): Promise<ShareSession> => {
+			const wantsPassword = Boolean(passwordToggle?.checked);
+			const password = passwordInput?.value ?? '';
+			if (wantsPassword) {
+				const problem = validatePassword(password);
+				if (problem) throw new UploadError(problem);
+			}
+
+			const response = await fetch('/api/shares', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					expiry,
+					password: wantsPassword ? password : undefined,
+					oneTime: Boolean(oneTimeToggle?.checked),
+					turnstileToken: TURNSTILE_SITE_KEY !== '' ? turnstileToken : undefined,
+					files: files.map((file) => ({ name: file.name, size: file.size, type: file.type })),
+				}),
+			}).finally(() => {
+				if (TURNSTILE_SITE_KEY !== '') resetTurnstile();
+			});
+			const data = (await response.json()) as {
+				id?: string;
+				expiresAt?: number;
+				uploads?: UploadTarget[];
+				protected?: boolean;
+				oneTime?: boolean;
+				error?: string;
+			};
+			if (!response.ok || !data.id || !data.uploads || data.expiresAt === undefined) {
+				throw new UploadError(data.error ?? 'Gagal membuat link.');
+			}
+
+			return {
+				id: data.id,
+				expiresAt: data.expiresAt,
+				uploads: data.uploads,
+				protected: Boolean(data.protected),
+				oneTime: Boolean(data.oneTime),
+			};
+		};
+
+		const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+		const uploadOne = async (index: number) => {
+			const active = session;
+			const file = files[index];
+			const target = active?.uploads[index];
+			if (!active || !file || !target) throw new UploadError('Respons server tidak lengkap.');
+
+			states[index] = 'uploading';
+			renderList();
+			status.textContent = `Mengunggah ${file.name}…`;
+
+			const handle = putWithProgress(
+				target.uploadUrl,
+				file,
+				file.type || 'application/octet-stream',
+				(loaded, total) => {
+					progress[index] = Math.round((loaded / total) * 100);
+					renderList();
+				},
+			);
+			current = handle;
+
+			try {
+				await handle.promise;
+				states[index] = 'done';
+				progress[index] = 100;
+				renderList();
+			} finally {
+				current = null;
+			}
+		};
+
+		const uploadAll = async () => {
+			for (let index = 0; index < files.length; index += 1) {
+				if (states[index] === 'done') continue;
+				if (cancelled) throw new UploadError('Unggahan dibatalkan.');
+
+				for (;;) {
+					try {
+						await uploadOne(index);
+						break;
+					} catch (error) {
+						if (cancelled) throw error;
+						const httpStatus = error instanceof UploadError ? error.status : undefined;
+						if (httpStatus === undefined && (attempts[index] ?? 0) < 1) {
+							attempts[index] = (attempts[index] ?? 0) + 1;
+							status.textContent = `Koneksi terputus. Mengulang ${files[index]?.name ?? 'berkas'} dari awal…`;
+							await delay(1200);
+							continue;
+						}
+						states[index] = 'failed';
+						renderList();
+						throw error;
+					}
+				}
+			}
+		};
+
+		const run = async () => {
+			if (running || files.length === 0) return;
+
+			const stale = session !== null && Date.now() - createdAt > PRESIGN_WINDOW_MS;
+			const needsNewSession = !session || stale;
+			if (needsNewSession && TURNSTILE_SITE_KEY !== '' && turnstileToken === '') {
+				status.textContent = 'Selesaikan verifikasi keamanan dulu.';
+				return;
+			}
+
+			cancelled = false;
+			setBusy(true);
+
+			try {
+				if (needsNewSession) {
+					if (stale) {
+						status.textContent = 'Sesi unggah sebelumnya sudah terlalu lama. Membuat link baru…';
+					} else {
+						status.textContent = 'Menyiapkan unggahan…';
+					}
+					resetSession();
+					states = files.map(() => 'idle');
+					progress = files.map(() => 0);
+					attempts = files.map(() => 0);
+					renderList();
+
+					session = await createSession();
+					createdAt = Date.now();
+					retryable = true;
+					setBusy(true);
+				}
+
+				await uploadAll();
+				const active = session;
+				if (!active) throw new UploadError('Sesi unggah tidak siap.');
+				const completed = await fetch(`/api/shares/${active.id}/complete`, { method: 'POST' });
+				if (!completed.ok) {
+					throw new UploadError(
+						'Berkas sudah terkirim, tapi link belum selesai dibuat. Tekan Ulangi unggahan.',
+					);
+				}
+				status.textContent = '';
+				retryable = false;
+				await showResult(active);
+				toast('Link siap dibagikan.');
+			} catch (error) {
+				retryable = session !== null;
+				states = states.map((state) => (state === 'uploading' ? 'idle' : state));
+				renderList();
+				status.textContent = cancelled
+					? 'Unggahan dibatalkan. Berkas yang sudah selesai tidak diunggah ulang.'
+					: error instanceof Error
+						? error.message
+						: 'Terjadi kesalahan.';
+			} finally {
+				current = null;
+				setBusy(false);
+			}
+		};
+
+		startButton.addEventListener('click', () => {
+			void run();
+		});
+
+		retryButton?.addEventListener('click', () => {
+			void run();
+		});
+
+		cancelButton?.addEventListener('click', () => {
+			if (!running) return;
+			cancelled = true;
+			status.textContent = 'Membatalkan unggahan…';
+			current?.abort();
+		});
+
+		copyButton.addEventListener('click', async () => {
+			const copied = await copyText(urlField.value);
+			toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.');
+		});
+
+		setupTurnstile();
+	}
+</script>
+
+<style>
+	.share-shell {
+		gap: var(--space-4);
+	}
+
+	.share-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.share-list:empty {
+		display: none;
+	}
+
+	.share-item {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+		font-size: 0.875rem;
+	}
+
+	.share-item__name {
+		min-width: 0;
+		flex: 1 1 12rem;
+		overflow-wrap: anywhere;
+	}
+
+	.share-item__state {
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.share-item progress {
+		width: 100%;
+		height: 8px;
+	}
+
+	.share-expiry,
+	.share-options {
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.share-expiry legend,
+	.share-options legend {
+		padding: 0;
+		margin-bottom: var(--space-2);
+	}
+
+	.share-options {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+
+	.share-turnstile {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+
+	.share-turnstile[hidden] {
+		display: none;
+	}
+
+	.share-turnstile [data-turnstile] {
+		min-height: 65px;
+	}
+
+	.share-result {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		padding: var(--space-4);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.share-result[hidden] {
+		display: none;
+	}
+
+	.share-link-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	.share-link-row .field-input {
+		flex: 1 1 240px;
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+	}
+
+	.share-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-4);
+	}
+
+	.share-meta img {
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: #fff;
+	}
+</style>

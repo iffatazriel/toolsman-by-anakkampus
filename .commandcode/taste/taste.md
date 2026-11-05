@@ -1,0 +1,4 @@
+- Never perform major/breaking dependency upgrades without asking first; propose them and wait for approval. Confidence: 0.9
+- Prefers concise end-of-task reports that separate what was fixed automatically from items that need the user's decision. Confidence: 0.75
+- Do not deploy to production on your own; hand the deploy/secret/dashboard commands to the user to run. Confidence: 0.85
+- Never label work "done" without test evidence (HTTP checks, headless browser runs, or unit tests). Confidence: 0.85

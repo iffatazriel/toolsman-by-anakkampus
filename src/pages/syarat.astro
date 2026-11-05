@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { absoluteUrl } from '../lib/site';
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'WebPage',
+	name: 'Syarat Penggunaan Toolsman',
+	url: absoluteUrl('/syarat/'),
+	description: 'Aturan pakai Toolsman, termasuk Kirim File.',
+	inLanguage: 'id-ID',
+};
+---
+
+<Layout
+	title="Syarat Penggunaan, Toolsman"
+	description="Aturan pakai Toolsman, termasuk batas Kirim File dan pelaporan link."
+	jsonLd={jsonLd}
+>
+	<article class="container prose-page">
+		<h1>Syarat Penggunaan</h1>
+		<p>
+			Dengan memakai Toolsman, kamu setuju dengan aturan di halaman ini. Aturan ini
+			berlaku untuk semua alat, termasuk Kirim File.
+		</p>
+
+		<h2>Yang boleh dipakai</h2>
+		<p>
+			Toolsman gratis untuk membuat gambar, menyusun diagram, mengolah PDF,
+			menyiapkan pas foto, mengirim berkas, dan membuat teks. Tidak perlu akun.
+		</p>
+
+		<h2>Yang tidak boleh</h2>
+		<ul>
+			<li>Mengunggah berkas ilegal, malware, atau materi yang melanggar hak cipta.</li>
+			<li>Mengirim spam atau tautan yang menyesatkan.</li>
+			<li>
+				Mencoba membebani layanan, melewati batas, atau menyalahgunakan celah
+				keamanan.
+			</li>
+		</ul>
+
+		<h2>Batas layanan</h2>
+		<ul>
+			<li>Kirim File menerima maksimal 10 berkas dan 100 MB per berkas.</li>
+			<li>Masa berlaku link 1 jam, 24 jam, atau 7 hari.</li>
+			<li>
+				Tidak ada jaminan ketersediaan. Jangan simpan satu-satunya salinan berkas
+				penting di Kirim File.
+			</li>
+		</ul>
+
+		<h2>Laporan dan penghapusan</h2>
+		<p>
+			Link bisa dilaporkan lewat tombol "Laporkan link ini" di halaman unduh.
+			Laporan ditinjau, dan link yang melanggar bisa dihapus tanpa pemberitahuan.
+		</p>
+
+		<h2>Tanggung jawab</h2>
+		<p>
+			Pengirim bertanggung jawab atas isi berkasnya. Toolsman tidak memindai isi
+			berkas secara otomatis. Gunakan layanan ini dengan risiko sendiri.
+		</p>
+
+		<h2>Perubahan</h2>
+		<p>Aturan ini bisa berubah. Versi terbaru selalu ada di halaman ini.</p>
+
+		<p><a href="/privasi/">Baca kebijakan privasi</a></p>
+	</article>
+</Layout>

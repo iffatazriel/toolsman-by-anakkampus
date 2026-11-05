@@ -1,0 +1,18 @@
+---
+interface Props {
+	label: string;
+	value: string;
+	pressed?: boolean;
+}
+
+const { label, value, pressed = false } = Astro.props;
+---
+
+<button
+	type="button"
+	class="chip"
+	data-filter={value}
+	aria-pressed={pressed ? 'true' : 'false'}
+>
+	{label}
+</button>

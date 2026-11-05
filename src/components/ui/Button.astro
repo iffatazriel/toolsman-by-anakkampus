@@ -1,0 +1,41 @@
+---
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+
+interface Props {
+	variant?: Variant;
+	href?: string;
+	type?: 'button' | 'submit' | 'reset';
+	disabled?: boolean;
+	loading?: boolean;
+	class?: string;
+}
+
+const {
+	variant = 'secondary',
+	href,
+	type = 'button',
+	disabled = false,
+	loading = false,
+	class: className,
+} = Astro.props;
+
+const classes = ['btn', `btn--${variant}`, className].filter(Boolean).join(' ');
+const busy = loading;
+---
+
+{
+	href ? (
+		<a href={href} class={classes}>
+			<slot />
+		</a>
+	) : (
+		<button
+			type={type}
+			class={classes}
+			disabled={disabled || busy}
+			aria-busy={busy ? 'true' : undefined}
+		>
+			<slot />
+		</button>
+	)
+}

@@ -1,0 +1,48 @@
+---
+import CommandPalette from './CommandPalette.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import Icon from './ui/Icon.astro';
+import { tools } from '../lib/tools';
+---
+
+<header class="site-header">
+	<div class="container header-inner">
+		<a class="brand" href="/">Toolsman</a>
+
+		<button
+			type="button"
+			class="search-trigger"
+			data-open-palette
+			aria-haspopup="dialog"
+			aria-label="Cari alat"
+		>
+			<Icon name="search" size={16} />
+			<span class="search-trigger__text">Cari alat</span>
+			<kbd class="kbd search-trigger__hint">Ctrl K</kbd>
+		</button>
+
+		<div class="header-actions">
+			<a class="header-link" href="/tentang/">Tentang</a>
+			<ThemeToggle />
+		</div>
+	</div>
+</header>
+
+<CommandPalette tools={tools} />
+
+<style>
+	.header-link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		padding-inline: var(--space-2);
+		font-size: 0.875rem;
+		color: var(--text-muted);
+		text-decoration: none;
+	}
+
+	.header-link:hover {
+		color: var(--text);
+		text-decoration: underline;
+	}
+</style>

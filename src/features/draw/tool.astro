@@ -1,0 +1,105 @@
+<script is:inline src="/excalidraw-fonts.js"></script>
+
+<div class="draw-shell">
+	<div class="draw-root-host" data-draw-root></div>
+	<div class="draw-export" role="group" aria-label="Ekspor gambar">
+		<button type="button" class="btn btn--secondary" data-export="png">Unduh PNG</button>
+		<button type="button" class="btn btn--secondary" data-export="svg">Unduh SVG</button>
+		<button type="button" class="btn btn--secondary" data-export="excalidraw">Unduh .excalidraw</button>
+	</div>
+</div>
+
+<script>
+	import { toast } from '../../lib/toast';
+	import { mountDraw } from './mount-draw';
+
+	mountDraw(document.querySelector('[data-draw-root]'));
+
+	const download = (name: string, blob: Blob) => {
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = name;
+		document.body.append(link);
+		link.click();
+		link.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 1000);
+	};
+
+	const safeName = (value: string) => {
+		const cleaned = value.trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').toLowerCase();
+		return cleaned === '' ? 'gambar' : cleaned;
+	};
+
+	document.querySelectorAll<HTMLButtonElement>('[data-export]').forEach((button) => {
+		button.addEventListener('click', async () => {
+			const format = button.dataset.export as 'png' | 'svg' | 'excalidraw';
+			const api = window.toolsmanDraw;
+			if (!api) {
+				toast('Kanvas belum siap. Tunggu sebentar.');
+				return;
+			}
+			const extension = format === 'excalidraw' ? 'excalidraw' : format;
+			const blob = await api.getBlob(format === 'excalidraw' ? 'json' : format);
+			if (!blob) {
+				toast('Gagal membuat berkas ekspor.');
+				return;
+			}
+			download(`${safeName(api.name())}.${extension}`, blob);
+			toast('Berkas diunduh.');
+		});
+	});
+</script>
+
+<style>
+	.draw-shell {
+		display: flex;
+		flex-direction: column;
+		min-height: calc(100dvh - var(--header-h) - var(--space-4));
+		gap: var(--space-3);
+	}
+
+	.draw-root-host {
+		display: contents;
+	}
+
+	.draw-root {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-height: 0;
+	}
+
+	.draw-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-3);
+		padding: var(--space-2) 0;
+	}
+
+	.draw-name {
+		width: auto;
+		min-width: 200px;
+	}
+
+	.draw-canvas {
+		position: relative;
+		flex: 1;
+		min-height: 560px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		background: var(--surface);
+	}
+
+	.draw-loading {
+		padding: var(--space-5);
+	}
+
+	.draw-export {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+</style>

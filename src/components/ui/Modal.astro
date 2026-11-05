@@ -1,0 +1,21 @@
+---
+interface Props {
+	id: string;
+	labelledby: string;
+	class?: string;
+}
+
+const { id, labelledby, class: className } = Astro.props;
+---
+
+<dialog id={id} class={['modal', className].filter(Boolean).join(' ')} aria-labelledby={labelledby}>
+	<slot />
+</dialog>
+
+<script>
+	document.querySelectorAll<HTMLDialogElement>('dialog.modal').forEach((dialog) => {
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+	});
+</script>

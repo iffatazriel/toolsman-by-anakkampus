@@ -1,0 +1,88 @@
+---
+interface Props {
+	label: string;
+	items: { id: string; label: string }[];
+}
+
+const { label, items } = Astro.props;
+const first = items[0]?.id;
+---
+
+<div class="tabs" role="tablist" aria-label={label}>
+	{
+		items.map((item) => (
+			<button
+				type="button"
+				class="tab"
+				role="tab"
+				id={`tab-${item.id}`}
+				aria-controls={`panel-${item.id}`}
+				aria-selected={item.id === first ? 'true' : 'false'}
+				tabindex={item.id === first ? 0 : -1}
+				data-tab={item.id}
+			>
+				{item.label}
+			</button>
+		))
+	}
+</div>
+<div data-tab-panels>
+	<slot />
+</div>
+
+<script>
+	const groups = document.querySelectorAll<HTMLElement>('[role="tablist"]');
+
+	groups.forEach((list) => {
+		const tabs = Array.from(list.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+		const wrapper = list.nextElementSibling as HTMLElement | null;
+		if (!wrapper || tabs.length === 0) return;
+
+		const panels = Array.from(wrapper.querySelectorAll<HTMLElement>('[data-panel]'));
+
+		panels.forEach((panel) => {
+			const id = panel.dataset.panel ?? '';
+			panel.id = `panel-${id}`;
+			panel.setAttribute('role', 'tabpanel');
+			panel.setAttribute('aria-labelledby', `tab-${id}`);
+		});
+
+		const select = (id: string, focus = false) => {
+			tabs.forEach((tab) => {
+				const active = tab.dataset.tab === id;
+				tab.setAttribute('aria-selected', active ? 'true' : 'false');
+				tab.tabIndex = active ? 0 : -1;
+				if (active && focus) tab.focus();
+			});
+			panels.forEach((panel) => {
+				panel.hidden = panel.dataset.panel !== id;
+			});
+		};
+
+		const firstId = tabs[0]?.dataset.tab;
+		if (firstId) select(firstId);
+
+		list.addEventListener('click', (event) => {
+			const tab = (event.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
+			if (tab?.dataset.tab) select(tab.dataset.tab);
+		});
+
+		list.addEventListener('keydown', (event) => {
+			const current = tabs.findIndex((tab) => tab === document.activeElement);
+			if (current === -1) return;
+
+			const keys = ['ArrowRight', 'ArrowLeft', 'Home', 'End'];
+			if (!keys.includes(event.key)) return;
+			event.preventDefault();
+
+			let next = current;
+			if (event.key === 'ArrowRight') next = (current + 1) % tabs.length;
+			if (event.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+			if (event.key === 'Home') next = 0;
+			if (event.key === 'End') next = tabs.length - 1;
+
+			const target = tabs[next];
+			if (target?.dataset.tab) select(target.dataset.tab, true);
+		});
+	});
+</script>

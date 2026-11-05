@@ -1,0 +1,1 @@
+ALTER TABLE share_files ADD COLUMN downloads INTEGER NOT NULL DEFAULT 0;

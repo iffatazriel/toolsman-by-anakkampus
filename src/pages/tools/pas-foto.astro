@@ -1,0 +1,19 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ToolPage from '../../components/ToolPage.astro';
+import { getTool } from '../../lib/tools';
+import { toolJsonLd } from '../../lib/tool-seo';
+
+// Halaman ini sengaja on-demand: Permissions-Policy dari middleware memberi
+// camera=(self) hanya untuk rute ini. Alat lain tetap statis dengan camera=().
+export const prerender = false;
+
+const tool = getTool('pas-foto');
+if (!tool) throw new Error('Meta alat pas-foto tidak ditemukan.');
+
+const jsonLd = toolJsonLd(tool);
+---
+
+<Layout title={`${tool.name}, Toolsman`} description={tool.tagline} jsonLd={jsonLd}>
+	<ToolPage tool={tool} />
+</Layout>

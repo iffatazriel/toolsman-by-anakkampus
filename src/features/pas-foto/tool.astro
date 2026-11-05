@@ -1,0 +1,529 @@
+---
+import Dropzone from '../../components/ui/Dropzone.astro';
+import Progress from '../../components/ui/Progress.astro';
+---
+
+<div class="tool-shell photo-shell">
+	<ol class="steps" aria-label="Langkah pas foto">
+		<li class="steps__item" data-step-item="1">1 Unggah</li>
+		<li class="steps__item" data-step-item="2">2 Latar</li>
+		<li class="steps__item" data-step-item="3">3 Ukuran &amp; posisi</li>
+		<li class="steps__item" data-step-item="4">4 Unduh</li>
+	</ol>
+
+	<div class="photo-step" data-step="1">
+		<Dropzone id="foto-input" label="Pilih foto wajah" accept="image/jpeg,image/png,image/webp" hint="JPG, PNG, atau WEBP, maks. 10 MB. Foto tidak dikirim ke server." />
+		<div class="camera-actions">
+			<button type="button" class="btn btn--secondary" data-camera-open>Ambil dari kamera</button>
+			<p class="field-hint" data-camera-status role="status" aria-live="polite">
+				Kamera hanya dipakai di perangkat ini.
+			</p>
+		</div>
+		<div class="camera-panel" data-camera-panel hidden>
+			<video
+				class="camera-video"
+				data-camera-video
+				width="360"
+				height="480"
+				autoplay
+				playsinline
+				muted
+				aria-label="Pratinjau kamera"
+			></video>
+			<div class="pane-actions">
+				<button type="button" class="btn btn--primary" data-camera-capture>Ambil foto</button>
+				<button type="button" class="btn btn--secondary" data-camera-close>Batal</button>
+			</div>
+		</div>
+		<p class="field-hint" data-photo-error hidden role="alert"></p>
+	</div>
+
+	<div class="photo-step" data-step="2" hidden>
+		<div class="progress-box" data-model-box hidden>
+			<Progress label="Menyiapkan penghapus latar (sekali saja)…" value={0} />
+			<p class="field-hint">Model disimpan di browser setelah selesai, jadi kunjungan berikutnya lebih cepat.</p>
+		</div>
+		<div class="swatch-row" role="radiogroup" aria-label="Warna latar">
+			<button type="button" class="swatch" role="radio" aria-checked="true" data-color="#DB1F26" style="--swatch:#DB1F26" aria-label="Merah"></button>
+			<button type="button" class="swatch" role="radio" aria-checked="false" data-color="#0F5BD8" style="--swatch:#0F5BD8" aria-label="Biru"></button>
+			<button type="button" class="swatch" role="radio" aria-checked="false" data-color="#FFFFFF" style="--swatch:#FFFFFF" aria-label="Putih"></button>
+			<label class="swatch swatch--custom" aria-label="Warna kustom">
+				<input type="color" id="foto-custom" value="#3B82F6" />
+			</label>
+		</div>
+		<p class="field-hint">Nilai bawaan bisa berbeda dengan standar instansi. Cek persyaratanmu.</p>
+	</div>
+
+	<div class="photo-step photo-step--crop" data-step="3" hidden>
+		<div class="segmented" role="radiogroup" aria-label="Ukuran cetak">
+			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-size="2x3">2×3</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-size="3x4">3×4</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-size="4x6">4×6</button>
+		</div>
+		<div class="crop-stage" data-stage>
+			<canvas id="foto-canvas" aria-label="Pratinjau pas foto"></canvas>
+			<label class="check-row">
+				<input type="checkbox" id="foto-guide" checked />
+				Tampilkan guide wajah
+			</label>
+		</div>
+		<div class="zoom-row">
+			<label class="field-label" for="foto-zoom">Zoom</label>
+			<input id="foto-zoom" type="range" min="1" max="2" step="0.05" value="1" />
+		</div>
+		<p class="field-hint">Aturan pas foto tiap instansi bisa berbeda. Cek persyaratanmu.</p>
+	</div>
+
+	<div class="photo-step" data-step="4" hidden>
+		<div class="pane-actions">
+			<button type="button" class="btn btn--primary" id="foto-png">Unduh PNG 300 DPI</button>
+			<button type="button" class="btn btn--secondary" id="foto-jpg">Unduh JPG</button>
+		</div>
+		<p class="field-hint" id="foto-dims"></p>
+	</div>
+
+	<div class="step-nav">
+		<button type="button" class="btn btn--secondary" id="foto-back" disabled>Kembali</button>
+		<button type="button" class="btn btn--primary" id="foto-next" disabled>Lanjut</button>
+	</div>
+</div>
+
+<script>
+	import { toast } from '../../lib/toast';
+	import { cropForFace, outputPixels, photoSizes, type PhotoSize } from './sizes';
+	import { loadPhotoModule } from './segment-client';
+
+	const step = { current: 1 };
+	let source: HTMLImageElement | null = null;
+	let cutout: HTMLCanvasElement | null = null;
+	let bgColor = '#DB1F26';
+	let sizeId: PhotoSize['id'] = '3x4';
+	let zoom = 1;
+	let face = { x: 0, y: 0, width: 0, height: 0 };
+
+	const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
+	const stepEls = document.querySelectorAll<HTMLElement>('[data-step]');
+	const back = $<HTMLButtonElement>('#foto-back')!;
+	const next = $<HTMLButtonElement>('#foto-next')!;
+	const canvas = $<HTMLCanvasElement>('#foto-canvas')!;
+	const ctx = canvas.getContext('2d')!;
+
+	const setStep = (value: number) => {
+		step.current = value;
+		stepEls.forEach((el) => {
+			el.hidden = Number(el.dataset.step) !== value;
+		});
+		document.querySelectorAll<HTMLElement>('[data-step-item]').forEach((el) => {
+			el.setAttribute('aria-current', Number(el.dataset.stepItem) === value ? 'step' : 'false');
+		});
+		back.disabled = value === 1;
+		next.disabled = value === 1 || value === 4;
+		next.textContent = value === 3 ? 'Lanjut ke unduh' : 'Lanjut';
+		if (value === 3) draw();
+	};
+
+	const defaultFace = (image: HTMLImageElement) => ({
+		x: image.naturalWidth * 0.3,
+		y: image.naturalHeight * 0.15,
+		width: image.naturalWidth * 0.4,
+		height: image.naturalHeight * 0.4,
+	});
+
+	const draw = () => {
+		if (!source || !cutout) return;
+		const size = photoSizes.find((item) => item.id === sizeId)!;
+		const out = outputPixels(size, 300);
+		const scale = Math.min(360 / out.width, 480 / out.height);
+		canvas.width = Math.round(out.width * scale);
+		canvas.height = Math.round(out.height * scale);
+
+		const crop = cropForFace(face, size, cutout.width, cutout.height, zoom);
+		ctx.fillStyle = bgColor;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(
+			cutout,
+			crop.x,
+			crop.y,
+			crop.width,
+			crop.height,
+			0,
+			0,
+			canvas.width,
+			canvas.height,
+		);
+
+		const guide = $<HTMLInputElement>('#foto-guide');
+		if (guide?.checked) {
+			ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+			ctx.setLineDash([6, 4]);
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.ellipse(canvas.width / 2, canvas.height * 0.4, canvas.width * 0.28, canvas.height * 0.22, 0, 0, Math.PI * 2);
+			ctx.stroke();
+			ctx.beginPath();
+			ctx.moveTo(canvas.width * 0.1, canvas.height * 0.78);
+			ctx.lineTo(canvas.width * 0.9, canvas.height * 0.78);
+			ctx.stroke();
+		}
+	};
+
+	const processPhoto = async (file: File) => {
+		const url = URL.createObjectURL(file);
+		const image = new Image();
+		image.src = url;
+		await image.decode();
+		source = image;
+
+		const modelBox = $<HTMLElement>('[data-model-box]')!;
+		modelBox.hidden = false;
+		const bar = modelBox.querySelector<HTMLElement>('.progress__bar')!;
+		const label = modelBox.querySelector<HTMLElement>('.text-ink-muted');
+
+		try {
+			const removeBackground = await loadPhotoModule((_key, current, total) => {
+				const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+				bar.style.width = `${percent}%`;
+				if (label) label.textContent = `${percent}%`;
+			});
+			const blob = await removeBackground(file);
+			const bitmap = await createImageBitmap(blob);
+			cutout = document.createElement('canvas');
+			cutout.width = bitmap.width;
+			cutout.height = bitmap.height;
+			cutout.getContext('2d')!.drawImage(bitmap, 0, 0);
+			face = defaultFace(image);
+			modelBox.hidden = true;
+			next.disabled = false;
+			setStep(2);
+		} catch (error) {
+			modelBox.hidden = true;
+			const message = error instanceof Error ? error.message : 'Gagal memproses foto.';
+			const errorBox = $<HTMLElement>('[data-photo-error]')!;
+			errorBox.textContent = message;
+			errorBox.hidden = false;
+		} finally {
+			URL.revokeObjectURL(url);
+		}
+	};
+
+	const input = $<HTMLInputElement>('#foto-input');
+	input?.addEventListener('change', (event) => {
+		const file = (event.target as HTMLInputElement).files?.[0];
+		if (!file) return;
+		if (file.size > 10 * 1024 * 1024) {
+			const errorBox = $<HTMLElement>('[data-photo-error]')!;
+			errorBox.textContent = 'Foto lebih dari 10 MB. Kecilkan dulu, lalu coba lagi.';
+			errorBox.hidden = false;
+			return;
+		}
+		void processPhoto(file);
+	});
+
+	const cameraButton = $<HTMLButtonElement>('[data-camera-open]');
+	const cameraPanel = $<HTMLElement>('[data-camera-panel]');
+	const cameraVideo = $<HTMLVideoElement>('[data-camera-video]');
+	const cameraCapture = $<HTMLButtonElement>('[data-camera-capture]');
+	const cameraClose = $<HTMLButtonElement>('[data-camera-close]');
+	const cameraStatus = $<HTMLElement>('[data-camera-status]');
+	let cameraStream: MediaStream | null = null;
+
+	const stopCamera = () => {
+		cameraStream?.getTracks().forEach((track) => track.stop());
+		cameraStream = null;
+		if (cameraVideo) cameraVideo.srcObject = null;
+		if (cameraPanel) cameraPanel.hidden = true;
+		if (cameraButton) cameraButton.disabled = false;
+	};
+
+	if (cameraButton && !navigator.mediaDevices?.getUserMedia) {
+		cameraButton.hidden = true;
+		if (cameraStatus) {
+			cameraStatus.textContent = 'Kamera tidak didukung di peramban ini. Pakai unggah foto.';
+		}
+	}
+
+	cameraButton?.addEventListener('click', async () => {
+		if (!cameraPanel || !cameraVideo || !cameraStatus) return;
+		const media = navigator.mediaDevices;
+		if (!media?.getUserMedia) return;
+
+		cameraButton.disabled = true;
+		cameraStatus.textContent = 'Meminta izin kamera…';
+
+		try {
+			cameraStream = await media.getUserMedia({
+				video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 1600 } },
+				audio: false,
+			});
+			cameraVideo.srcObject = cameraStream;
+			await cameraVideo.play();
+			cameraPanel.hidden = false;
+			cameraStatus.textContent = 'Posisikan wajah di dalam bingkai, lalu tekan Ambil foto.';
+		} catch {
+			cameraButton.disabled = false;
+			cameraStatus.textContent =
+				'Izin kamera ditolak atau kamera tidak tersedia. Pakai unggah foto di atas.';
+		}
+	});
+
+	cameraCapture?.addEventListener('click', async () => {
+		if (!cameraVideo || !cameraStream || !cameraStatus) return;
+		if (cameraVideo.videoWidth === 0) {
+			cameraStatus.textContent = 'Kamera belum siap. Tunggu sebentar, lalu coba lagi.';
+			return;
+		}
+
+		const frame = document.createElement('canvas');
+		frame.width = cameraVideo.videoWidth;
+		frame.height = cameraVideo.videoHeight;
+		const frameCtx = frame.getContext('2d');
+		if (!frameCtx) return;
+		frameCtx.drawImage(cameraVideo, 0, 0, frame.width, frame.height);
+
+		const blob = await new Promise<Blob | null>((resolve) => {
+			frame.toBlob(resolve, 'image/jpeg', 0.95);
+		});
+		if (!blob) {
+			cameraStatus.textContent = 'Gagal mengambil foto. Coba lagi.';
+			return;
+		}
+
+		const file = new File([blob], 'kamera.jpg', { type: 'image/jpeg' });
+		stopCamera();
+		cameraStatus.textContent = 'Foto diambil. Memproses…';
+		await processPhoto(file);
+	});
+
+	cameraClose?.addEventListener('click', () => {
+		stopCamera();
+		if (cameraStatus) cameraStatus.textContent = 'Kamera ditutup. Pakai unggah foto kalau perlu.';
+	});
+
+	window.addEventListener('pagehide', stopCamera);
+
+	document.querySelectorAll<HTMLButtonElement>('[data-color]').forEach((button) => {
+		button.addEventListener('click', () => {
+			bgColor = button.dataset.color ?? bgColor;
+			document.querySelectorAll<HTMLButtonElement>('[data-color]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+			draw();
+		});
+	});
+
+	$<HTMLInputElement>('#foto-custom')?.addEventListener('input', (event) => {
+		bgColor = (event.target as HTMLInputElement).value;
+		draw();
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((button) => {
+		button.addEventListener('click', () => {
+			sizeId = button.dataset.size as PhotoSize['id'];
+			document.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+			draw();
+		});
+	});
+
+	$<HTMLInputElement>('#foto-zoom')?.addEventListener('input', (event) => {
+		zoom = Number((event.target as HTMLInputElement).value);
+		draw();
+	});
+
+	$<HTMLInputElement>('#foto-guide')?.addEventListener('change', draw);
+
+	const download = (type: 'png' | 'jpg') => {
+		if (!cutout) return;
+		const size = photoSizes.find((item) => item.id === sizeId)!;
+		const out = outputPixels(size, 300);
+		const exportCanvas = document.createElement('canvas');
+		exportCanvas.width = out.width;
+		exportCanvas.height = out.height;
+		const exportCtx = exportCanvas.getContext('2d')!;
+		const crop = cropForFace(face, size, cutout.width, cutout.height, zoom);
+		exportCtx.fillStyle = bgColor;
+		exportCtx.fillRect(0, 0, out.width, out.height);
+		exportCtx.drawImage(cutout, crop.x, crop.y, crop.width, crop.height, 0, 0, out.width, out.height);
+
+		const mime = type === 'png' ? 'image/png' : 'image/jpeg';
+		exportCanvas.toBlob((blob) => {
+			if (!blob) return;
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = `pas-foto-${sizeId}.${type}`;
+			document.body.append(link);
+			link.click();
+			link.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 1000);
+			toast('Pas foto diunduh.');
+		}, mime, 0.95);
+	};
+
+	$<HTMLButtonElement>('#foto-png')?.addEventListener('click', () => download('png'));
+	$<HTMLButtonElement>('#foto-jpg')?.addEventListener('click', () => download('jpg'));
+
+	back.addEventListener('click', () => setStep(Math.max(1, step.current - 1)));
+	next.addEventListener('click', () => setStep(Math.min(4, step.current + 1)));
+
+	const dims = $<HTMLElement>('#foto-dims');
+	const updateDims = () => {
+		const size = photoSizes.find((item) => item.id === sizeId)!;
+		const out = outputPixels(size, 300);
+		if (dims) dims.textContent = `${size.label} · ${out.width} × ${out.height} px · 300 DPI`;
+	};
+	document.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((button) => {
+		button.addEventListener('click', updateDims);
+	});
+	updateDims();
+</script>
+
+<style>
+	.photo-shell {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		padding: var(--space-4);
+	}
+
+	.steps {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.steps__item {
+		padding: var(--space-1) var(--space-3);
+		border-radius: 999px;
+		border: 1px solid var(--border);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.steps__item[aria-current="step"] {
+		border-color: var(--accent);
+		background: var(--accent-soft);
+		color: var(--text);
+	}
+
+	.photo-step {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+
+	.photo-step[hidden] {
+		display: none;
+	}
+
+	.progress-box {
+		padding: var(--space-4);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.swatch-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+	}
+
+	.camera-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-3);
+	}
+
+	.camera-actions .field-hint {
+		margin: 0;
+	}
+
+	.camera-panel {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-3);
+		padding: var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.camera-panel[hidden] {
+		display: none;
+	}
+
+	.camera-video {
+		width: 100%;
+		max-width: 360px;
+		aspect-ratio: 3 / 4;
+		object-fit: cover;
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.swatch {
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		border: 2px solid var(--border-strong);
+		background: var(--swatch);
+		padding: 0;
+		cursor: pointer;
+	}
+
+	.swatch[aria-checked="true"] {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.swatch--custom {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+	}
+
+	.swatch--custom input {
+		width: 44px;
+		height: 44px;
+		opacity: 0;
+		cursor: pointer;
+	}
+
+	.crop-stage {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-2);
+	}
+
+	.crop-stage canvas {
+		max-width: 100%;
+		height: auto;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+	}
+
+	.zoom-row {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		max-width: 320px;
+	}
+
+	.step-nav {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-3);
+	}
+</style>

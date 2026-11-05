@@ -1,0 +1,155 @@
+---
+import type { ToolMeta } from '../lib/tool-types';
+import { categories } from '../lib/tool-types';
+import ToolCard from './ToolCard.astro';
+import Chip from './ui/Chip.astro';
+
+interface Props {
+	tools: ToolMeta[];
+}
+
+const { tools } = Astro.props;
+---
+
+<section class="catalog container" id="katalog" aria-labelledby="katalog-title">
+	<div class="section-head">
+		<h2 class="section-title" id="katalog-title">Alat di daftar MVP</h2>
+		<p class="section-meta">{tools.length} modul</p>
+	</div>
+
+	<p class="catalog-intro">
+		Enam alat MVP di bawah ini bisa langsung dipakai. File diproses di browser,
+		kecuali Kirim File yang memakai server dan ditandai di kartunya.
+	</p>
+
+	<div class="chip-row" role="group" aria-label="Filter kategori">
+		<Chip label="Semua" value="semua" pressed />
+		{categories.map((category) => <Chip label={category.label} value={category.id} />)}
+	</div>
+
+	<p class="catalog-count" aria-live="polite" data-count>{tools.length} alat</p>
+
+	<ul class="tool-grid" data-tool-grid>
+		{
+			tools.map((tool) => (
+				<li
+					data-tool
+					data-name={tool.name}
+					data-category={tool.category}
+					data-keywords={tool.keywords.join('|')}
+				>
+					<ToolCard tool={tool} />
+				</li>
+			))
+		}
+	</ul>
+
+	<div class="empty-state" data-catalog-empty hidden>
+		<p class="empty-state__title">Tidak ada alat yang cocok</p>
+		<p class="empty-state__body">
+			Belum ada hasil untuk "<span data-empty-query></span>" di kategori yang
+			dipilih. Coba kata lain seperti "pdf", "foto", atau "json", atau hapus
+			filter kategori.
+		</p>
+		<button type="button" class="btn btn--secondary mt-4" data-catalog-reset>
+			Hapus filter
+		</button>
+	</div>
+</section>
+
+<style>
+	.catalog-intro {
+		max-width: 62ch;
+		margin-top: var(--space-2);
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.catalog-count {
+		margin-top: var(--space-4);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+</style>
+
+<script>
+	import { matches } from '../lib/search';
+
+	const grid = document.querySelector<HTMLElement>('[data-tool-grid]');
+
+	if (grid) {
+		const items = Array.from(grid.querySelectorAll<HTMLElement>('[data-tool]'));
+		const input = document.querySelector<HTMLInputElement>('#catalog-search');
+		const chips = Array.from(
+			document.querySelectorAll<HTMLButtonElement>('[data-filter]'),
+		);
+		const count = document.querySelector<HTMLElement>('[data-count]');
+		const empty = document.querySelector<HTMLElement>('[data-catalog-empty]');
+		const emptyQuery = document.querySelector<HTMLElement>('[data-empty-query]');
+		const reset = document.querySelector<HTMLButtonElement>('[data-catalog-reset]');
+		const total = items.length;
+		let category = 'semua';
+		let query = '';
+
+		const apply = () => {
+			let visible = 0;
+
+			items.forEach((item) => {
+				const fields = [
+					item.dataset.name ?? '',
+					item.dataset.category ?? '',
+					...(item.dataset.keywords ?? '').split('|'),
+				];
+				const hit =
+					(category === 'semua' || item.dataset.category === category) &&
+					matches(fields, query);
+				item.hidden = !hit;
+				if (hit) visible += 1;
+			});
+
+			const filtered = query.trim() !== '' || category !== 'semua';
+			if (count) {
+				count.textContent = filtered
+					? `${visible} dari ${total} alat`
+					: `${total} alat`;
+			}
+			if (empty) empty.hidden = visible !== 0;
+			if (emptyQuery) emptyQuery.textContent = query;
+		};
+
+		chips.forEach((chip) => {
+			chip.addEventListener('click', () => {
+				category = chip.dataset.filter ?? 'semua';
+				chips.forEach((other) =>
+					other.setAttribute(
+						'aria-pressed',
+						other === chip ? 'true' : 'false',
+					),
+				);
+				apply();
+			});
+		});
+
+		input?.addEventListener('input', () => {
+			query = input.value;
+			apply();
+		});
+
+		reset?.addEventListener('click', () => {
+			query = '';
+			category = 'semua';
+			if (input) input.value = '';
+			chips.forEach((chip) =>
+				chip.setAttribute(
+					'aria-pressed',
+					chip.dataset.filter === 'semua' ? 'true' : 'false',
+				),
+			);
+			apply();
+			input?.focus();
+		});
+	}
+</script>
