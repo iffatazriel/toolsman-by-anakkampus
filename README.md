@@ -1,6 +1,6 @@
 # Toolsman
 
-Kotak perkakas gratis untuk mahasiswa informatika dan developer pemula. Rencananya: kanvas gambar, diagram, olah PDF, pas foto, kirim file, dan generator teks. Gratis, tanpa akun, dan sebagian besar file diproses di browser.
+Kotak perkakas gratis untuk mahasiswa informatika dan developer pemula: kanvas gambar, diagram, olah PDF, pas foto, kirim file, generator teks, utilitas, QR code, kompres gambar, cek warna, dan data uji. Gratis, tanpa akun, dan sebagian besar file diproses di browser.
 
 Proyek ini memakai Astro (bukan Next.js seperti di PRD bagian 9). `PRD.md` dan `design.md` tetap jadi acuan isi dan tampilan.
 
@@ -18,12 +18,26 @@ npm run build    # hasil di dist/client (statis) dan dist/server (Worker)
 
 Semua alat MVP sudah terpasang dan bisa dipakai:
 
-- Generator Teks: Markdown, README, dan JSON dengan tab terpisah
-- Olah PDF: gabung, pisah, kompres, dan gambar menjadi PDF, dijalankan di Web Worker
-- Kanvas Gambar: Excalidraw yang dimuat lazy, simpan otomatis, ekspor PNG/SVG/.excalidraw
-- Diagram Mermaid: split view, template, penanda baris error, ekspor PNG/SVG
-- Pas Foto: hapus latar di browser, pilih warna, ukuran 2×3/3×4/4×6 pada 300 DPI
-- Kirim File: unggah ke Cloudflare R2 lewat presigned URL, link berlaku 1 jam, 24 jam, atau 7 hari, bisa dikunci kata sandi dan dibatasi sekali unduh per berkas
+- Generator Teks: Markdown, README, JSON, konversi JSON/CSV/YAML, .gitignore, dan LICENSE dengan tab terpisah
+- Olah PDF: gabung, pisah, kompres, gambar menjadi PDF, PDF menjadi gambar (PNG/JPG), serta putar dan hapus halaman, dijalankan di Web Worker
+- Kanvas Gambar: Excalidraw yang dimuat lazy, simpan otomatis, tema mengikuti toggle situs, salin gambar ke clipboard, ekspor PNG/SVG/.excalidraw
+- Diagram Mermaid: split view, template, penanda baris error, ekspor PNG/SVG, plus editor diagrams.net yang di-embed dan bisa mengunduh `.drawio`
+- Pas Foto: hapus latar di browser, pilih warna, ukuran 2×3/3×4/4×6 pada 300 DPI, atur kecerahan dan penghalusan tepi, lalu susun lembar cetak 4R atau A4
+- Utilitas Teks: Base64, URL encode/decode, JWT decoder, UUID, konverter timestamp, regex tester, dan diff checker
+- QR Code: teks atau URL ke PNG/SVG dengan pilihan ukuran, koreksi error, dan margin
+- Kompres Gambar: perkecil ukuran, batasi dimensi, dan konversi ke JPG/PNG/WebP di browser
+- Warna & Kontras: cek rasio WCAG AA/AAA dan buat palet turunan dari satu warna
+- Data Palsu: data uji JSON/CSV dengan field, jumlah baris, dan seed yang bisa diulang
+- Hash Teks & Berkas: SHA-256/512/384/1 untuk teks atau berkas, plus pembanding hash
+- Toolkit Teks: ubah huruf, slug, nama variabel, lorem ipsum, dan hitung kata/karakter
+- Hapus Metadata Foto: buang EXIF, GPS, XMP, dan komentar dari JPG/PNG tanpa mengompres ulang
+- Cron Builder: ekspresi 5 field, 5 jadwal berikutnya per zona waktu, penjelasan Indonesia
+- Kode ke Gambar: highlight.js, tema terang/gelap, padding dan sudut, ekspor PNG
+- Validator JSON Schema: draft 4/7/2019-09/2020-12, error per path dalam bahasa Indonesia
+- Berbagi sesi: link hanya-baca untuk Kanvas Gambar dan Diagram, data terkompresi di URL tanpa server. Batas token 7.000 karakter dan URL 8.000 karakter; sesi lebih besar ditolak dengan saran ekspor.
+- Bilingual: toggle Indonesia/Inggris untuk shell, beranda, katalog, palette, dan metadata alat. Copy di dalam workspace alat masih Indonesia.
+- Kirim File: unggah ke Cloudflare R2 lewat presigned URL, berkas di atas 8 MB diunggah per bagian dan bisa dilanjutkan, link berlaku 1 jam, 24 jam, atau 7 hari, bisa dikunci kata sandi dan dibatasi sekali unduh per berkas
+- Favorit dan alat terakhir: disimpan di `localStorage` dan muncul sebagai rak di beranda
 
 ## Pas Foto dan model
 
@@ -98,11 +112,13 @@ CSP final ada di `src/lib/security-headers.ts`, dan `public/_headers` harus memu
 
 Yang perlu dilonggarkan dan alasannya:
 
-- `script-src 'unsafe-eval'`: dibutuhkan backend ONNX Runtime Web di `@imgly/background-removal`. Runtime itu mengevaluasi string JavaScript saat menyiapkan WASM, jadi Pas Foto gagal tanpa izin ini. Ini pengecualian tertulis, bukan default. `'unsafe-inline'` tetap tidak dipakai di `script-src`.
-- `script-src 'wasm-unsafe-eval'` dan `blob:`: WASM dan modul perekat ONNX dimuat dari blob URL.
+- CSP dasar **tidak** memakai `'unsafe-eval'`. `'wasm-unsafe-eval'` dan `blob:` tetap ada untuk WASM dan modul perekat ONNX.
+- `'unsafe-eval'` hanya dipasang di `/tools/pas-foto` lewat `securityHeadersFor`. ONNX Runtime Web di `@imgly/background-removal` mengevaluasi string JavaScript saat menyiapkan WASM. Rute lain memakai CSP dasar.
 - `style-src 'unsafe-inline'`: Excalidraw dan Mermaid menyuntikkan `<style>` dan style attribute saat runtime.
 - `connect-src` mengizinkan `*.r2.cloudflarestorage.com` untuk presigned URL, `staticimgly.com` untuk model, `challenges.cloudflare.com` untuk Turnstile, dan `plausible.io` untuk analitik.
 - `frame-src` mengizinkan Turnstile dan `embed.diagrams.net`.
+
+Penting saat build: jangan menjalankan `npm run build` dengan `NODE_ENV=development`. Astro akan menganggap build sebagai mode dev dan membuang middleware header. Build dengan `NODE_ENV` tidak diisi (atau `production`), lalu pastikan `dist/server/virtual_astro_middleware.mjs` memuat `securityHeadersFor` sebelum deploy.
 
 Font Excalidraw disalin ke `public/excalidraw/fonts` oleh `npm run build` (prebuild) atau `npm run dev` (predev), dan `public/theme-init.js` menetapkan `window.EXCALIDRAW_ASSET_PATH = '/excalidraw/'` sebelum modul Excalidraw dimuat. Jadi font tidak diambil dari esm.sh.
 
@@ -128,6 +144,24 @@ Kalau Pas Foto diganti dengan pustaka tanpa `eval`, hapus `'unsafe-eval'` dari C
 - Perbandingan hash memakai akumulasi XOR per byte, bukan perbandingan string biasa.
 - Percobaan kata sandi dibatasi `PASSWORD_LIMIT`: 10 kali per 60 detik untuk tiap IP dan tiap link. Batas ini dicek sebelum hashing, baik di halaman unduh maupun di endpoint unduh.
 - Catatan: OWASP 2023 menyarankan 600.000 iterasi untuk PBKDF2-SHA256. Nilai 100.000 dipilih agar tetap murah di Cloudflare Workers; naikkan `ITERATIONS` di `src/features/kirim-file/password.ts` kalau mau lebih ketat. Hash lama tetap bisa diverifikasi karena jumlah iterasinya ikut tersimpan.
+
+### Berkas besar dan resume
+
+Berkas sampai 8 MB memakai satu presigned PUT. Di atas 8 MB, browser memotong berkas
+menjadi bagian 8 MB dan mengirim tiap bagian ke Worker
+(`/api/shares/:id/multipart/part`). Worker meneruskannya ke R2 dengan SigV4, jadi tidak
+perlu mengatur CORS R2 atau mengekspos ETag ke browser.
+
+- ETag tiap bagian disimpan di tabel `upload_parts`, bersama `upload_id` di `share_files`
+  (migrasi `0005_multipart.sql`).
+- Kalau koneksi putus, bagian yang gagal diulang sampai dua kali. Kalau masih gagal,
+  tombol **Ulangi unggahan** memakai sesi yang sama dan melewati bagian yang sudah selesai.
+- Tombol **Batalkan** menghentikan bagian yang sedang berjalan dan memanggil endpoint abort
+  supaya bagian yang belum selesai tidak menumpuk di R2.
+- Progres keseluruhan dan progres tiap berkas ditampilkan, termasuk "per bagian".
+
+Konsekuensinya, berkas besar melewati Worker (bukan langsung browser ke R2). Ini disengaja
+supaya resume tidak bergantung pada konfigurasi CORS bucket.
 
 ### Pembersihan otomatis
 
@@ -166,7 +200,7 @@ npx wrangler secret put R2_SECRET_ACCESS_KEY
 npx wrangler secret put R2_BUCKET
 npx wrangler secret put TURNSTILE_SECRET_KEY
 
-# 3. Terapkan semua migrasi ke D1 produksi (0001 sampai 0004)
+# 3. Terapkan semua migrasi ke D1 produksi (0001 sampai 0005)
 npx wrangler d1 migrations apply toolsman-shares --remote
 
 # 4. Build dan deploy Worker utama
@@ -213,27 +247,57 @@ Setelah deploy, uji alur nyata:
    npx wrangler d1 execute toolsman-shares --remote --command "SELECT share_id, name, downloads, purged FROM share_files LIMIT 10"
    ```
 6. Untuk menguji pembersihan lebih cepat tanpa menunggu satu jam, buat link 1 jam, lalu set `expires_at` ke waktu lampau dan jalankan cron manual dari dashboard Cloudflare (Worker `toolsman-cleanup`, tombol Trigger Cron).
+7. Uji multipart: unggah berkas > 8 MB, putuskan koneksi di tengah, lalu tekan **Ulangi unggahan**. Pastikan progres melanjutkan dari bagian terakhir (bukan 0%), dan tombol **Batalkan** tidak meninggalkan bagian yatim di R2.
+8. Verifikasi CSP setelah deploy: `/tools/draw` harus tanpa `'unsafe-eval'`, sedangkan `/tools/pas-foto` harus memuat `'unsafe-eval'`.
 
 
 
 ## Kerentanan npm
 
-`npm audit` melaporkan 14 temuan: 2 low, 1 moderate, 11 high. Semuanya berasal dari dependensi transitif tiga paket langsung:
+`npm audit` sekarang melaporkan 7 temuan: 2 low, 2 moderate, 3 high. Sebelumnya 14.
 
-- `@excalidraw/excalidraw` 0.18.1: nanoid 3.3.3 dan 4.0.2, katex 0.16.47 lewat Mermaid 11, serta rangkaian langium/chevrotain yang bergantung pada lodash-es 4.17.21.
-- `@imgly/background-removal` 1.7.0: zod 3.25.76.
-- `mermaid` 12.3.0: rantai katex dari paket Mermaid yang dibawa Excalidraw.
+Yang sudah diperbaiki tanpa lompat mayor (ada di `overrides` `package.json`):
 
-`npm audit fix` biasa tidak mengubah apa pun di proyek ini (`up to date`), jadi semua temuan hanya bisa ditutup dengan `--force` atau `overrides`. `npm audit fix --force` menurunkan `@excalidraw/excalidraw` ke 0.17.6 dan `@imgly/background-removal` ke 1.1.5, keduanya perubahan mayor yang berisiko mematahkan Kanvas Gambar dan Pas Foto, jadi belum dijalankan tanpa persetujuan.
+- `lodash-es` 4.17.21 → 4.18.1. Menutup 7 temuan yang menular ke chevrotain, langium, @mermaid-js/parser, dan @excalidraw/mermaid-to-excalidraw.
+- `nanoid` 3.3.3 di dalam `@excalidraw/excalidraw` → 3.3.20. Menutup salinan 3.x.
 
-Dampak praktisnya kecil: semua paket itu mengolah input pengguna sendiri di browser, bukan menerima masukan dari pihak lain. Kandidat perbaikan tanpa menurunkan paket langsung, semuanya butuh persetujuan karena mengubah pohon dependensi:
+Tujuh temuan yang tersisa semuanya butuh keputusan karena perbaikannya lompat mayor atau menurunkan paket langsung:
 
-- `overrides` `lodash-es` ke 4.18.1: menutup lodash-es, chevrotain, langium, dan @mermaid-js/parser (7 temuan, masih satu mayor).
-- `overrides` `nanoid` 3.x ke 3.3.20: menutup salinan 3.3.3 di Excalidraw. Salinan 4.0.2 butuh nanoid 5.1.16 (lompat mayor) atau pembaruan Excalidraw.
-- `overrides` `katex` ke 0.18.10: menutup salinan Mermaid 11 di Excalidraw, tetapi lompat dari 0.16.
-- `overrides` `zod` ke 4.6.6 di `@imgly/background-removal`: lompat mayor, paling berisiko.
+| Paket | Severity | Perbaikan yang tersedia | Risiko |
+|---|---|---|---|
+| `@excalidraw/excalidraw` | moderate | turun ke 0.17.6 | breaking, fitur Excalidraw berubah |
+| `@excalidraw/mermaid-to-excalidraw` | moderate | ikut downgrade Excalidraw | transitive |
+| `@imgly/background-removal` | high | turun ke 1.1.5 | breaking, Pas Foto berisiko rusak |
+| `katex` 0.16.47 (nested) | low | override ke 0.19.1 | 0.x minor dianggap breaking |
+| `mermaid` 11.x (nested) | low | override ke 12.3.0 | lompat mayor dari `^11.12.1` |
+| `nanoid` 4.0.2 (nested) | high | override ke 5.1.16 | lompat mayor |
+| `zod` 3.x (nested di imgly) | high | override ke 4.6.7 | lompat mayor, paling berisiko |
 
-Pilihan paling aman jangka panjang adalah menunggu Excalidraw dan imgly merilis versi yang memperbarui dependensinya.
+Dampak praktisnya kecil: semua paket itu mengolah input pengguna sendiri di browser, bukan menerima masukan dari pihak lain. `npm audit fix --force` menurunkan `@excalidraw/excalidraw` ke 0.17.6 dan `@imgly/background-removal` ke 1.1.5, jadi belum dijalankan tanpa persetujuan. Pilihan paling aman jangka panjang adalah menunggu Excalidraw dan imgly memperbarui dependensinya.
+
+## Lisensi dependensi
+
+Proyek ini belum punya berkas `LICENSE`. Dependensi runtime yang ikut terkirim ke browser:
+
+| Paket | Lisensi | Kewajiban utama |
+|---|---|---|
+| Astro, @astrojs/*, React, React DOM | MIT | sertakan copyright dan izin |
+| croner, @cfworker/json-schema | MIT | sertakan copyright dan izin |
+| @excalidraw/excalidraw | MIT | sertakan copyright dan izin |
+| Mermaid | MIT | sertakan copyright dan izin |
+| marked, pdf-lib, qrcode, aws4fetch | MIT | sertakan copyright dan izin |
+| yaml | ISC | sertakan copyright dan izin |
+| pdfjs-dist | Apache-2.0 | sertakan LICENSE/NOTICE, klausul paten |
+| DOMPurify | MPL-2.0 OR Apache-2.0 | pilih salah satu; Apache-2.0 paling sederhana |
+| highlight.js | BSD-3-Clause | atribusi, tidak memakai nama kontributor untuk promosi |
+| @fontsource-variable/inter, plus-jakarta-sans, jetbrains-mono | OFL-1.1 | sertakan OFL; jangan jual font sendiri atau ubah namanya |
+| **@imgly/background-removal** | **AGPL-3.0** | **pengguna jaringan berhak atas source versi yang berjalan** |
+
+Konsekuensi lisensi proyek:
+
+- Semua dependensi kecuali `@imgly/background-removal` adalah lisensi permisif (MIT/ISC/Apache/BSD/OFL), jadi proyek bisa dirilis MIT atau Apache-2.0 asalkan notice dependensi disertakan.
+- AGPL-3.0 di `@imgly/background-removal` adalah satu-satunya copyleft jaringan. Kalau Toolsman dipublikasikan dengan paket ini, opsi yang aman: (a) rilis proyek sebagai AGPL-3.0 dan sediakan source lengkap untuk pengguna jaringan, atau (b) ganti dengan pustaka penghapus latar berlisensi permisif (mis. MediaPipe Selfie Segmentation, Apache-2.0), lalu proyek bisa tetap MIT.
+- Jangan mencampur AGPL dengan lisensi proyek permisif tanpa keputusan eksplisit. `LICENSE` belum diubah.
 
 
 
@@ -266,7 +330,7 @@ Alasan di balik keputusan yang tidak kelihatan dari kode:
 - **Gerak sebatas hover dan transisi 120 sampai 200 ms.** Tidak ada animasi berulang, dan semuanya berhenti saat `prefers-reduced-motion`.
 - **Tanpa gradient, glass, atau glow.** Tidak ada peran hierarki yang butuh salah satunya.
 - **Logo masih wordmark teks dan favicon huruf T.** Aset logo asli ada di daftar design.md bagian 16, jadi yang dipakai sekarang penanda sementara, bukan logo final.
-- **Enam kartu alat, bukan tujuh.** "Landing & Katalog" di PRD adalah halaman ini sendiri, jadi katalog berisi enam modul alat.
+- **Tujuh belas kartu alat.** "Landing & Katalog" di PRD adalah halaman ini sendiri, jadi katalog berisi alat saja. Kategori Utilitas ditambahkan setelah Generator mulai penuh; Cron, Kode ke Gambar, dan Validator JSON Schema menyusul di sana.
 
 ## Catatan teknis
 

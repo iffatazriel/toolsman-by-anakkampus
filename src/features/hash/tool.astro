@@ -1,0 +1,297 @@
+---
+import Dropzone from '../../components/ui/Dropzone.astro';
+import { hashAlgorithms } from './hash';
+
+const algorithms = hashAlgorithms;
+---
+
+<div class="tool-shell hash-shell">
+	<div class="pane-grid pane-grid--split">
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Masukan</h2>
+				<div class="segmented" role="group" aria-label="Jenis masukan">
+					<button type="button" class="segmented__btn" data-hash-mode="text" aria-pressed="true">
+						Teks
+					</button>
+					<button type="button" class="segmented__btn" data-hash-mode="file" aria-pressed="false">
+						Berkas
+					</button>
+				</div>
+			</div>
+
+			<div data-hash-pane="text">
+				<label class="sr-only" for="hash-input">Teks yang akan di-hash</label>
+				<textarea
+					id="hash-input"
+					class="code-area"
+					spellcheck="false"
+					placeholder="Tempel teks di sini"></textarea>
+			</div>
+
+			<div data-hash-pane="file" hidden>
+				<Dropzone
+					id="hash-file"
+					label="Pilih berkas"
+					hint="Semua jenis berkas, maks. 50 MB. Berkas tidak diunggah."
+				/>
+			</div>
+
+			<div class="form-grid">
+				<div>
+					<label class="field-label" for="hash-algorithm">Algoritme</label>
+					<select class="field-input" id="hash-algorithm">
+						{algorithms.map((algorithm) => <option value={algorithm.id}>{algorithm.label}</option>)}
+					</select>
+				</div>
+				<div>
+					<label class="field-label" for="hash-compare">Bandingkan dengan hash</label>
+					<input
+						class="field-input field-mono"
+						id="hash-compare"
+						type="text"
+						spellcheck="false"
+						placeholder="Tempel hash pembanding"
+					/>
+					<p class="field-hint">Spasi dan besar-kecil huruf diabaikan saat membandingkan.</p>
+				</div>
+			</div>
+
+			<div class="hash-status-row">
+				<span class="spinner" id="hash-spinner" hidden aria-hidden="true"></span>
+				<p class="field-hint" id="hash-status" role="status" aria-live="polite">
+					Masukkan teks atau pilih berkas.
+				</p>
+			</div>
+
+			<div class="alert" id="hash-error" role="alert" hidden>
+				<p id="hash-error-text"></p>
+			</div>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Hash</h2>
+				<div class="pane-actions">
+					<span class="badge" id="hash-match" hidden></span>
+					<button type="button" class="btn btn--primary" id="hash-copy" disabled>Salin</button>
+				</div>
+			</div>
+
+			<pre class="code-block code-block--short" id="hash-output" hidden><code id="hash-code"></code></pre>
+			<p class="preview-empty" id="hash-empty">Hash muncul di sini setelah ada masukan.</p>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { toast } from '../../lib/toast';
+	import {
+		hashBuffer,
+		hashMatches,
+		hashText,
+		type HashAlgorithm,
+	} from './hash';
+
+	const input = document.getElementById('hash-input') as HTMLTextAreaElement | null;
+	const fileInput = document.getElementById('hash-file') as HTMLInputElement | null;
+	const algorithm = document.getElementById('hash-algorithm') as HTMLSelectElement | null;
+	const compare = document.getElementById('hash-compare') as HTMLInputElement | null;
+	const output = document.getElementById('hash-output');
+	const code = document.getElementById('hash-code');
+	const empty = document.getElementById('hash-empty');
+	const copy = document.getElementById('hash-copy') as HTMLButtonElement | null;
+	const status = document.getElementById('hash-status');
+	const spinner = document.getElementById('hash-spinner');
+	const errorBox = document.getElementById('hash-error');
+	const errorText = document.getElementById('hash-error-text');
+	const matchBadge = document.getElementById('hash-match');
+	const modeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-hash-mode]'));
+	const panes = Array.from(document.querySelectorAll<HTMLElement>('[data-hash-pane]'));
+
+	if (
+		input &&
+		fileInput &&
+		algorithm &&
+		compare &&
+		output &&
+		code &&
+		empty &&
+		copy &&
+		status &&
+		spinner &&
+		errorBox &&
+		errorText &&
+		matchBadge
+	) {
+		let mode: 'text' | 'file' = 'text';
+		let file: File | null = null;
+		let result = '';
+		let timer: number | undefined;
+		let job = 0;
+
+		const setError = (message: string | null) => {
+			errorBox.hidden = message === null;
+			errorText.textContent = message ?? '';
+		};
+
+		const setLoading = (loading: boolean) => {
+			spinner.hidden = !loading;
+		};
+
+		const setResult = (value: string) => {
+			result = value;
+			const blank = value === '';
+			code.textContent = value;
+			output.hidden = blank;
+			empty.hidden = !blank;
+			copy.disabled = blank;
+			updateMatch();
+		};
+
+		const updateMatch = () => {
+			if (!matchBadge) return;
+			const expected = compare.value.trim();
+			if (expected === '' || result === '') {
+				matchBadge.hidden = true;
+				matchBadge.classList.remove('is-pass', 'is-fail');
+				return;
+			}
+			const matched = hashMatches(expected, result);
+			matchBadge.hidden = false;
+			matchBadge.textContent = matched ? 'Cocok' : 'Tidak cocok';
+			matchBadge.classList.toggle('is-pass', matched);
+			matchBadge.classList.toggle('is-fail', !matched);
+		};
+
+		const compute = async () => {
+			const current = ++job;
+			setError(null);
+			setLoading(true);
+
+			try {
+				if (mode === 'text') {
+					if (input.value === '') {
+						if (current === job) {
+							setResult('');
+							status.textContent = 'Masukkan teks atau pilih berkas.';
+						}
+						return;
+					}
+					const value = await hashText(input.value, algorithm.value as HashAlgorithm);
+					if (current !== job) return;
+					setResult(value);
+					status.textContent = `${algorithm.value} · ${input.value.length} karakter`;
+				} else {
+					if (!file) {
+						if (current === job) {
+							setResult('');
+							status.textContent = 'Pilih berkas dulu.';
+						}
+						return;
+					}
+					const buffer = await file.arrayBuffer();
+					const value = await hashBuffer(buffer, algorithm.value as HashAlgorithm);
+					if (current !== job) return;
+					setResult(value);
+					status.textContent = `${algorithm.value} · ${file.name}`;
+				}
+			} catch {
+				if (current !== job) return;
+				setResult('');
+				setError('Hash gagal dihitung. Coba lagi.');
+			} finally {
+				if (current === job) setLoading(false);
+			}
+		};
+
+		modeButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				mode = button.dataset.hashMode === 'file' ? 'file' : 'text';
+				modeButtons.forEach((other) =>
+					other.setAttribute('aria-pressed', other === button ? 'true' : 'false'),
+				);
+				panes.forEach((pane) => {
+					pane.hidden = pane.dataset.hashPane !== mode;
+				});
+				void compute();
+			});
+		});
+
+		input.addEventListener('input', () => {
+			window.clearTimeout(timer);
+			timer = window.setTimeout(() => void compute(), 200);
+		});
+
+		fileInput.addEventListener('change', () => {
+			file = fileInput.files?.[0] ?? null;
+			if (file && file.size > 50 * 1024 * 1024) {
+				file = null;
+				setError('Berkas lebih dari 50 MB. Pilih berkas lain.');
+				return;
+			}
+			void compute();
+		});
+
+		algorithm.addEventListener('change', () => void compute());
+		compare.addEventListener('input', updateMatch);
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(result);
+			toast(copied ? 'Hash disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+	}
+</script>
+
+<style>
+	.hash-shell {
+		padding: var(--space-4);
+	}
+
+	.field-mono {
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+	}
+
+	.hash-status-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.hash-status-row .field-hint {
+		margin: 0;
+	}
+
+	.code-block--short {
+		min-height: 140px;
+		font-size: 0.8125rem;
+		overflow-wrap: anywhere;
+		white-space: pre-wrap;
+	}
+
+	.badge {
+		padding: 2px 8px;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+
+	.badge[hidden] {
+		display: none;
+	}
+
+	.badge.is-pass {
+		border-color: light-dark(#9ccdb4, #2a5a43);
+		background: light-dark(#e8f5ee, #1b2c24);
+		color: light-dark(#11663f, #3dbe86);
+	}
+
+	.badge.is-fail {
+		border-color: light-dark(#e2b4b4, #5c2e2e);
+		background: light-dark(#fbeaea, #2e1b1b);
+		color: light-dark(#8f2424, #f06b6b);
+	}
+</style>

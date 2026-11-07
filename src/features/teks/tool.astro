@@ -1,0 +1,248 @@
+---
+---
+
+<div class="tool-shell teks-shell">
+	<div class="pane-grid pane-grid--split">
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Teks</h2>
+			</div>
+
+			<label class="sr-only" for="teks-input">Teks sumber</label>
+			<textarea
+				id="teks-input"
+				class="code-area"
+				spellcheck="false"
+				placeholder="Tempel atau tulis teks di sini"></textarea>
+
+			<dl class="teks-stats" id="teks-stats">
+				<div>
+					<dt>Karakter</dt>
+					<dd id="stat-chars">0</dd>
+				</div>
+				<div>
+					<dt>Tanpa spasi</dt>
+					<dd id="stat-nospaces">0</dd>
+				</div>
+				<div>
+					<dt>Kata</dt>
+					<dd id="stat-words">0</dd>
+				</div>
+				<div>
+					<dt>Baris</dt>
+					<dd id="stat-lines">0</dd>
+				</div>
+				<div>
+					<dt>Kalimat</dt>
+					<dd id="stat-sentences">0</dd>
+				</div>
+			</dl>
+
+			<div class="lorem-row">
+				<label class="field-label" for="teks-lorem">Jumlah kalimat lorem</label>
+				<input class="field-input" id="teks-lorem" type="number" min="1" max="10" value="3" />
+				<button type="button" class="btn btn--secondary" id="teks-lorem-fill">Isi lorem</button>
+			</div>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Hasil</h2>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--secondary" id="teks-copy" disabled>Salin</button>
+					<button type="button" class="btn btn--primary" id="teks-download" disabled>Unduh .txt</button>
+				</div>
+			</div>
+
+			<div class="teks-actions" role="group" aria-label="Ubah teks">
+				<button type="button" class="btn btn--secondary" data-teks-action="upper">HURUF BESAR</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="lower">huruf kecil</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="title">Title Case</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="sentence">Sentence case</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="camel">camelCase</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="snake">snake_case</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="kebab">kebab-case</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="slug">slug</button>
+			</div>
+
+			<pre class="code-block" id="teks-output" hidden><code id="teks-code"></code></pre>
+			<p class="preview-empty" id="teks-empty">Pilih salah satu tombol ubah untuk melihat hasil.</p>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { toast } from '../../lib/toast';
+	import {
+		countText,
+		loremIpsum,
+		slugify,
+		toCamelCase,
+		toKebabCase,
+		toSentenceCase,
+		toSnakeCase,
+		toTitleCase,
+	} from './text-tools';
+
+	const input = document.getElementById('teks-input') as HTMLTextAreaElement | null;
+	const output = document.getElementById('teks-output');
+	const code = document.getElementById('teks-code');
+	const empty = document.getElementById('teks-empty');
+	const copy = document.getElementById('teks-copy') as HTMLButtonElement | null;
+	const download = document.getElementById('teks-download') as HTMLButtonElement | null;
+	const loremCount = document.getElementById('teks-lorem') as HTMLInputElement | null;
+	const loremFill = document.getElementById('teks-lorem-fill');
+	const actionButtons = Array.from(
+		document.querySelectorAll<HTMLButtonElement>('[data-teks-action]'),
+	);
+	const stats = {
+		chars: document.getElementById('stat-chars'),
+		noSpaces: document.getElementById('stat-nospaces'),
+		words: document.getElementById('stat-words'),
+		lines: document.getElementById('stat-lines'),
+		sentences: document.getElementById('stat-sentences'),
+	};
+
+	const transforms = {
+		upper: (value: string) => value.toUpperCase(),
+		lower: (value: string) => value.toLowerCase(),
+		title: toTitleCase,
+		sentence: toSentenceCase,
+		camel: toCamelCase,
+		snake: toSnakeCase,
+		kebab: toKebabCase,
+		slug: slugify,
+	};
+
+	if (
+		input &&
+		output &&
+		code &&
+		empty &&
+		copy &&
+		download &&
+		loremCount &&
+		loremFill &&
+		stats.chars &&
+		stats.noSpaces &&
+		stats.words &&
+		stats.lines &&
+		stats.sentences
+	) {
+		let result = '';
+
+		const updateStats = () => {
+			const counts = countText(input.value);
+			stats.chars!.textContent = String(counts.chars);
+			stats.noSpaces!.textContent = String(counts.charsNoSpaces);
+			stats.words!.textContent = String(counts.words);
+			stats.lines!.textContent = String(counts.lines);
+			stats.sentences!.textContent = String(counts.sentences);
+		};
+
+		const setResult = (value: string) => {
+			result = value;
+			const blank = value === '';
+			code.textContent = value;
+			output.hidden = blank;
+			empty.hidden = !blank;
+			copy.disabled = blank;
+			download.disabled = blank;
+		};
+
+		input.addEventListener('input', () => {
+			updateStats();
+			setResult('');
+		});
+
+		actionButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				const action = button.dataset.teksAction ?? '';
+				const transform = transforms[action as keyof typeof transforms];
+				if (!transform) return;
+				setResult(input.value === '' ? '' : transform(input.value));
+			});
+		});
+
+		loremFill.addEventListener('click', () => {
+			const value = loremIpsum(Number(loremCount.value) || 1);
+			input.value = value;
+			updateStats();
+			setResult(value);
+			input.focus();
+		});
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(result);
+			toast(copied ? 'Hasil disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		download.addEventListener('click', () => {
+			downloadText('teks.txt', result, 'text/plain;charset=utf-8');
+			toast('Berkas teks diunduh.');
+		});
+
+		updateStats();
+	}
+</script>
+
+<style>
+	.teks-shell {
+		padding: var(--space-4);
+	}
+
+	.teks-stats {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+		gap: var(--space-2);
+		margin: 0;
+	}
+
+	.teks-stats div {
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.teks-stats dt {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.teks-stats dd {
+		margin: 2px 0 0;
+		font-family: var(--font-mono);
+		font-size: 1.125rem;
+	}
+
+	.lorem-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--space-2);
+	}
+
+	.lorem-row .field-input {
+		max-width: 96px;
+	}
+
+	.lorem-row .field-label {
+		width: 100%;
+		margin-bottom: 0;
+	}
+
+	.teks-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	.teks-actions .btn {
+		min-height: 40px;
+		padding: 0 var(--space-3);
+		font-size: 0.8125rem;
+	}
+</style>

@@ -57,12 +57,20 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		<button type="button" class="btn btn--secondary" data-retry hidden>Ulangi unggahan</button>
 	</div>
 
-	<p class="field-hint">
-		Kalau koneksi putus, unggahan berkas yang gagal diulang dari awal. Untuk berkas besar,
-		pakai koneksi stabil atau pecah jadi beberapa berkas.
-	</p>
+	<div class="share-overall" data-overall hidden>
+		<progress max="100" value="0" data-overall-bar aria-label="Kemajuan unggahan keseluruhan"></progress>
+		<p class="field-hint" data-overall-text></p>
+	</div>
 
-	<p class="field-hint" data-status aria-live="polite"></p>
+	<div class="share-status-row">
+		<span class="spinner" data-status-spinner hidden aria-hidden="true"></span>
+		<p class="field-hint" data-status aria-live="polite"></p>
+	</div>
+
+	<p class="field-hint">
+		Berkas besar diunggah per bagian 8 MB. Kalau koneksi putus, tekan Ulangi unggahan
+		dan alat lanjut dari bagian terakhir yang berhasil, bukan dari awal.
+	</p>
 
 	<section class="share-result" data-result hidden aria-labelledby="result-title">
 		<h2 id="result-title" class="pane__title">Link siap dibagikan</h2>
@@ -82,11 +90,19 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	import { toast } from '../../lib/toast';
 	import { copyText } from '../../lib/clipboard';
 	import {
+		postJson,
+		putPartWithProgress,
 		putWithProgress,
 		UploadError,
 		formatBytes,
 		formatRemaining,
 	} from './upload-client';
+	import {
+		partCount,
+		partRange,
+		partSize,
+		shouldUseMultipart,
+	} from './multipart';
 	import { validateFile, validatePassword } from './share-rules';
 	import { qrDataUrl } from './qr';
 
@@ -112,6 +128,10 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	const list = document.querySelector<HTMLUListElement>('[data-list]');
 	const startButton = document.getElementById('kirim-start') as HTMLButtonElement | null;
 	const status = document.querySelector<HTMLElement>('[data-status]');
+	const statusSpinner = document.querySelector<HTMLElement>('[data-status-spinner]');
+	const overall = document.querySelector<HTMLElement>('[data-overall]');
+	const overallBar = document.querySelector<HTMLProgressElement>('[data-overall-bar]');
+	const overallText = document.querySelector<HTMLElement>('[data-overall-text]');
 	const result = document.querySelector<HTMLElement>('[data-result]');
 	const urlField = document.getElementById('share-url') as HTMLInputElement | null;
 	const copyButton = document.getElementById('share-copy');
@@ -203,12 +223,46 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		let running = false;
 		let cancelled = false;
 		let retryable = false;
+		const multipartStarted = new Set<number>();
+		const thumbUrls = new Map<File, string>();
+
+		const setStatus = (message: string, loading = false) => {
+			status.textContent = message;
+			if (statusSpinner) statusSpinner.hidden = !loading;
+		};
 
 		const resetSession = () => {
 			session = null;
 			createdAt = 0;
 			attempts = files.map(() => 0);
 			retryable = false;
+			multipartStarted.clear();
+		};
+
+		const updateOverall = () => {
+			if (!overall || !overallBar || !overallText) return;
+			if (files.length === 0) {
+				overall.hidden = true;
+				overallBar.value = 0;
+				overallText.textContent = '';
+				return;
+			}
+
+			const total = files.reduce((sum, file) => sum + file.size, 0);
+			const loaded = files.reduce((sum, file, index) => {
+				if (states[index] === 'done') return sum + file.size;
+				return sum + Math.round((file.size * (progress[index] ?? 0)) / 100);
+			}, 0);
+			const percent = total > 0 ? Math.round((loaded / total) * 100) : 0;
+
+			overall.hidden = false;
+			overallBar.value = percent;
+			overallText.textContent = `${percent}% · ${formatBytes(loaded)} dari ${formatBytes(total)}`;
+		};
+
+		const clearThumbs = () => {
+			for (const url of thumbUrls.values()) URL.revokeObjectURL(url);
+			thumbUrls.clear();
 		};
 
 		const setBusy = (busy: boolean) => {
@@ -220,13 +274,19 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			if (passwordToggle) passwordToggle.disabled = busy;
 			if (passwordInput) passwordInput.disabled = busy;
 			if (oneTimeToggle) oneTimeToggle.disabled = busy;
+			renderList();
 		};
 
 		const stateLabel = (index: number) => {
-			if (states[index] === 'done') return 'Selesai';
+			const file = files[index];
+			if (!file) return '';
+			if (states[index] === 'done') return '✓ Selesai';
 			if (states[index] === 'failed') return 'Gagal';
-			if (states[index] === 'uploading') return `${progress[index] ?? 0}%`;
-			return 'Menunggu';
+			if (states[index] === 'uploading') {
+				const percent = progress[index] ?? 0;
+				return shouldUseMultipart(file.size) ? `${percent}% · per bagian` : `${percent}%`;
+			}
+			return 'Siap diunggah';
 		};
 
 		const renderList = () => {
@@ -234,16 +294,72 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			files.forEach((file, index) => {
 				const item = document.createElement('li');
 				item.className = 'share-item';
+				item.dataset.state = states[index] ?? 'idle';
+
+				const thumb = document.createElement('span');
+				thumb.className = 'share-item__thumb';
+				if (file.type.startsWith('image/')) {
+					let url = thumbUrls.get(file);
+					if (!url) {
+						url = URL.createObjectURL(file);
+						thumbUrls.set(file, url);
+					}
+					const image = document.createElement('img');
+					image.src = url;
+					image.alt = '';
+					image.loading = 'lazy';
+					thumb.append(image);
+				} else {
+					const extension = file.name.split('.').pop() ?? 'file';
+					thumb.textContent = extension.slice(0, 4).toUpperCase();
+				}
+
+				const info = document.createElement('span');
+				info.className = 'share-item__info';
 
 				const name = document.createElement('span');
 				name.className = 'share-item__name';
-				name.textContent = `${file.name} · ${formatBytes(file.size)}`;
+				name.textContent = file.name;
+
+				const meta = document.createElement('span');
+				meta.className = 'share-item__meta';
+
+				const size = document.createElement('span');
+				size.textContent = formatBytes(file.size);
 
 				const state = document.createElement('span');
 				state.className = 'share-item__state';
 				state.textContent = stateLabel(index);
+				if (states[index] === 'done') state.classList.add('is-done');
+				if (states[index] === 'failed') state.classList.add('is-failed');
 
-				item.append(name, state);
+				meta.append(size, document.createTextNode(' · '), state);
+				info.append(name, meta);
+
+				const remove = document.createElement('button');
+				remove.type = 'button';
+				remove.className = 'icon-button share-item__remove';
+				remove.textContent = '×';
+				remove.disabled = running;
+				remove.setAttribute('aria-label', `Hapus ${file.name} dari daftar`);
+				remove.addEventListener('click', () => {
+					if (running) return;
+					const [removedFile] = files.splice(index, 1);
+					states.splice(index, 1);
+					progress.splice(index, 1);
+					attempts.splice(index, 1);
+					multipartStarted.delete(index);
+					if (removedFile) {
+						const url = thumbUrls.get(removedFile);
+						if (url) URL.revokeObjectURL(url);
+						thumbUrls.delete(removedFile);
+					}
+					resetSession();
+					result.hidden = true;
+					renderList();
+				});
+
+				item.append(thumb, info, remove);
 
 				if (states[index] === 'uploading' || states[index] === 'done') {
 					const bar = document.createElement('progress');
@@ -256,11 +372,14 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				list.append(item);
 			});
 			startButton.disabled = running || files.length === 0;
+			updateOverall();
 		};
 
 		const resetFiles = () => {
 			states = files.map(() => 'idle');
 			progress = files.map(() => 0);
+			attempts = files.map(() => 0);
+			multipartStarted.clear();
 			renderList();
 		};
 
@@ -269,7 +388,9 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			const picked = Array.from(input.files ?? []);
 			const problems = picked.map(validateFile).filter((item): item is string => item !== null);
 			files = picked.filter((file) => validateFile(file) === null);
-			status.textContent = problems[0] ?? '';
+			input.value = '';
+			clearThumbs();
+			setStatus(problems[0] ?? '');
 			result.hidden = true;
 			resetSession();
 			resetFiles();
@@ -361,29 +482,99 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 		const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
+		const uploadMultipart = async (index: number, active: ShareSession, file: File) => {
+			multipartStarted.add(index);
+			const info = await postJson<{ partCount: number; completed: number[] }>(
+				`/api/shares/${active.id}/multipart/start`,
+				{ index },
+			);
+
+			const total = partCount(file.size);
+			if (info.partCount !== total) {
+				throw new UploadError('Jumlah bagian tidak cocok dengan ukuran berkas.');
+			}
+
+			const done = new Set(info.completed);
+			let doneBytes = 0;
+			for (const part of done) {
+				if (part >= 1 && part <= total) doneBytes += partSize(file.size, part);
+			}
+
+			for (let part = 1; part <= total; part += 1) {
+				if (done.has(part)) continue;
+				if (cancelled) throw new UploadError('Unggahan dibatalkan.');
+
+				const range = partRange(file.size, part);
+				const chunk = file.slice(range.start, range.end);
+				let retry = 0;
+
+				for (;;) {
+					try {
+						const handle = putPartWithProgress(
+							`/api/shares/${active.id}/multipart/part?index=${index}&part=${part}`,
+							chunk,
+							(loaded) => {
+								progress[index] = Math.min(
+									99,
+									Math.round(((doneBytes + loaded) / file.size) * 100),
+								);
+								renderList();
+							},
+						);
+						current = handle;
+						await handle.promise;
+						doneBytes += chunk.size;
+						progress[index] = Math.min(99, Math.round((doneBytes / file.size) * 100));
+						renderList();
+						break;
+					} catch (error) {
+						if (cancelled) throw error;
+						const httpStatus = error instanceof UploadError ? error.status : undefined;
+						if (httpStatus !== undefined && httpStatus < 500) throw error;
+						retry += 1;
+						if (retry > 2) throw error;
+						setStatus(`Koneksi terputus di bagian ${part}. Mengulang ${retry}/2…`, true);
+						await delay(800 * retry);
+					}
+				}
+			}
+
+			await postJson(`/api/shares/${active.id}/multipart/complete`, { index });
+			multipartStarted.delete(index);
+		};
+
 		const uploadOne = async (index: number) => {
 			const active = session;
 			const file = files[index];
-			const target = active?.uploads[index];
-			if (!active || !file || !target) throw new UploadError('Respons server tidak lengkap.');
+			if (!active || !file) throw new UploadError('Respons server tidak lengkap.');
 
 			states[index] = 'uploading';
 			renderList();
-			status.textContent = `Mengunggah ${file.name}…`;
-
-			const handle = putWithProgress(
-				target.uploadUrl,
-				file,
-				file.type || 'application/octet-stream',
-				(loaded, total) => {
-					progress[index] = Math.round((loaded / total) * 100);
-					renderList();
-				},
+			setStatus(
+				`Mengunggah ${file.name}…${shouldUseMultipart(file.size) ? ' (per bagian 8 MB)' : ''}`,
+				true,
 			);
-			current = handle;
 
 			try {
-				await handle.promise;
+				if (shouldUseMultipart(file.size)) {
+					await uploadMultipart(index, active, file);
+				} else {
+					const target = active.uploads[index];
+					if (!target) throw new UploadError('Respons server tidak lengkap.');
+
+					const handle = putWithProgress(
+						target.uploadUrl,
+						file,
+						file.type || 'application/octet-stream',
+						(loaded, total) => {
+							progress[index] = Math.round((loaded / total) * 100);
+							renderList();
+						},
+					);
+					current = handle;
+					await handle.promise;
+				}
+
 				states[index] = 'done';
 				progress[index] = 100;
 				renderList();
@@ -406,7 +597,10 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 						const httpStatus = error instanceof UploadError ? error.status : undefined;
 						if (httpStatus === undefined && (attempts[index] ?? 0) < 1) {
 							attempts[index] = (attempts[index] ?? 0) + 1;
-							status.textContent = `Koneksi terputus. Mengulang ${files[index]?.name ?? 'berkas'} dari awal…`;
+							setStatus(
+								`Koneksi terputus. Mengulang ${files[index]?.name ?? 'berkas'}…`,
+								true,
+							);
 							await delay(1200);
 							continue;
 						}
@@ -424,7 +618,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			const stale = session !== null && Date.now() - createdAt > PRESIGN_WINDOW_MS;
 			const needsNewSession = !session || stale;
 			if (needsNewSession && TURNSTILE_SITE_KEY !== '' && turnstileToken === '') {
-				status.textContent = 'Selesaikan verifikasi keamanan dulu.';
+				setStatus('Selesaikan verifikasi keamanan dulu.');
 				return;
 			}
 
@@ -434,9 +628,9 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			try {
 				if (needsNewSession) {
 					if (stale) {
-						status.textContent = 'Sesi unggah sebelumnya sudah terlalu lama. Membuat link baru…';
+						setStatus('Sesi unggah sebelumnya sudah terlalu lama. Membuat link baru…', true);
 					} else {
-						status.textContent = 'Menyiapkan unggahan…';
+						setStatus('Menyiapkan unggahan…', true);
 					}
 					resetSession();
 					states = files.map(() => 'idle');
@@ -459,7 +653,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 						'Berkas sudah terkirim, tapi link belum selesai dibuat. Tekan Ulangi unggahan.',
 					);
 				}
-				status.textContent = '';
+				setStatus('');
 				retryable = false;
 				await showResult(active);
 				toast('Link siap dibagikan.');
@@ -467,11 +661,26 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				retryable = session !== null;
 				states = states.map((state) => (state === 'uploading' ? 'idle' : state));
 				renderList();
-				status.textContent = cancelled
-					? 'Unggahan dibatalkan. Berkas yang sudah selesai tidak diunggah ulang.'
-					: error instanceof Error
-						? error.message
-						: 'Terjadi kesalahan.';
+
+				if (cancelled && session) {
+					const active = session;
+					await Promise.all(
+						[...multipartStarted].map((index) =>
+							postJson(`/api/shares/${active.id}/multipart/abort`, { index }).catch(
+								() => null,
+							),
+						),
+					);
+					multipartStarted.clear();
+				}
+
+				setStatus(
+					cancelled
+						? 'Unggahan dibatalkan. Berkas yang sudah selesai tidak diunggah ulang.'
+						: error instanceof Error
+							? error.message
+							: 'Terjadi kesalahan.',
+				);
 			} finally {
 				current = null;
 				setBusy(false);
@@ -489,7 +698,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		cancelButton?.addEventListener('click', () => {
 			if (!running) return;
 			cancelled = true;
-			status.textContent = 'Membatalkan unggahan…';
+			setStatus('Membatalkan unggahan…', true);
 			current?.abort();
 		});
 
@@ -521,11 +730,10 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	}
 
 	.share-item {
-		display: flex;
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: 48px minmax(0, 1fr) 44px;
 		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-2);
+		gap: var(--space-2) var(--space-3);
 		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
@@ -533,10 +741,48 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		font-size: 0.875rem;
 	}
 
-	.share-item__name {
+	.share-item[data-state='failed'] {
+		border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+	}
+
+	.share-item__thumb {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+	}
+
+	.share-item__thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.share-item__info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
 		min-width: 0;
-		flex: 1 1 12rem;
+	}
+
+	.share-item__name {
 		overflow-wrap: anywhere;
+	}
+
+	.share-item__meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-1);
+		font-size: 0.75rem;
+		color: var(--text-muted);
 	}
 
 	.share-item__state {
@@ -544,9 +790,52 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		font-variant-numeric: tabular-nums;
 	}
 
+	.share-item__state.is-done {
+		color: var(--success);
+	}
+
+	.share-item__state.is-failed {
+		color: var(--danger);
+	}
+
+	.share-item__remove {
+		width: 44px;
+		height: 44px;
+	}
+
 	.share-item progress {
+		grid-column: 1 / -1;
 		width: 100%;
 		height: 8px;
+	}
+
+	.share-overall {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.share-overall[hidden] {
+		display: none;
+	}
+
+	.share-overall progress {
+		width: 100%;
+		height: 8px;
+	}
+
+	.share-overall .field-hint {
+		margin: 0;
+	}
+
+	.share-status-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.share-status-row .field-hint {
+		margin: 0;
 	}
 
 	.share-expiry,

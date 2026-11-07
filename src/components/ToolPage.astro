@@ -21,26 +21,39 @@ const LiveTool = getToolUI(tool.slug);
 const isLive = tool.status === 'siap' && LiveTool !== null;
 ---
 
-<div class="container">
+<div class="container" data-tool-meta={tool.slug}>
 	<nav class="breadcrumb" aria-label="Breadcrumb">
-		<a href="/">Beranda</a>
+		<a href="/" data-i18n="tool.home">Beranda</a>
 		<span aria-hidden="true">/</span>
-		<a href="/#katalog">{category}</a>
+		<a href="/#katalog" data-category-label={tool.category}>{category}</a>
 		<span aria-hidden="true">/</span>
-		<span aria-current="page">{tool.name}</span>
+		<span aria-current="page" data-tool-name>{tool.name}</span>
 	</nav>
 
 	<header class="tool-head" data-category={tool.category}>
 		<span class="tool-tile"><Icon name={tool.icon} size={24} /></span>
-		<h1 class="tool-title">{tool.name}</h1>
+		<h1 class="tool-title" data-tool-name>{tool.name}</h1>
 		<span class="privacy-label">
 			<Icon name={tool.privacy === 'lokal' ? 'laptop' : 'server'} size={16} />
-			{privacyLabel[tool.privacy]}
+			<span data-privacy-label={tool.privacy}>{privacyLabel[tool.privacy]}</span>
 		</span>
-		<span class="status-label">{statusLabel[tool.status]}</span>
+		<span class="status-label" data-status-label={tool.status}>{statusLabel[tool.status]}</span>
+		<button
+			type="button"
+			class="btn btn--ghost tool-fav"
+			data-favorite={tool.slug}
+			data-name={tool.name}
+			aria-pressed="false"
+			aria-label={`Simpan ${tool.name} ke favorit`}
+		>
+			<Icon name="star" size={16} />
+			<span data-i18n="tool.favorite">Favorit</span>
+		</button>
 	</header>
 
-	<p class="tool-lede">{tool.tagline}</p>
+	<span data-recent-tool={tool.slug} hidden></span>
+
+	<p class="tool-lede" data-tool-tagline>{tool.tagline}</p>
 
 	<div class:list={['tool-body', isLive && 'tool-body--live']}>
 		{
@@ -53,15 +66,15 @@ const isLive = tool.status === 'siap' && LiveTool !== null;
 					<span class="tool-tile" data-category={tool.category}>
 						<Icon name={tool.icon} size={24} />
 					</span>
-					<h2 class="text-lg font-semibold" id="workspace-title">
+					<h2 class="text-lg font-semibold" id="workspace-title" data-i18n="tool.notReady">
 						Alat ini belum jadi
 					</h2>
-					<p class="empty-state__body">
+					<p class="empty-state__body" data-i18n="tool.notReadyBody" data-name-value={tool.name}>
 						{tool.name} masuk daftar PRD dan akan muncul di sini setelah selesai.
 						Tidak ada tombol unggah di halaman ini supaya kamu tidak mengira
 						alatnya sudah jalan.
 					</p>
-					<a class="btn btn--primary" href="/#katalog">Buka katalog alat</a>
+					<a class="btn btn--primary" href="/#katalog" data-i18n="tool.openCatalog">Buka katalog alat</a>
 				</section>
 			)
 		}
@@ -70,19 +83,19 @@ const isLive = tool.status === 'siap' && LiveTool !== null;
 			{
 				isLive && tool.usage ? (
 					<>
-						<h2 class="panel__title" id="rencana-title">Cara pakai</h2>
+						<h2 class="panel__title" id="rencana-title" data-i18n="tool.usage">Cara pakai</h2>
 						<ul class="plan-list">
-							{tool.usage.map((step) => (
+							{tool.usage.map((step, index) => (
 								<li>
-									<span>{step}</span>
+									<span data-tool-usage-index={index}>{step}</span>
 								</li>
 							))}
 						</ul>
 					</>
 				) : (
 					<>
-						<h2 class="panel__title" id="rencana-title">Yang direncanakan</h2>
-						<p class="field-hint">Diambil dari PRD v1.0, modul {tool.name}.</p>
+						<h2 class="panel__title" id="rencana-title" data-i18n="tool.plans">Yang direncanakan</h2>
+						<p class="field-hint" data-i18n="tool.plansHint" data-name-value={tool.name}>Diambil dari PRD v1.0, modul {tool.name}.</p>
 						<ul class="plan-list">
 							{(tool.plans ?? []).map((plan) => (
 								<li>
@@ -101,7 +114,7 @@ const isLive = tool.status === 'siap' && LiveTool !== null;
 
 <section class="related" aria-labelledby="lain-title">
 	<div class="container">
-		<h2 class="section-title" id="lain-title">Alat lain di daftar</h2>
+		<h2 class="section-title" id="lain-title" data-i18n="tool.related">Alat lain di daftar</h2>
 		<ul class="related__grid">
 			{
 				related.map((item) => (
@@ -114,7 +127,27 @@ const isLive = tool.status === 'siap' && LiveTool !== null;
 	</div>
 </section>
 
+<script>
+	import { recordRecent } from '../lib/favorites';
+
+	const marker = document.querySelector<HTMLElement>('[data-recent-tool]');
+	const slug = marker?.dataset.recentTool ?? '';
+	if (slug !== '') recordRecent(localStorage, slug);
+</script>
+
 <style>
+	.tool-fav {
+		margin-left: auto;
+	}
+
+	.tool-fav[aria-pressed='true'] {
+		color: var(--accent);
+	}
+
+	.tool-fav[aria-pressed='true'] svg {
+		fill: currentColor;
+	}
+
 	.related__grid {
 		margin: var(--space-4) 0 0;
 		padding: 0;

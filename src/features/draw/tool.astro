@@ -3,17 +3,69 @@
 <div class="draw-shell">
 	<div class="draw-root-host" data-draw-root></div>
 	<div class="draw-export" role="group" aria-label="Ekspor gambar">
+		<button type="button" class="btn btn--secondary" data-copy>Salin gambar</button>
 		<button type="button" class="btn btn--secondary" data-export="png">Unduh PNG</button>
 		<button type="button" class="btn btn--secondary" data-export="svg">Unduh SVG</button>
 		<button type="button" class="btn btn--secondary" data-export="excalidraw">Unduh .excalidraw</button>
+		<button type="button" class="btn btn--secondary" data-share>Bagikan</button>
+	</div>
+	<div class="draw-share-result" data-share-result hidden>
+		<label class="sr-only" for="draw-share-url">Link hanya-baca</label>
+		<input class="field-input" id="draw-share-url" readonly />
+		<button type="button" class="btn btn--secondary" id="draw-share-copy">Salin link</button>
 	</div>
 </div>
 
 <script>
+	import { copyText } from '../../lib/clipboard';
+	import { buildSessionUrl, encodeSession, SessionTooLargeError } from '../../lib/share-session';
 	import { toast } from '../../lib/toast';
 	import { mountDraw } from './mount-draw';
 
 	mountDraw(document.querySelector('[data-draw-root]'));
+
+	const shareButton = document.querySelector<HTMLButtonElement>('[data-share]');
+	const shareResult = document.querySelector<HTMLElement>('[data-share-result]');
+	const shareUrl = document.getElementById('draw-share-url') as HTMLInputElement | null;
+	const shareCopy = document.getElementById('draw-share-copy');
+
+	shareButton?.addEventListener('click', async () => {
+		const api = window.toolsmanDraw;
+		if (!api) {
+			toast('Kanvas belum siap. Tunggu sebentar.');
+			return;
+		}
+
+		try {
+			const token = await encodeSession({ v: 1, type: 'draw', scene: api.getScene() });
+			const url = buildSessionUrl(`${location.origin}/tools/draw/`, token);
+			if (shareUrl && shareResult) {
+				shareUrl.value = url;
+				shareResult.hidden = false;
+			}
+			const copied = await copyText(url);
+			toast(
+				copied
+					? `Link hanya-baca disalin (${url.length} karakter).`
+					: `Link dibuat (${url.length} karakter). Salin dari kolom.`,
+			);
+		} catch (error) {
+			if (shareResult) shareResult.hidden = true;
+			if (error instanceof SessionTooLargeError) {
+				toast(
+					`Kanvas terlalu besar untuk link (${error.length.toLocaleString('id-ID')} dari ${error.limit.toLocaleString('id-ID')} karakter). Hapus beberapa elemen atau gambar, lalu coba lagi.`,
+				);
+				return;
+			}
+			toast(error instanceof Error ? error.message : 'Gagal membuat link.');
+		}
+	});
+
+	shareCopy?.addEventListener('click', async () => {
+		if (!shareUrl) return;
+		const copied = await copyText(shareUrl.value);
+		toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.');
+	});
 
 	const download = (name: string, blob: Blob) => {
 		const url = URL.createObjectURL(blob);
@@ -30,6 +82,31 @@
 		const cleaned = value.trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').toLowerCase();
 		return cleaned === '' ? 'gambar' : cleaned;
 	};
+
+	document.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async () => {
+		const api = window.toolsmanDraw;
+		if (!api) {
+			toast('Kanvas belum siap. Tunggu sebentar.');
+			return;
+		}
+
+		if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+			toast('Peramban ini belum mendukung salin gambar. Pakai Unduh PNG.');
+			return;
+		}
+
+		try {
+			const blob = await api.getBlob('png');
+			if (!blob) {
+				toast('Gagal membuat gambar.');
+				return;
+			}
+			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+			toast('Gambar disalin ke clipboard.');
+		} catch {
+			toast('Gagal menyalin gambar. Coba Unduh PNG.');
+		}
+	});
 
 	document.querySelectorAll<HTMLButtonElement>('[data-export]').forEach((button) => {
 		button.addEventListener('click', async () => {
@@ -101,5 +178,41 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
+	}
+
+	.draw-share-result {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	.draw-share-result[hidden] {
+		display: none;
+	}
+
+	.draw-share-result .field-input {
+		flex: 1 1 260px;
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+	}
+</style>
+
+<style is:global>
+	.draw-share-banner--warning {
+		border-color: var(--danger);
+		background: var(--surface-2);
+	}
+
+	.draw-share-banner {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		background: var(--accent-soft);
+		font-size: 0.875rem;
 	}
 </style>

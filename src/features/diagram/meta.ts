@@ -25,6 +25,7 @@ export const meta: ToolMeta = {
 		'Pilih template di atas editor, lalu ubah kodenya. Pratinjau ikut berubah.',
 		'Kalau ada error sintaks, pesannya menunjuk baris yang bermasalah.',
 		'Unduh PNG atau SVG setelah diagramnya valid.',
+		'Editor Visual membuka diagrams.net di dalam halaman. Tekan Save & Exit di sana untuk mengunduh berkas .drawio.',
 	],
 	privacyDetail:
 		'Kode diagram disimpan sebagai draf di browser ini. Tidak dikirim ke server.',

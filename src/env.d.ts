@@ -2,6 +2,11 @@
 
 interface ToolsmanDrawApi {
 	getBlob: (format: 'png' | 'svg' | 'json') => Promise<Blob | null>;
+	getScene: () => {
+		elements: unknown[];
+		appState: { viewBackgroundColor?: string };
+		files: Record<string, unknown>;
+	};
 	name: () => string;
 }
 

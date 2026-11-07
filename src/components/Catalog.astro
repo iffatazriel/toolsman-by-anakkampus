@@ -13,12 +13,12 @@ const { tools } = Astro.props;
 
 <section class="catalog container" id="katalog" aria-labelledby="katalog-title">
 	<div class="section-head">
-		<h2 class="section-title" id="katalog-title">Alat di daftar MVP</h2>
-		<p class="section-meta">{tools.length} modul</p>
+		<h2 class="section-title" id="katalog-title" data-i18n="catalog.title">Alat di daftar MVP</h2>
+		<p class="section-meta" data-i18n="catalog.meta" data-count-value={tools.length}>{tools.length} modul</p>
 	</div>
 
-	<p class="catalog-intro">
-		Enam alat MVP di bawah ini bisa langsung dipakai. File diproses di browser,
+	<p class="catalog-intro" data-i18n="catalog.intro" data-count-value={tools.length}>
+		{tools.length} alat di bawah ini bisa langsung dipakai. File diproses di browser,
 		kecuali Kirim File yang memakai server dan ditandai di kartunya.
 	</p>
 
@@ -45,13 +45,12 @@ const { tools } = Astro.props;
 	</ul>
 
 	<div class="empty-state" data-catalog-empty hidden>
-		<p class="empty-state__title">Tidak ada alat yang cocok</p>
-		<p class="empty-state__body">
-			Belum ada hasil untuk "<span data-empty-query></span>" di kategori yang
-			dipilih. Coba kata lain seperti "pdf", "foto", atau "json", atau hapus
-			filter kategori.
+		<p class="empty-state__title" data-i18n="catalog.emptyTitle">Tidak ada alat yang cocok</p>
+		<p class="empty-state__body" data-empty-body>
+			Belum ada hasil untuk "..." di kategori yang dipilih. Coba kata lain seperti
+			"pdf", "foto", atau "json", atau hapus filter kategori.
 		</p>
-		<button type="button" class="btn btn--secondary mt-4" data-catalog-reset>
+		<button type="button" class="btn btn--secondary mt-4" data-catalog-reset data-i18n="catalog.reset">
 			Hapus filter
 		</button>
 	</div>
@@ -76,6 +75,7 @@ const { tools } = Astro.props;
 </style>
 
 <script>
+	import { fill, readLang, t } from '../lib/i18n';
 	import { matches } from '../lib/search';
 
 	const grid = document.querySelector<HTMLElement>('[data-tool-grid]');
@@ -88,7 +88,7 @@ const { tools } = Astro.props;
 		);
 		const count = document.querySelector<HTMLElement>('[data-count]');
 		const empty = document.querySelector<HTMLElement>('[data-catalog-empty]');
-		const emptyQuery = document.querySelector<HTMLElement>('[data-empty-query]');
+		const emptyBody = document.querySelector<HTMLElement>('[data-empty-body]');
 		const reset = document.querySelector<HTMLButtonElement>('[data-catalog-reset]');
 		const total = items.length;
 		let category = 'semua';
@@ -110,14 +110,19 @@ const { tools } = Astro.props;
 				if (hit) visible += 1;
 			});
 
+			const lang = readLang();
 			const filtered = query.trim() !== '' || category !== 'semua';
 			if (count) {
 				count.textContent = filtered
-					? `${visible} dari ${total} alat`
-					: `${total} alat`;
+					? fill(t(lang, 'catalog.countFiltered'), { visible, total })
+					: fill(t(lang, 'catalog.count'), { n: total });
 			}
 			if (empty) empty.hidden = visible !== 0;
-			if (emptyQuery) emptyQuery.textContent = query;
+			if (emptyBody) {
+				emptyBody.textContent = fill(t(lang, 'catalog.emptyBody'), {
+					query: query.trim() === '' ? '...' : query,
+				});
+			}
 		};
 
 		chips.forEach((chip) => {
@@ -151,5 +156,8 @@ const { tools } = Astro.props;
 			apply();
 			input?.focus();
 		});
+
+		document.addEventListener('lang:change', apply);
+		apply();
 	}
 </script>

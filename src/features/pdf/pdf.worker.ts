@@ -2,6 +2,7 @@ import * as pdfjs from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import {
 	compressSettings,
+	editPdf,
 	imagesToPdf,
 	mergePdfs,
 	rebuildCompressed,
@@ -9,6 +10,7 @@ import {
 	type CompressLevel,
 	type Margin,
 	type Orientation,
+	type PageEdits,
 	type RenderedPage,
 } from './pdf-ops';
 
@@ -49,6 +51,17 @@ class WorkerCanvasFactory {
 	}
 }
 
+export interface OutputImage {
+	name: string;
+	mime: 'image/png' | 'image/jpeg';
+	bytes: Uint8Array;
+}
+
+export interface PreviewImage {
+	mime: 'image/jpeg';
+	bytes: Uint8Array;
+}
+
 export type WorkerRequest =
 	| { id: number; op: 'merge'; files: ArrayBuffer[] }
 	| { id: number; op: 'split'; file: ArrayBuffer; pages: number[] }
@@ -59,11 +72,21 @@ export type WorkerRequest =
 			orientation: Orientation;
 			margin: Margin;
 	  }
-	| { id: number; op: 'compress'; file: ArrayBuffer; level: CompressLevel };
+	| { id: number; op: 'compress'; file: ArrayBuffer; level: CompressLevel }
+	| { id: number; op: 'edit'; file: ArrayBuffer; edits: PageEdits }
+	| { id: number; op: 'to-images'; file: ArrayBuffer; format: 'png' | 'jpeg'; scale: number }
+	| { id: number; op: 'preview'; file: ArrayBuffer };
 
 export type WorkerResponse =
 	| { id: number; type: 'progress'; done: number; total: number }
-	| { id: number; type: 'result'; bytes: Uint8Array; pageCount?: number }
+	| {
+			id: number;
+			type: 'result';
+			bytes: Uint8Array;
+			pageCount?: number;
+			images?: OutputImage[];
+			preview?: PreviewImage;
+	  }
 	| { id: number; type: 'error'; message: string };
 
 async function renderPages(bytes: ArrayBuffer, level: CompressLevel, id: number): Promise<RenderedPage[]> {
@@ -101,11 +124,95 @@ async function renderPages(bytes: ArrayBuffer, level: CompressLevel, id: number)
 	return pages;
 }
 
+async function renderPageImages(
+	bytes: ArrayBuffer,
+	format: 'png' | 'jpeg',
+	scale: number,
+	id: number,
+): Promise<OutputImage[]> {
+	const mime = format === 'png' ? 'image/png' : 'image/jpeg';
+	const extension = format === 'png' ? 'png' : 'jpg';
+	const loadingTask = pdfjs.getDocument({
+		data: new Uint8Array(bytes),
+		CanvasFactory: WorkerCanvasFactory,
+	});
+	const doc = await loadingTask.promise;
+	const images: OutputImage[] = [];
+
+	for (let index = 1; index <= doc.numPages; index += 1) {
+		const page = await doc.getPage(index);
+		const viewport = page.getViewport({ scale });
+		const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+		const context = canvas.getContext('2d');
+		if (!context) throw new Error('Kanvas tidak tersedia di worker.');
+
+		if (format === 'jpeg') {
+			context.fillStyle = '#ffffff';
+			context.fillRect(0, 0, canvas.width, canvas.height);
+		}
+
+		await page.render({
+			canvasContext: context as unknown as CanvasRenderingContext2D,
+			canvas: canvas as unknown as HTMLCanvasElement,
+			viewport,
+		}).promise;
+
+		const blob = await canvas.convertToBlob({
+			type: mime,
+			quality: format === 'jpeg' ? 0.92 : undefined,
+		});
+		const pageBytes = new Uint8Array(await blob.arrayBuffer());
+		images.push({
+			name: `halaman-${String(index).padStart(2, '0')}.${extension}`,
+			mime,
+			bytes: pageBytes,
+		});
+		postMessage({ id, type: 'progress', done: index, total: doc.numPages } satisfies WorkerResponse);
+	}
+
+	await loadingTask.destroy();
+	return images;
+}
+
+async function previewPdf(
+	bytes: ArrayBuffer,
+): Promise<{ preview: PreviewImage; pageCount: number }> {
+	const loadingTask = pdfjs.getDocument({
+		data: new Uint8Array(bytes),
+		CanvasFactory: WorkerCanvasFactory,
+	});
+	const doc = await loadingTask.promise;
+	const pageCount = doc.numPages;
+	const page = await doc.getPage(1);
+	const base = page.getViewport({ scale: 1 });
+	const scale = Math.min(0.6, 300 / base.width);
+	const viewport = page.getViewport({ scale });
+	const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+	const context = canvas.getContext('2d');
+	if (!context) throw new Error('Kanvas tidak tersedia di worker.');
+
+	context.fillStyle = '#ffffff';
+	context.fillRect(0, 0, canvas.width, canvas.height);
+	await page.render({
+		canvasContext: context as unknown as CanvasRenderingContext2D,
+		canvas: canvas as unknown as HTMLCanvasElement,
+		viewport,
+	}).promise;
+
+	const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.82 });
+	const previewBytes = new Uint8Array(await blob.arrayBuffer());
+	await loadingTask.destroy();
+
+	return { preview: { mime: 'image/jpeg', bytes: previewBytes }, pageCount };
+}
+
 self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
 	const request = event.data;
 	try {
-		let bytes: Uint8Array;
+		let bytes: Uint8Array = new Uint8Array();
 		let pageCount: number | undefined;
+		let images: OutputImage[] | undefined;
+		let preview: PreviewImage | undefined;
 
 		if (request.op === 'merge') {
 			bytes = await mergePdfs(request.files);
@@ -117,14 +224,33 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
 				orientation: request.orientation,
 				margin: request.margin,
 			});
-		} else {
+		} else if (request.op === 'compress') {
 			const pages = await renderPages(request.file, request.level, request.id);
 			bytes = await rebuildCompressed(pages);
 			pageCount = pages.length;
+		} else if (request.op === 'edit') {
+			bytes = await editPdf(request.file, request.edits);
+		} else if (request.op === 'preview') {
+			const info = await previewPdf(request.file);
+			preview = info.preview;
+			pageCount = info.pageCount;
+		} else {
+			images = await renderPageImages(request.file, request.format, request.scale, request.id);
+			pageCount = images.length;
 		}
 
-		const response: WorkerResponse = { id: request.id, type: 'result', bytes, pageCount };
-		postMessage(response, { transfer: [bytes.buffer as ArrayBuffer] });
+		const response: WorkerResponse = {
+			id: request.id,
+			type: 'result',
+			bytes,
+			pageCount,
+			images,
+			preview,
+		};
+		const transfer: ArrayBuffer[] = [bytes.buffer as ArrayBuffer];
+		images?.forEach((image) => transfer.push(image.bytes.buffer as ArrayBuffer));
+		if (preview) transfer.push(preview.bytes.buffer as ArrayBuffer);
+		postMessage(response, { transfer });
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Gagal memproses PDF.';
 		postMessage({ id: request.id, type: 'error', message } satisfies WorkerResponse);

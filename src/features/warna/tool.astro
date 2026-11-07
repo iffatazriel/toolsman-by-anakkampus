@@ -1,0 +1,356 @@
+---
+---
+
+<div class="tool-shell warna-shell">
+	<div class="pane-grid pane-grid--split">
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Pilih warna</h2>
+			</div>
+
+			<div class="color-field">
+				<label class="field-label" for="fg-color">Teks</label>
+				<div class="color-inputs">
+					<input type="color" id="fg-color" value="#1f1d1a" aria-label="Warna teks" />
+					<input
+						class="field-input color-hex"
+						id="fg-hex"
+						type="text"
+						value="#1f1d1a"
+						spellcheck="false"
+						aria-label="HEX warna teks"
+					/>
+				</div>
+			</div>
+
+			<div class="color-field">
+				<label class="field-label" for="bg-color">Latar</label>
+				<div class="color-inputs">
+					<input type="color" id="bg-color" value="#faf8f5" aria-label="Warna latar" />
+					<input
+						class="field-input color-hex"
+						id="bg-hex"
+						type="text"
+						value="#faf8f5"
+						spellcheck="false"
+						aria-label="HEX warna latar"
+					/>
+				</div>
+			</div>
+
+			<div class="pane-actions">
+				<button type="button" class="btn btn--secondary" id="color-swap">Tukar teks dan latar</button>
+			</div>
+
+			<div class="contrast-card" id="contrast-card">
+				<p class="sample-normal" id="sample-normal">Contoh teks biasa 16 px di atas latar ini.</p>
+				<p class="sample-large" id="sample-large">Contoh teks besar 24 px.</p>
+			</div>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Kontras</h2>
+				<span class="ratio" id="color-ratio">16.00:1</span>
+			</div>
+
+			<div class="wcag-list">
+				<div class="wcag-row">
+					<span>Teks biasa, AA (4.5:1)</span>
+					<span class="badge" id="wcag-normal-aa"></span>
+				</div>
+				<div class="wcag-row">
+					<span>Teks biasa, AAA (7:1)</span>
+					<span class="badge" id="wcag-normal-aaa"></span>
+				</div>
+				<div class="wcag-row">
+					<span>Teks besar, AA (3:1)</span>
+					<span class="badge" id="wcag-large-aa"></span>
+				</div>
+				<div class="wcag-row">
+					<span>Teks besar, AAA (4.5:1)</span>
+					<span class="badge" id="wcag-large-aaa"></span>
+				</div>
+			</div>
+
+			<p class="field-hint">
+				Rasio dihitung dari luminansi relatif. Teks besar berarti 18 px tebal atau 24 px biasa.
+			</p>
+
+			<div class="pane__head scale-head">
+				<h2 class="pane__title">Palet turunan</h2>
+				<p class="field-hint">Klik untuk menyalin HEX.</p>
+			</div>
+			<div class="scale" id="color-scale"></div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { toast } from '../../lib/toast';
+	import {
+		contrastRatio,
+		generateScale,
+		normalizeHex,
+		wcag,
+	} from './color';
+
+	const fgColor = document.getElementById('fg-color') as HTMLInputElement | null;
+	const fgHex = document.getElementById('fg-hex') as HTMLInputElement | null;
+	const bgColor = document.getElementById('bg-color') as HTMLInputElement | null;
+	const bgHex = document.getElementById('bg-hex') as HTMLInputElement | null;
+	const swap = document.getElementById('color-swap');
+	const ratioText = document.getElementById('color-ratio');
+	const sampleNormal = document.getElementById('sample-normal');
+	const sampleLarge = document.getElementById('sample-large');
+	const scaleBox = document.getElementById('color-scale');
+	const badges = {
+		normalAA: document.getElementById('wcag-normal-aa'),
+		normalAAA: document.getElementById('wcag-normal-aaa'),
+		largeAA: document.getElementById('wcag-large-aa'),
+		largeAAA: document.getElementById('wcag-large-aaa'),
+	};
+
+	if (
+		fgColor &&
+		fgHex &&
+		bgColor &&
+		bgHex &&
+		swap &&
+		ratioText &&
+		sampleNormal &&
+		sampleLarge &&
+		scaleBox
+	) {
+		let foreground = '#1f1d1a';
+		let background = '#faf8f5';
+
+		const setBadge = (element: HTMLElement | null, pass: boolean) => {
+			if (!element) return;
+			element.textContent = pass ? 'Lolos' : 'Gagal';
+			element.classList.toggle('is-pass', pass);
+			element.classList.toggle('is-fail', !pass);
+		};
+
+		const renderScale = () => {
+			scaleBox.innerHTML = '';
+			for (const step of generateScale(foreground)) {
+				const item = document.createElement('div');
+				item.className = 'scale-item';
+
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'scale-swatch';
+				button.style.setProperty('--swatch', step.hex);
+				button.setAttribute('aria-label', `Salin ${step.hex}`);
+				button.addEventListener('click', async () => {
+					const copied = await copyText(step.hex);
+					toast(copied ? `${step.hex} disalin.` : 'Gagal menyalin. Tulis manual.');
+				});
+
+				const label = document.createElement('span');
+				label.textContent = `${step.label} · ${step.hex}`;
+
+				item.append(button, label);
+				scaleBox.append(item);
+			}
+		};
+
+		const apply = () => {
+			fgColor.value = foreground;
+			fgHex.value = foreground;
+			bgColor.value = background;
+			bgHex.value = background;
+
+			const ratio = contrastRatio(foreground, background) ?? 0;
+			const result = wcag(ratio);
+
+			ratioText.textContent = `${ratio.toFixed(2)}:1`;
+			sampleNormal.style.color = foreground;
+			sampleNormal.style.background = background;
+			sampleLarge.style.color = foreground;
+			sampleLarge.style.background = background;
+
+			setBadge(badges.normalAA, result.normalAA);
+			setBadge(badges.normalAAA, result.normalAAA);
+			setBadge(badges.largeAA, result.largeAA);
+			setBadge(badges.largeAAA, result.largeAAA);
+			renderScale();
+		};
+
+		const bindColor = (
+			colorInput: HTMLInputElement,
+			hexInput: HTMLInputElement,
+			set: (value: string) => void,
+		) => {
+			colorInput.addEventListener('input', () => {
+				set(colorInput.value);
+				hexInput.removeAttribute('aria-invalid');
+				apply();
+			});
+
+			const updateFromHex = () => {
+				const normalized = normalizeHex(hexInput.value);
+				if (!normalized) {
+					hexInput.setAttribute('aria-invalid', 'true');
+					return;
+				}
+				hexInput.removeAttribute('aria-invalid');
+				set(normalized);
+				apply();
+			};
+
+			hexInput.addEventListener('input', updateFromHex);
+			hexInput.addEventListener('blur', () => {
+				if (!normalizeHex(hexInput.value)) {
+					hexInput.value = colorInput.value;
+					hexInput.removeAttribute('aria-invalid');
+				}
+			});
+		};
+
+		bindColor(fgColor, fgHex, (value) => {
+			foreground = value;
+		});
+		bindColor(bgColor, bgHex, (value) => {
+			background = value;
+		});
+
+		swap.addEventListener('click', () => {
+			[foreground, background] = [background, foreground];
+			apply();
+		});
+
+		apply();
+	}
+</script>
+
+<style>
+	.warna-shell {
+		padding: var(--space-4);
+	}
+
+	.color-field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	.color-inputs {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.color-inputs input[type='color'] {
+		width: 52px;
+		height: 44px;
+		padding: 2px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.color-hex {
+		max-width: 150px;
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+	}
+
+	.contrast-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		padding: var(--space-4);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+	}
+
+	.contrast-card p {
+		margin: 0;
+	}
+
+	.sample-normal {
+		font-size: 1rem;
+	}
+
+	.sample-large {
+		font-size: 1.5rem;
+	}
+
+	.ratio {
+		font-family: var(--font-mono);
+		font-size: 1.5rem;
+		font-weight: 600;
+	}
+
+	.wcag-list {
+		display: flex;
+		flex-direction: column;
+		border-top: 1px solid var(--border);
+	}
+
+	.wcag-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		padding: var(--space-2) 0;
+		border-bottom: 1px solid var(--border);
+		font-size: 0.9375rem;
+	}
+
+	.badge {
+		padding: 2px 8px;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+
+	.badge.is-pass {
+		border-color: light-dark(#9ccdb4, #2a5a43);
+		background: light-dark(#e8f5ee, #1b2c24);
+		color: light-dark(#11663f, #3dbe86);
+	}
+
+	.badge.is-fail {
+		border-color: light-dark(#e2b4b4, #5c2e2e);
+		background: light-dark(#fbeaea, #2e1b1b);
+		color: light-dark(#8f2424, #f06b6b);
+	}
+
+	.scale-head {
+		margin-top: var(--space-4);
+	}
+
+	.scale {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: var(--space-2);
+		margin-top: var(--space-3);
+	}
+
+	.scale-item {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		color: var(--text-muted);
+	}
+
+	.scale-swatch {
+		height: 44px;
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-sm);
+		background: var(--swatch);
+	}
+
+	@media (max-width: 480px) {
+		.scale {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+</style>

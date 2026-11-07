@@ -22,10 +22,12 @@ export interface ShareRow {
 
 export interface ShareFileRow {
 	share_id: string;
+	file_index?: number | null;
 	object_key: string;
 	name: string;
 	size: number;
 	mime: string;
 	downloads: number;
 	purged: number;
+	upload_id?: string | null;
 }

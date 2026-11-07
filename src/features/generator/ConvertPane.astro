@@ -1,0 +1,151 @@
+---
+const modes = [
+	{ id: 'json-csv', label: 'JSON → CSV' },
+	{ id: 'csv-json', label: 'CSV → JSON' },
+	{ id: 'json-yaml', label: 'JSON → YAML' },
+	{ id: 'yaml-json', label: 'YAML → JSON' },
+];
+
+---
+
+<div class="pane-grid pane-grid--split">
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Masukan</h2>
+			<div class="segmented" role="radiogroup" aria-label="Arah konversi">
+				{
+					modes.map((mode, index) => (
+						<button
+							type="button"
+							class="segmented__btn"
+							role="radio"
+							aria-checked={index === 0 ? 'true' : 'false'}
+							data-convert-mode={mode.id}
+						>
+							{mode.label}
+						</button>
+					))
+				}
+			</div>
+		</div>
+		<label class="sr-only" for="convert-input">Teks sumber</label>
+		<textarea
+			id="convert-input"
+			class="code-area"
+			spellcheck="false"
+			placeholder='[{"nama":"Budi","umur":21}]'></textarea>
+		<p class="field-hint">
+			Untuk CSV, baris pertama dianggap judul kolom. Nilai yang mengandung koma atau kutip
+			otomatis diapit tanda kutip.
+		</p>
+		<div class="alert" id="convert-error" role="alert" hidden>
+			<p id="convert-error-text"></p>
+		</div>
+	</div>
+
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Hasil</h2>
+			<div class="pane-actions">
+				<button type="button" class="btn btn--secondary" id="convert-copy" disabled>Salin</button>
+				<button type="button" class="btn btn--primary" id="convert-download" disabled>Unduh</button>
+			</div>
+		</div>
+		<pre class="code-block" id="convert-output" hidden><code id="convert-code"></code></pre>
+		<p class="preview-empty" id="convert-empty">Tekan salah satu arah konversi di atas.</p>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { csvToJson, jsonToCsv, jsonToYaml, yamlToJson } from '../../lib/convert';
+	import { toast } from '../../lib/toast';
+
+	const input = document.getElementById('convert-input') as HTMLTextAreaElement | null;
+	const output = document.getElementById('convert-output');
+	const code = document.getElementById('convert-code');
+	const empty = document.getElementById('convert-empty');
+	const errorBox = document.getElementById('convert-error');
+	const errorText = document.getElementById('convert-error-text');
+	const copy = document.getElementById('convert-copy') as HTMLButtonElement | null;
+	const download = document.getElementById('convert-download') as HTMLButtonElement | null;
+	const modeButtons = Array.from(
+		document.querySelectorAll<HTMLButtonElement>('[data-convert-mode]'),
+	);
+
+	const extensions: Record<string, string> = {
+		'json-csv': 'csv',
+		'csv-json': 'json',
+		'json-yaml': 'yaml',
+		'yaml-json': 'json',
+	};
+
+	const converters = {
+		'json-csv': jsonToCsv,
+		'csv-json': csvToJson,
+		'json-yaml': jsonToYaml,
+		'yaml-json': yamlToJson,
+	};
+
+	if (input && output && code && empty && errorBox && errorText && copy && download) {
+		let mode = 'json-csv';
+		let result = '';
+
+		const showError = (message: string | null) => {
+			errorBox.hidden = message === null;
+			errorText.textContent = message ?? '';
+			if (message) input.setAttribute('aria-invalid', 'true');
+			else input.removeAttribute('aria-invalid');
+		};
+
+		const run = () => {
+			showError(null);
+			const converter = converters[mode as keyof typeof converters];
+			const outcome = converter(input.value);
+
+			if (outcome.ok) {
+				result = outcome.text;
+				const blank = result === '';
+				code.textContent = result;
+				output.hidden = blank;
+				empty.hidden = !blank;
+				copy.disabled = blank;
+				download.disabled = blank;
+			} else {
+				result = '';
+				code.textContent = '';
+				output.hidden = true;
+				empty.hidden = false;
+				copy.disabled = true;
+				download.disabled = true;
+				showError(outcome.error);
+			}
+		};
+
+		modeButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				mode = button.dataset.convertMode ?? 'json-csv';
+				modeButtons.forEach((other) =>
+					other.setAttribute('aria-checked', other === button ? 'true' : 'false'),
+				);
+				run();
+			});
+		});
+
+		input.addEventListener('input', run);
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(result);
+			toast(copied ? 'Hasil disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		download.addEventListener('click', () => {
+			const extension = extensions[mode] ?? 'txt';
+			downloadText(`hasil.${extension}`, result, 'text/plain;charset=utf-8');
+			toast('Berkas diunduh.');
+		});
+
+		run();
+	}
+</script>

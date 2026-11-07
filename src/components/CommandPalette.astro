@@ -14,7 +14,7 @@ const { tools } = Astro.props;
 
 <Modal id="palette" labelledby="palette-title">
 	<div class="palette__head">
-		<label class="palette__label" id="palette-title" for="palette-input">Cari alat</label>
+		<label class="palette__label" id="palette-title" for="palette-input" data-i18n="palette.label">Cari alat</label>
 		<kbd class="kbd">Esc</kbd>
 	</div>
 
@@ -27,13 +27,19 @@ const { tools } = Astro.props;
 			placeholder="mis. gabung pdf, flowchart, pas foto"
 			autocomplete="off"
 			data-palette-input
+			data-i18n-placeholder="palette.placeholder"
 		/>
 	</div>
 
 	<ul class="palette__list" data-palette-list>
 		{
 			tools.map((tool) => (
-				<li data-palette-item data-search={normalize(searchableFields(tool).join(' '))}>
+				<li
+					data-palette-item
+					data-palette-slug={tool.slug}
+					data-category={tool.category}
+					data-search={normalize(searchableFields(tool).join(' '))}
+				>
 					<a class="palette__link" href={`/tools/${tool.slug}/`}>
 						<span class="tool-tile" data-category={tool.category}>
 							<Icon name={tool.icon} size={18} />
@@ -46,13 +52,13 @@ const { tools } = Astro.props;
 		}
 	</ul>
 
-	<p class="palette__empty" data-palette-empty hidden>
+	<p class="palette__empty" data-palette-empty data-i18n="palette.empty" hidden>
 		Belum ada alat yang cocok. Coba kata lain seperti "pdf", "foto", atau "json".
 	</p>
 
 	<div class="palette__foot">
-		<span>↑ ↓ untuk pilih</span>
-		<span>Enter untuk buka</span>
+		<span data-i18n="palette.updown">↑ ↓ untuk pilih</span>
+		<span data-i18n="palette.enter">Enter untuk buka</span>
 	</div>
 </Modal>
 
@@ -149,6 +155,7 @@ const { tools } = Astro.props;
 		});
 
 		input?.addEventListener('input', filter);
+		document.addEventListener('lang:change', filter);
 
 		input?.addEventListener('keydown', (event) => {
 			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;

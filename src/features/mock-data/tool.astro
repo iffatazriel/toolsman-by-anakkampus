@@ -1,0 +1,227 @@
+---
+import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
+---
+
+<div class="tool-shell mock-shell">
+	<div class="pane-grid pane-grid--split">
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Pengaturan</h2>
+			</div>
+
+			<div class="form-grid">
+				<div>
+					<label class="field-label" for="mock-count">Jumlah baris</label>
+					<input class="field-input" id="mock-count" type="number" min="1" max="200" value="10" />
+					<p class="field-hint">Satu sampai 200 baris.</p>
+				</div>
+
+				<div>
+					<label class="field-label" for="mock-seed">Seed</label>
+					<div class="mock-seed-row">
+						<input class="field-input" id="mock-seed" type="number" value="42" />
+						<button type="button" class="btn btn--secondary" id="mock-random">Acak</button>
+					</div>
+					<p class="field-hint">Seed yang sama menghasilkan data yang sama.</p>
+				</div>
+
+				<fieldset class="mock-fields">
+					<legend class="field-label">Field</legend>
+					<div class="mock-field-grid">
+						{
+							mockFields.map((field) => (
+								<label class="check-row">
+									<input
+										type="checkbox"
+										value={field.id}
+										checked={DEFAULT_MOCK_FIELDS.includes(field.id)}
+										data-mock-field
+									/>
+									{field.label}
+								</label>
+							))
+						}
+					</div>
+				</fieldset>
+			</div>
+
+			<div class="pane-actions">
+				<button type="button" class="btn btn--primary" id="mock-generate">Buat data</button>
+			</div>
+
+			<p class="field-hint">
+				Data ini palsu. Jangan dipakai sebagai data nyata atau data pribadi sungguhan.
+			</p>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Hasil</h2>
+				<div class="pane-actions">
+					<div class="segmented" role="group" aria-label="Format hasil">
+						<button type="button" class="segmented__btn" data-mock-output="json" aria-pressed="true">
+							JSON
+						</button>
+						<button type="button" class="segmented__btn" data-mock-output="csv" aria-pressed="false">
+							CSV
+						</button>
+					</div>
+					<button type="button" class="btn btn--secondary" id="mock-copy" disabled>Salin</button>
+					<button type="button" class="btn btn--primary" id="mock-download" disabled>Unduh</button>
+				</div>
+			</div>
+
+			<pre class="code-block" id="mock-output" hidden><code id="mock-code"></code></pre>
+			<p class="preview-empty" id="mock-empty">Atur field lalu tekan Buat data.</p>
+			<p class="field-hint" id="mock-status" role="status" aria-live="polite"></p>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { toast } from '../../lib/toast';
+	import {
+		generateMockData,
+		mockToCsv,
+		mockToJson,
+		type MockField,
+		type MockRow,
+	} from './mock';
+
+	const count = document.getElementById('mock-count') as HTMLInputElement | null;
+	const seed = document.getElementById('mock-seed') as HTMLInputElement | null;
+	const randomButton = document.getElementById('mock-random');
+	const generateButton = document.getElementById('mock-generate');
+	const copyButton = document.getElementById('mock-copy') as HTMLButtonElement | null;
+	const downloadButton = document.getElementById('mock-download') as HTMLButtonElement | null;
+	const output = document.getElementById('mock-output');
+	const code = document.getElementById('mock-code');
+	const empty = document.getElementById('mock-empty');
+	const status = document.getElementById('mock-status');
+	const fieldBoxes = Array.from(document.querySelectorAll<HTMLInputElement>('[data-mock-field]'));
+	const outputButtons = Array.from(
+		document.querySelectorAll<HTMLButtonElement>('[data-mock-output]'),
+	);
+
+	if (
+		count &&
+		seed &&
+		randomButton &&
+		generateButton &&
+		copyButton &&
+		downloadButton &&
+		output &&
+		code &&
+		empty &&
+		status
+	) {
+		let format: 'json' | 'csv' = 'json';
+		let rows: MockRow[] = [];
+
+		const selectedFields = () =>
+			fieldBoxes
+				.filter((box) => box.checked)
+				.map((box) => box.value as MockField);
+
+		const paint = () => {
+			const fields = selectedFields();
+			const text = format === 'json' ? mockToJson(rows) : mockToCsv(rows);
+			const blank = fields.length === 0 || rows.length === 0;
+
+			code.textContent = blank ? '' : text;
+			output.hidden = blank;
+			empty.hidden = !blank;
+			empty.textContent =
+				fields.length === 0
+					? 'Pilih minimal satu field untuk membuat data.'
+					: 'Atur field lalu tekan Buat data.';
+			copyButton.disabled = blank;
+			downloadButton.disabled = blank;
+			status.textContent =
+				fields.length === 0
+					? ''
+					: `${rows.length} baris · ${fields.length} field · seed ${seed.value || '1'}`;
+		};
+
+		const generate = () => {
+			const fields = selectedFields();
+			rows = fields.length === 0
+				? []
+				: generateMockData({
+						count: Number(count.value),
+						fields,
+						seed: Number(seed.value) || 1,
+					});
+			paint();
+		};
+
+		generateButton.addEventListener('click', generate);
+
+		randomButton.addEventListener('click', () => {
+			seed.value = String(Math.floor(Math.random() * 900000) + 100000);
+			generate();
+		});
+
+		fieldBoxes.forEach((box) => box.addEventListener('change', generate));
+		count.addEventListener('change', generate);
+		seed.addEventListener('change', generate);
+
+		outputButtons.forEach((button) => {
+			button.addEventListener('click', () => {
+				format = button.dataset.mockOutput === 'csv' ? 'csv' : 'json';
+				outputButtons.forEach((other) =>
+					other.setAttribute('aria-pressed', other === button ? 'true' : 'false'),
+				);
+				paint();
+			});
+		});
+
+		copyButton.addEventListener('click', async () => {
+			const text = format === 'json' ? mockToJson(rows) : mockToCsv(rows);
+			const copied = await copyText(text);
+			toast(copied ? 'Data disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		downloadButton.addEventListener('click', () => {
+			const text = format === 'json' ? mockToJson(rows) : mockToCsv(rows);
+			downloadText(
+				`data-palsu.${format}`,
+				text,
+				format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8',
+			);
+			toast('Data diunduh.');
+		});
+
+		generate();
+	}
+</script>
+
+<style>
+	.mock-shell {
+		padding: var(--space-4);
+	}
+
+	.mock-seed-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	.mock-seed-row .field-input {
+		flex: 1 1 140px;
+	}
+
+	.mock-fields {
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.mock-field-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 0 var(--space-3);
+	}
+</style>

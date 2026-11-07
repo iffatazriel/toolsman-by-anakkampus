@@ -8,6 +8,7 @@ const applicationCategory: Record<ToolMeta['category'], string> = {
 	foto: 'MultimediaApplication',
 	berbagi: 'UtilitiesApplication',
 	generator: 'DeveloperApplication',
+	utilitas: 'UtilitiesApplication',
 };
 
 export function toolJsonLd(tool: ToolMeta): Record<string, unknown> {

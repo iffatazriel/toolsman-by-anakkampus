@@ -21,16 +21,18 @@ const jsonLd = {
 	jsonLd={jsonLd}
 >
 	<section class="hero container" aria-labelledby="hero-title">
-		<h1 class="hero__title" id="hero-title">Semua perkakas kuliahmu, satu kotak.</h1>
-		<p class="hero__lede">
+		<h1 class="hero__title" id="hero-title" data-i18n="home.heroTitle">
+			Semua perkakas kuliahmu, satu kotak.
+		</h1>
+		<p class="hero__lede" data-i18n="home.heroLede">
 			Alat gambar, diagram, PDF, pas foto, kirim file, dan generator teks. Gratis
 			dan tanpa akun.
 		</p>
 
 		<p class="status-note">
 			<span>
-				<strong>Enam alat sudah bisa dipakai.</strong> Gambar, diagram, PDF, pas foto,
-				kirim file, dan generator teks. Gratis, tanpa akun.
+				<strong data-i18n="home.readyCount" data-count-value={tools.length}>{tools.length} alat sudah bisa dipakai.</strong>
+				<span data-i18n="home.readyList">Gambar, diagram, PDF, foto, kirim file, teks, utilitas, QR, dan data uji. Gratis, tanpa akun.</span>
 			</span>
 		</p>
 
@@ -41,36 +43,55 @@ const jsonLd = {
 				type="search"
 				placeholder="mis. gabung pdf atau flowchart"
 				hint="Tekan / atau Ctrl+K untuk membuka pencarian dari halaman mana saja."
+				i18nLabel="home.searchLabel"
+				i18nPlaceholder="home.searchPlaceholder"
+				i18nHint="home.searchHint"
 			/>
 		</div>
+	</section>
+
+	<section class="shelf container" data-shelf="favorites" aria-labelledby="favorit-title" hidden>
+		<div class="section-head">
+			<h2 class="section-title" id="favorit-title" data-i18n="home.favorites">Favoritmu</h2>
+			<a class="section-meta shelf-link" href="#katalog" data-i18n="home.allTools">Semua alat</a>
+		</div>
+		<ul class="shelf-grid" data-shelf-list="favorites"></ul>
+	</section>
+
+	<section class="shelf container" data-shelf="recent" aria-labelledby="terakhir-title" hidden>
+		<div class="section-head">
+			<h2 class="section-title" id="terakhir-title" data-i18n="home.recent">Terakhir dipakai</h2>
+			<p class="section-meta" data-i18n="home.saved">Disimpan di browser ini</p>
+		</div>
+		<ul class="shelf-grid" data-shelf-list="recent"></ul>
 	</section>
 
 	<Catalog tools={tools} />
 
 	<section class="principles" aria-labelledby="principles-title">
 		<div class="container">
-			<h2 class="section-title" id="principles-title">Aturan yang kami pakai</h2>
-			<p class="hero__lede">Ini yang menentukan bentuk Toolsman.</p>
+			<h2 class="section-title" id="principles-title" data-i18n="home.principlesTitle">Aturan yang kami pakai</h2>
+			<p class="hero__lede" data-i18n="home.principlesLede">Ini yang menentukan bentuk Toolsman.</p>
 
 			<div class="principles__grid">
 				<div>
-					<h3 class="principle__title">Gratis dan tanpa akun</h3>
-					<p class="principle__body">
-						Semua alat P0 bisa dipakai tanpa daftar. Tidak ada batas harian yang
+					<h3 class="principle__title" data-i18n="home.p1Title">Gratis dan tanpa akun</h3>
+					<p class="principle__body" data-i18n="home.p1Body">
+						Semua alat bisa dipakai tanpa daftar. Tidak ada batas harian yang
 						ujungnya menyuruh kamu bikin akun.
 					</p>
 				</div>
 				<div>
-					<h3 class="principle__title">File tetap di perangkatmu</h3>
-					<p class="principle__body">
-						Draw, diagram, PDF, pas foto, dan generator memproses file di browser.
-						Kirim File memakai server karena link harus bisa dibuka orang lain,
-						dan itu ditandai di kartunya.
+					<h3 class="principle__title" data-i18n="home.p2Title">File tetap di perangkatmu</h3>
+					<p class="principle__body" data-i18n="home.p2Body">
+						Draw, diagram, PDF, pas foto, generator, utilitas, dan QR memproses isi
+						di browser. Kirim File memakai server karena link harus bisa dibuka
+						orang lain, dan itu ditandai di kartunya.
 					</p>
 				</div>
 				<div>
-					<h3 class="principle__title">Satu pola untuk semua alat</h3>
-					<p class="principle__body">
+					<h3 class="principle__title" data-i18n="home.p3Title">Satu pola untuk semua alat</h3>
+					<p class="principle__body" data-i18n="home.p3Body">
 						Tiap halaman alat punya susunan yang sama: area kerja, panel opsi, satu
 						tombol utama. Kamu tidak perlu belajar ulang tiap alat.
 					</p>
@@ -78,4 +99,90 @@ const jsonLd = {
 			</div>
 		</div>
 	</section>
+
+	<script>
+		import { readFavorites, readRecent } from '../lib/favorites';
+
+		const cards = new Map<string, HTMLElement>();
+		document.querySelectorAll<HTMLElement>('[data-tool-grid] [data-tool]').forEach((item) => {
+			const link = item.querySelector<HTMLAnchorElement>('.tool-card__link');
+			const slug = link?.getAttribute('href')?.replace(/^\/tools\//, '').replace(/\/$/, '');
+			if (slug) cards.set(slug, item);
+		});
+
+		const renderShelf = (name: string, slugs: string[], favorites: string[]) => {
+			const section = document.querySelector<HTMLElement>(`[data-shelf="${name}"]`);
+			const list = document.querySelector<HTMLUListElement>(`[data-shelf-list="${name}"]`);
+			if (!section || !list) return;
+
+			list.innerHTML = '';
+			slugs.forEach((slug) => {
+				const source = cards.get(slug);
+				if (!source) return;
+
+				const clone = source.cloneNode(true) as HTMLElement;
+				for (const attribute of ['data-tool', 'data-name', 'data-category', 'data-keywords']) {
+					clone.removeAttribute(attribute);
+				}
+				clone.hidden = false;
+				clone.querySelectorAll<HTMLButtonElement>('[data-favorite]').forEach((button) => {
+					const active = favorites.includes(slug);
+					button.setAttribute('aria-pressed', active ? 'true' : 'false');
+				});
+				list.append(clone);
+			});
+
+			section.hidden = list.children.length === 0;
+		};
+
+		const refresh = () => {
+			const favorites = readFavorites(localStorage);
+			const recent = readRecent(localStorage).filter((slug) => !favorites.includes(slug));
+			renderShelf('favorites', favorites, favorites);
+			renderShelf('recent', recent, favorites);
+		};
+
+		refresh();
+		document.addEventListener('favorites:change', refresh);
+		window.addEventListener('pageshow', refresh);
+	</script>
+
+	<style>
+		.shelf {
+			padding-top: var(--space-6);
+		}
+
+		.shelf[hidden] {
+			display: none;
+		}
+
+		.shelf-grid {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr);
+			gap: var(--space-3);
+			margin: var(--space-3) 0 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		@media (min-width: 640px) {
+			.shelf-grid {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+		}
+
+		@media (min-width: 1024px) {
+			.shelf-grid {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+		}
+
+		.shelf-link {
+			text-decoration: none;
+		}
+
+		.shelf-link:hover {
+			color: var(--text);
+		}
+	</style>
 </Layout>

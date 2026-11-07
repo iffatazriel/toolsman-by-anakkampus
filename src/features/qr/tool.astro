@@ -1,0 +1,287 @@
+---
+---
+
+<div class="tool-shell">
+	<div class="qr-layout">
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Isian</h2>
+			</div>
+
+			<label class="field-label" for="qr-text">Teks atau URL</label>
+			<textarea
+				id="qr-text"
+				class="field-input field-textarea qr-text"
+				rows="4"
+				placeholder="https://contoh.id/halaman"
+			></textarea>
+
+			<div class="qr-options">
+				<div>
+					<label class="field-label" for="qr-size">Ukuran</label>
+					<select class="field-input" id="qr-size">
+						<option value="256" selected>256 px</option>
+						<option value="512">512 px</option>
+						<option value="1024">1024 px</option>
+					</select>
+				</div>
+				<div>
+					<label class="field-label" for="qr-correction">Koreksi error</label>
+					<select class="field-input" id="qr-correction">
+						<option value="L">L (rendah)</option>
+						<option value="M" selected>M (sedang)</option>
+						<option value="Q">Q (tinggi)</option>
+						<option value="H">H (paling tinggi)</option>
+					</select>
+				</div>
+				<div>
+					<label class="field-label" for="qr-margin">Margin</label>
+					<input
+						class="field-input"
+						id="qr-margin"
+						type="number"
+						min="0"
+						max="8"
+						value="2"
+					/>
+				</div>
+			</div>
+
+			<p class="field-hint">
+				Koreksi lebih tinggi membuat QR lebih tahan gores, tapi polanya lebih padat.
+			</p>
+
+			<div class="alert" id="qr-error" role="alert" hidden>
+				<p id="qr-error-text"></p>
+			</div>
+
+			<p class="field-hint qr-status-row">
+				<span class="spinner" id="qr-loading" hidden aria-hidden="true"></span>
+				<span id="qr-status" role="status" aria-live="polite">
+					Pratinjau muncul setelah teks diisi.
+				</span>
+			</p>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Pratinjau</h2>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--secondary" id="qr-png" disabled>
+						Unduh PNG
+					</button>
+					<button type="button" class="btn btn--secondary" id="qr-svg" disabled>
+						Unduh SVG
+					</button>
+				</div>
+			</div>
+
+			<div class="qr-preview">
+				<img id="qr-image" alt="Pratinjau QR code" hidden />
+				<p class="qr-empty" id="qr-empty">Tulis teks atau URL dulu.</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { downloadText } from '../../lib/download';
+	import { toast } from '../../lib/toast';
+	import { qrFilename, qrOptions, type QrCorrection, type QrSize } from './qr-options';
+
+	const text = document.getElementById('qr-text') as HTMLTextAreaElement | null;
+	const size = document.getElementById('qr-size') as HTMLSelectElement | null;
+	const correction = document.getElementById('qr-correction') as HTMLSelectElement | null;
+	const margin = document.getElementById('qr-margin') as HTMLInputElement | null;
+	const image = document.getElementById('qr-image') as HTMLImageElement | null;
+	const empty = document.getElementById('qr-empty');
+	const errorBox = document.getElementById('qr-error');
+	const errorText = document.getElementById('qr-error-text');
+	const png = document.getElementById('qr-png') as HTMLButtonElement | null;
+	const svgButton = document.getElementById('qr-svg') as HTMLButtonElement | null;
+	const loading = document.getElementById('qr-loading');
+	const status = document.getElementById('qr-status');
+
+	if (
+		text &&
+		size &&
+		correction &&
+		margin &&
+		image &&
+		empty &&
+		errorBox &&
+		errorText &&
+		png &&
+		svgButton
+	) {
+		let pngUrl = '';
+		let svgText = '';
+		let timer: number | undefined;
+		let request = 0;
+
+		const setError = (message: string | null) => {
+			errorBox.hidden = message === null;
+			errorText.textContent = message ?? '';
+		};
+
+		const setLoading = (busy: boolean, message = '') => {
+			if (loading) loading.hidden = !busy;
+			if (status) status.textContent = busy ? 'Membuat QR…' : message;
+			if (busy) {
+				png.disabled = true;
+				svgButton.disabled = true;
+			}
+		};
+
+		const paint = (hasCode: boolean) => {
+			image.hidden = !hasCode;
+			empty.hidden = hasCode;
+			png.disabled = !hasCode;
+			svgButton.disabled = !hasCode;
+		};
+
+		const render = async () => {
+			const current = ++request;
+			const value = text.value;
+			setError(null);
+
+			if (value.trim() === '') {
+				pngUrl = '';
+				svgText = '';
+				image.removeAttribute('src');
+				paint(false);
+				setLoading(false, 'Pratinjau muncul setelah teks diisi.');
+				return;
+			}
+
+			setLoading(true);
+
+			try {
+				const module = await import('qrcode');
+				const settings = qrOptions({
+					size: Number(size.value) as QrSize,
+					correction: correction.value as QrCorrection,
+					margin: Number(margin.value),
+				});
+
+				const [pngData, svgData] = await Promise.all([
+					module.toDataURL(value, { ...settings, type: 'image/png' }),
+					module.toString(value, { ...settings, type: 'svg' }),
+				]);
+				if (current !== request) return;
+
+				pngUrl = pngData;
+				svgText = svgData;
+				image.src = pngData;
+				paint(true);
+				setLoading(false, `${settings.width} px siap diunduh.`);
+			} catch (error) {
+				if (current !== request) return;
+				pngUrl = '';
+				svgText = '';
+				image.removeAttribute('src');
+				paint(false);
+				setLoading(false, '');
+				setError(
+					error instanceof Error && /too (big|long)|length/i.test(error.message)
+						? 'Isinya terlalu panjang untuk ukuran QR ini. Pendekkan teks atau pilih koreksi error lebih rendah.'
+						: 'QR tidak bisa dibuat. Coba lagi dengan teks yang lebih pendek.',
+				);
+			}
+		};
+
+		const schedule = () => {
+			setLoading(true);
+			window.clearTimeout(timer);
+			timer = window.setTimeout(() => void render(), 250);
+		};
+
+		text.addEventListener('input', schedule);
+		size.addEventListener('change', () => void render());
+		correction.addEventListener('change', () => void render());
+		margin.addEventListener('change', () => void render());
+
+		png.addEventListener('click', () => {
+			if (!pngUrl) return;
+			const link = document.createElement('a');
+			link.href = pngUrl;
+			link.download = qrFilename(Number(size.value) as QrSize, 'png');
+			document.body.append(link);
+			link.click();
+			link.remove();
+			toast('QR PNG diunduh.');
+		});
+
+		svgButton.addEventListener('click', () => {
+			if (!svgText) return;
+			downloadText(
+				qrFilename(Number(size.value) as QrSize, 'svg'),
+				svgText,
+				'image/svg+xml;charset=utf-8',
+			);
+			toast('QR SVG diunduh.');
+		});
+
+		paint(false);
+	}
+</script>
+
+<style>
+	.qr-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4);
+		padding: var(--space-4);
+	}
+
+	@media (min-width: 900px) {
+		.qr-layout {
+			grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+		}
+	}
+
+	.qr-text {
+		min-height: 120px;
+		resize: vertical;
+	}
+
+	.qr-options {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+		gap: var(--space-3);
+	}
+
+	.qr-preview {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 320px;
+		padding: var(--space-4);
+		border: 1px dashed var(--border-strong);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.qr-preview img {
+		width: min(100%, 360px);
+		height: auto;
+		border-radius: var(--radius-sm);
+		image-rendering: pixelated;
+	}
+
+	.qr-preview img[hidden] {
+		display: none;
+	}
+
+	.qr-empty {
+		color: var(--text-muted);
+		font-size: 0.875rem;
+	}
+
+	.qr-status-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: 0;
+	}
+</style>

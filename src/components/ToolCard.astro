@@ -10,18 +10,77 @@ interface Props {
 const { tool } = Astro.props;
 ---
 
-<a class="tool-card" href={`/tools/${tool.slug}/`} data-category={tool.category}>
-	<span class="tool-card__top">
-		<span class="tool-tile"><Icon name={tool.icon} size={22} /></span>
-		<span class="category-label">{categoryLabel(tool.category)}</span>
-	</span>
-	<span class="tool-card__name">{tool.name}</span>
-	<span class="tool-card__desc">{tool.tagline}</span>
-	<span class="tool-card__foot">
-		<span class="privacy-label">
-			<Icon name={tool.privacy === 'lokal' ? 'laptop' : 'server'} size={16} />
-			{privacyLabel[tool.privacy]}
+<div class="tool-card" data-category={tool.category} data-tool-card={tool.slug}>
+	<a class="tool-card__link" href={`/tools/${tool.slug}/`} data-category={tool.category}>
+		<span class="tool-card__top">
+			<span class="tool-tile"><Icon name={tool.icon} size={22} /></span>
+			<span class="category-label" data-category-label={tool.category}>{categoryLabel(tool.category)}</span>
 		</span>
-		<span class="status-label">{statusLabel[tool.status]}</span>
-	</span>
-</a>
+		<span class="tool-card__name">{tool.name}</span>
+		<span class="tool-card__desc">{tool.tagline}</span>
+		<span class="tool-card__foot">
+			<span class="privacy-label">
+				<Icon name={tool.privacy === 'lokal' ? 'laptop' : 'server'} size={16} />
+				<span data-privacy-label={tool.privacy}>{privacyLabel[tool.privacy]}</span>
+			</span>
+			<span class="status-label" data-status-label={tool.status}>{statusLabel[tool.status]}</span>
+		</span>
+	</a>
+	<button
+		type="button"
+		class="tool-card__fav"
+		data-favorite={tool.slug}
+		data-name={tool.name}
+		aria-pressed="false"
+		aria-label={`Simpan ${tool.name} ke favorit`}
+	>
+		<Icon name="star" size={18} />
+	</button>
+</div>
+
+<style>
+	.tool-card {
+		position: relative;
+	}
+
+	.tool-card__link {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.tool-card__top {
+		padding-right: 36px;
+	}
+
+	.tool-card__fav {
+		position: absolute;
+		top: var(--space-3);
+		right: var(--space-3);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border: 0;
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--text-muted);
+	}
+
+	.tool-card__fav:hover {
+		background: var(--surface-2);
+		color: var(--text);
+	}
+
+	.tool-card__fav[aria-pressed='true'] {
+		color: var(--accent);
+	}
+
+	.tool-card__fav[aria-pressed='true'] svg {
+		fill: currentColor;
+	}
+</style>

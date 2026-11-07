@@ -1,0 +1,301 @@
+---
+---
+
+<div class="tool-shell schema-shell">
+	<div class="schema-grid">
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Schema</h2>
+			</div>
+			<label class="sr-only" for="schema-input">JSON Schema</label>
+			<textarea id="schema-input" class="code-area code-area--schema" spellcheck="false"></textarea>
+			<div class="alert" id="schema-error" role="alert" hidden>
+				<p id="schema-error-text"></p>
+			</div>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Data</h2>
+			</div>
+			<label class="sr-only" for="schema-data">Data JSON</label>
+			<textarea id="schema-data" class="code-area code-area--schema" spellcheck="false"></textarea>
+			<div class="alert" id="data-error" role="alert" hidden>
+				<p id="data-error-text"></p>
+			</div>
+		</div>
+	</div>
+
+	<div class="schema-bar">
+		<div>
+			<label class="field-label" for="schema-draft">Draft</label>
+			<select class="field-input schema-draft" id="schema-draft">
+				<option value="2020-12">2020-12</option>
+				<option value="2019-09">2019-09</option>
+				<option value="7">Draft 7</option>
+				<option value="4">Draft 4</option>
+			</select>
+		</div>
+		<button type="button" class="btn btn--secondary" id="schema-example">Muat contoh</button>
+		<button type="button" class="btn btn--primary" id="schema-validate">Validasi</button>
+	</div>
+
+	<div class="pane schema-result">
+		<div class="pane__head">
+			<h2 class="pane__title">Hasil</h2>
+			<span class="badge" id="schema-status" hidden></span>
+		</div>
+		<p class="field-hint" id="schema-summary" role="status" aria-live="polite">
+			Tekan Validasi untuk memeriksa data.
+		</p>
+		<ul class="schema-issues" id="schema-issues"></ul>
+		<p class="preview-empty" id="schema-empty" hidden>
+			Tidak ada masalah. Data sesuai schema.
+		</p>
+	</div>
+</div>
+
+<script>
+	import { validateJsonSchema, type SchemaDraftId } from './schema-validator';
+
+	const schemaInput = document.getElementById('schema-input') as HTMLTextAreaElement | null;
+	const dataInput = document.getElementById('schema-data') as HTMLTextAreaElement | null;
+	const draft = document.getElementById('schema-draft') as HTMLSelectElement | null;
+	const validateButton = document.getElementById('schema-validate');
+	const exampleButton = document.getElementById('schema-example');
+	const statusBadge = document.getElementById('schema-status');
+	const summary = document.getElementById('schema-summary');
+	const issues = document.getElementById('schema-issues') as HTMLUListElement | null;
+	const empty = document.getElementById('schema-empty');
+	const schemaError = document.getElementById('schema-error');
+	const schemaErrorText = document.getElementById('schema-error-text');
+	const dataError = document.getElementById('data-error');
+	const dataErrorText = document.getElementById('data-error-text');
+
+	const exampleSchema = `{
+  "type": "object",
+  "required": ["nama", "email"],
+  "properties": {
+    "nama": { "type": "string", "minLength": 2 },
+    "email": { "type": "string", "format": "email" },
+    "umur": { "type": "integer", "minimum": 17 }
+  },
+  "additionalProperties": false
+}`;
+
+	const exampleData = `{
+  "nama": "A",
+  "email": 123,
+  "umur": 15,
+  "extra": true
+}`;
+
+	if (
+		schemaInput &&
+		dataInput &&
+		draft &&
+		validateButton &&
+		exampleButton &&
+		statusBadge &&
+		summary &&
+		issues &&
+		empty &&
+		schemaError &&
+		schemaErrorText &&
+		dataError &&
+		dataErrorText
+	) {
+		let timer: number | undefined;
+
+		const clearErrors = () => {
+			schemaError.hidden = true;
+			schemaErrorText.textContent = '';
+			dataError.hidden = true;
+			dataErrorText.textContent = '';
+		};
+
+		const setStatus = (state: 'pass' | 'fail' | 'neutral', label: string) => {
+			statusBadge.hidden = state === 'neutral';
+			statusBadge.textContent = label;
+			statusBadge.classList.toggle('is-pass', state === 'pass');
+			statusBadge.classList.toggle('is-fail', state === 'fail');
+		};
+
+		const showIssues = (items: { path: string; message: string }[]) => {
+			issues.innerHTML = '';
+			for (const issue of items) {
+				const item = document.createElement('li');
+				item.className = 'schema-issue';
+
+				const path = document.createElement('code');
+				path.textContent = issue.path;
+
+				const message = document.createElement('span');
+				message.textContent = issue.message;
+
+				item.append(path, message);
+				issues.append(item);
+			}
+		};
+
+		const validate = () => {
+			clearErrors();
+			const result = validateJsonSchema(
+				schemaInput.value,
+				dataInput.value,
+				draft.value as SchemaDraftId,
+			);
+
+			if (!result.ok) {
+				setStatus('fail', 'Gagal');
+				showIssues([]);
+				empty.hidden = true;
+				summary.textContent =
+					result.kind === 'schema' ? 'Schema belum bisa dibaca.' : 'Data belum bisa dibaca.';
+
+				if (result.kind === 'schema') {
+					schemaError.hidden = false;
+					schemaErrorText.textContent = result.error;
+					schemaInput.setAttribute('aria-invalid', 'true');
+				} else if (result.kind === 'data') {
+					dataError.hidden = false;
+					dataErrorText.textContent = result.error;
+					dataInput.setAttribute('aria-invalid', 'true');
+				} else {
+					summary.textContent = result.error;
+				}
+				return;
+			}
+
+			schemaInput.removeAttribute('aria-invalid');
+			dataInput.removeAttribute('aria-invalid');
+
+			if (result.valid) {
+				setStatus('pass', 'Valid');
+				showIssues([]);
+				empty.hidden = false;
+				summary.textContent = 'Data sesuai schema.';
+				return;
+			}
+
+			setStatus('fail', 'Tidak valid');
+			showIssues(result.issues);
+			empty.hidden = true;
+			summary.textContent = `${result.issues.length} masalah ditemukan.`;
+		};
+
+		const schedule = () => {
+			window.clearTimeout(timer);
+			timer = window.setTimeout(validate, 350);
+		};
+
+		schemaInput.addEventListener('input', schedule);
+		dataInput.addEventListener('input', schedule);
+		draft.addEventListener('change', validate);
+		validateButton.addEventListener('click', validate);
+
+		exampleButton.addEventListener('click', () => {
+			schemaInput.value = exampleSchema;
+			dataInput.value = exampleData;
+			validate();
+		});
+
+		schemaInput.value = exampleSchema;
+		dataInput.value = exampleData;
+		validate();
+	}
+</script>
+
+<style>
+	.schema-shell {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		padding: var(--space-4);
+	}
+
+	.schema-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4);
+	}
+
+	@media (min-width: 900px) {
+		.schema-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	.code-area--schema {
+		min-height: 280px;
+	}
+
+	.schema-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--space-3);
+	}
+
+	.schema-draft {
+		width: auto;
+		min-width: 130px;
+	}
+
+	.schema-result {
+		gap: var(--space-3);
+	}
+
+	.badge {
+		padding: 2px 10px;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+
+	.badge[hidden] {
+		display: none;
+	}
+
+	.badge.is-pass {
+		border-color: light-dark(#9ccdb4, #2a5a43);
+		background: light-dark(#e8f5ee, #1b2c24);
+		color: light-dark(#11663f, #3dbe86);
+	}
+
+	.badge.is-fail {
+		border-color: light-dark(#e2b4b4, #5c2e2e);
+		background: light-dark(#fbeaea, #2e1b1b);
+		color: light-dark(#8f2424, #f06b6b);
+	}
+
+	.schema-issues {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.schema-issue {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+		font-size: 0.9375rem;
+	}
+
+	.schema-issue code {
+		padding: 1px 6px;
+		border-radius: 4px;
+		background: var(--surface);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+	}
+</style>

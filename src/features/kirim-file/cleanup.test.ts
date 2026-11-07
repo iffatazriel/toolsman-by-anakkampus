@@ -80,6 +80,10 @@ function makeEnv(shares: FakeShare[], files: FakeFile[]) {
 						return {};
 					}
 
+					if (sql.startsWith('DELETE FROM upload_parts WHERE share_id')) {
+						return {};
+					}
+
 					if (sql.startsWith('UPDATE share_files SET purged = 1')) {
 						const [shareId, objectKey] = bound as [string, string];
 						const file = files.find(

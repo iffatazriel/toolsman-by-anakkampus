@@ -1,0 +1,351 @@
+---
+import Dropzone from '../../components/ui/Dropzone.astro';
+---
+
+<div class="tool-shell exif-shell">
+	<Dropzone
+		id="exif-input"
+		label="Pilih foto JPG atau PNG"
+		accept="image/jpeg,image/png"
+		hint="Maks. 25 MB. Metadata seperti EXIF, GPS, XMP, dan komentar akan dibuang."
+	/>
+
+	<div class="upload-preview" data-exif-preview hidden>
+		<span class="upload-preview__thumb">
+			<img data-exif-original alt="" />
+		</span>
+		<span class="upload-preview__info">
+			<span class="upload-preview__name" data-exif-name></span>
+			<span class="upload-preview__status" data-exif-status role="status" aria-live="polite"></span>
+		</span>
+	</div>
+
+	<div class="pane-grid pane-grid--split" data-exif-workspace hidden>
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Hasil</h2>
+				<span class="field-hint" id="exif-state">Menyiapkan…</span>
+			</div>
+
+			<div class="exif-result">
+				<img id="exif-preview" alt="Pratinjau foto tanpa metadata" hidden />
+				<p class="preview-empty" id="exif-empty">Hasil muncul di sini.</p>
+			</div>
+
+			<div class="pane-actions">
+				<button type="button" class="btn btn--primary" id="exif-download" disabled>
+					Unduh foto bersih
+				</button>
+			</div>
+
+			<div class="alert" id="exif-error" role="alert" hidden>
+				<p id="exif-error-text"></p>
+			</div>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Rincian</h2>
+			</div>
+
+			<dl class="exif-stats" id="exif-stats" hidden>
+				<div>
+					<dt>Ukuran</dt>
+					<dd id="exif-size"></dd>
+				</div>
+				<div>
+					<dt>Metadata dibuang</dt>
+					<dd id="exif-removed"></dd>
+				</div>
+				<div>
+					<dt>Catatan</dt>
+					<dd>Data gambar tidak diubah dan tidak dikompres ulang.</dd>
+				</div>
+			</dl>
+
+			<p class="field-hint">
+				Yang dibuang: EXIF dan GPS di JPEG, XMP, IPTC, komentar, serta chunk teks di
+				PNG. Profil warna dan data gambar tetap dipertahankan.
+			</p>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { formatBytes } from '../../lib/page-range';
+	import { toast } from '../../lib/toast';
+	import { stripMetadata } from './strip';
+
+	const input = document.getElementById('exif-input') as HTMLInputElement | null;
+	const preview = document.querySelector<HTMLElement>('[data-exif-preview]');
+	const original = document.querySelector<HTMLImageElement>('[data-exif-original]');
+	const nameText = document.querySelector<HTMLElement>('[data-exif-name]');
+	const statusText = document.querySelector<HTMLElement>('[data-exif-status]');
+	const workspace = document.querySelector<HTMLElement>('[data-exif-workspace]');
+	const stateText = document.getElementById('exif-state');
+	const resultImage = document.getElementById('exif-preview') as HTMLImageElement | null;
+	const empty = document.getElementById('exif-empty');
+	const stats = document.getElementById('exif-stats');
+	const sizeText = document.getElementById('exif-size');
+	const removedText = document.getElementById('exif-removed');
+	const downloadButton = document.getElementById('exif-download') as HTMLButtonElement | null;
+	const errorBox = document.getElementById('exif-error');
+	const errorText = document.getElementById('exif-error-text');
+
+	if (
+		input &&
+		preview &&
+		original &&
+		nameText &&
+		statusText &&
+		workspace &&
+		stateText &&
+		resultImage &&
+		empty &&
+		stats &&
+		sizeText &&
+		removedText &&
+		downloadButton &&
+		errorBox &&
+		errorText
+	) {
+		let originalUrl = '';
+		let resultUrl = '';
+		let resultBlob: Blob | null = null;
+		let resultName = 'foto-tanpa-metadata.jpg';
+
+		const setError = (message: string | null) => {
+			errorBox.hidden = message === null;
+			errorText.textContent = message ?? '';
+		};
+
+		const setStatus = (message: string, loading: boolean) => {
+			stateText.textContent = '';
+			if (loading) {
+				const spinner = document.createElement('span');
+				spinner.className = 'spinner';
+				spinner.setAttribute('aria-hidden', 'true');
+				stateText.append(spinner);
+			}
+			stateText.append(document.createTextNode(message));
+		};
+
+		input.addEventListener('change', async (event) => {
+			const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+			input.value = '';
+			if (!file) return;
+
+			const isJpeg = file.type === 'image/jpeg' || /\.jpe?g$/i.test(file.name);
+			const isPng = file.type === 'image/png' || /\.png$/i.test(file.name);
+			if (!isJpeg && !isPng) {
+				setError('Format ini belum didukung. Pakai JPG atau PNG.');
+				return;
+			}
+			if (file.size > 25 * 1024 * 1024) {
+				setError('Foto lebih dari 25 MB. Pilih berkas lain.');
+				return;
+			}
+
+			setError(null);
+			resultBlob = null;
+			downloadButton.disabled = true;
+			resultImage.hidden = true;
+			empty.hidden = false;
+			stats.hidden = true;
+			workspace.hidden = false;
+			setStatus('Membaca metadata…', true);
+
+			if (originalUrl) URL.revokeObjectURL(originalUrl);
+			originalUrl = URL.createObjectURL(file);
+			original.src = originalUrl;
+			nameText.textContent = `${file.name} · ${formatBytes(file.size)}`;
+			preview.hidden = false;
+			statusText.classList.remove('is-ready', 'is-failed');
+			statusText.textContent = 'Membaca foto…';
+
+			try {
+				const bytes = new Uint8Array(await file.arrayBuffer());
+				const result = stripMetadata(bytes, file.type);
+				if (!result.ok || !result.bytes) {
+					throw new Error(result.error ?? 'Metadata tidak bisa diproses.');
+				}
+
+				const mime = isPng ? 'image/png' : 'image/jpeg';
+				const extension = isPng ? 'png' : 'jpg';
+				const base = file.name.replace(/\.[^.]+$/, '') || 'foto';
+				resultName = `${base}-tanpa-metadata.${extension}`;
+				resultBlob = new Blob([result.bytes as BlobPart], { type: mime });
+
+				if (resultUrl) URL.revokeObjectURL(resultUrl);
+				resultUrl = URL.createObjectURL(resultBlob);
+				resultImage.src = resultUrl;
+				resultImage.hidden = false;
+				empty.hidden = true;
+				stats.hidden = false;
+
+				sizeText.textContent = `${formatBytes(file.size)} → ${formatBytes(resultBlob.size)}`;
+				const removed = result.removedBytes ?? 0;
+				removedText.textContent =
+					removed > 0 ? `${formatBytes(removed)} dibuang` : 'Tidak ada metadata terdeteksi';
+
+				if (removed > 0) {
+					downloadButton.disabled = false;
+					setStatus('✓ Metadata dibuang', false);
+					statusText.textContent = '✓ Foto bersih, siap diunduh.';
+					statusText.classList.add('is-ready');
+				} else {
+					setStatus('Foto sudah tanpa metadata', false);
+					statusText.textContent = '✓ Tidak ada metadata yang perlu dibuang.';
+					statusText.classList.add('is-ready');
+				}
+			} catch (error) {
+				setStatus('Gagal memproses', false);
+				statusText.textContent = 'Gagal membaca foto.';
+				statusText.classList.add('is-failed');
+				setError(error instanceof Error ? error.message : 'Gagal memproses foto.');
+			}
+		});
+
+		downloadButton.addEventListener('click', () => {
+			if (!resultBlob) return;
+			const url = URL.createObjectURL(resultBlob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = resultName;
+			document.body.append(link);
+			link.click();
+			link.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 1000);
+			toast('Foto tanpa metadata diunduh.');
+		});
+	}
+</script>
+
+<style>
+	.exif-shell {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		padding: var(--space-4);
+	}
+
+	.upload-preview {
+		display: grid;
+		grid-template-columns: 64px minmax(0, 1fr);
+		align-items: center;
+		gap: var(--space-3);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.upload-preview[hidden] {
+		display: none;
+	}
+
+	.upload-preview__thumb {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 64px;
+		height: 64px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+	}
+
+	.upload-preview__thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.upload-preview__info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.upload-preview__name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.9375rem;
+	}
+
+	.upload-preview__status {
+		font-size: 0.8125rem;
+		color: var(--text-muted);
+	}
+
+	.upload-preview__status.is-ready {
+		color: var(--success);
+	}
+
+	.upload-preview__status.is-failed {
+		color: var(--danger);
+	}
+
+	.exif-result {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 280px;
+		padding: var(--space-3);
+		border: 1px dashed var(--border-strong);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.exif-result img {
+		max-width: 100%;
+		max-height: 420px;
+		width: auto;
+		height: auto;
+		border-radius: var(--radius-sm);
+	}
+
+	.exif-result img[hidden] {
+		display: none;
+	}
+
+	.exif-stats {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+	}
+
+	.exif-stats[hidden] {
+		display: none;
+	}
+
+	.exif-stats div {
+		display: grid;
+		grid-template-columns: 130px minmax(0, 1fr);
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.exif-stats dt {
+		color: var(--text-muted);
+		font-size: 0.875rem;
+	}
+
+	.exif-stats dd {
+		margin: 0;
+		font-size: 0.875rem;
+	}
+
+	#exif-state {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: 0;
+	}
+</style>

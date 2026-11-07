@@ -110,11 +110,11 @@ export const POST: APIRoute = async ({ request }) => {
 			.bind(shareId, expiry, now, 'uploading', passwordHash, oneTime ? 1 : null)
 			.run();
 
-		for (const file of files) {
+		for (const [index, file] of files.entries()) {
 			await env.DB.prepare(
-				'INSERT INTO share_files (share_id, object_key, name, size, mime) VALUES (?, ?, ?, ?, ?)',
+				'INSERT INTO share_files (share_id, file_index, object_key, name, size, mime) VALUES (?, ?, ?, ?, ?, ?)',
 			)
-				.bind(shareId, file.key, file.name, file.size, file.type)
+				.bind(shareId, index, file.key, file.name, file.size, file.type)
 				.run();
 		}
 

@@ -13,6 +13,9 @@ interface Props {
 	required?: boolean;
 	autocomplete?: string;
 	class?: string;
+	i18nLabel?: string;
+	i18nPlaceholder?: string;
+	i18nHint?: string;
 }
 
 const {
@@ -27,6 +30,9 @@ const {
 	required = false,
 	autocomplete,
 	class: className,
+	i18nLabel,
+	i18nPlaceholder,
+	i18nHint,
 } = Astro.props;
 
 const describedBy = [
@@ -39,7 +45,7 @@ const describedBy = [
 
 <div class={className}>
 	<label class="field-label" for={id}>
-		{label}{required && <><span class="sr-only"> (wajib diisi)</span><span aria-hidden="true"> *</span></>}
+		<span data-i18n={i18nLabel}>{label}</span>{required && <><span class="sr-only"> (wajib diisi)</span><span aria-hidden="true"> *</span></>}
 	</label>
 	<input
 		id={id}
@@ -52,8 +58,9 @@ const describedBy = [
 		class="field-input"
 		aria-invalid={error ? 'true' : undefined}
 		aria-describedby={describedBy || undefined}
+		data-i18n-placeholder={i18nPlaceholder}
 	/>
-	{hint && <p class="field-hint" id={`${id}-hint`}>{hint}</p>}
+	{hint && <p class="field-hint" id={`${id}-hint`} data-i18n={i18nHint}>{hint}</p>}
 	{
 		error && (
 			<p class="field-error" id={`${id}-error`}>

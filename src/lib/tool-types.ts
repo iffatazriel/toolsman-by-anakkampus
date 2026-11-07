@@ -6,7 +6,8 @@ export type ToolCategory =
 	| 'dokumen'
 	| 'foto'
 	| 'berbagi'
-	| 'generator';
+	| 'generator'
+	| 'utilitas';
 
 export type ToolStatus = 'rencana' | 'siap';
 export type PrivacyMode = 'lokal' | 'server';
@@ -32,6 +33,7 @@ export const categories: { id: ToolCategory; label: string }[] = [
 	{ id: 'foto', label: 'Foto' },
 	{ id: 'berbagi', label: 'Berbagi' },
 	{ id: 'generator', label: 'Generator' },
+	{ id: 'utilitas', label: 'Utilitas' },
 ];
 
 export const privacyLabel: Record<PrivacyMode, string> = {

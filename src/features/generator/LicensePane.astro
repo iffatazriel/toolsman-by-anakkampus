@@ -1,0 +1,221 @@
+---
+import { licenseOptions } from '../../lib/license';
+
+const currentYear = new Date().getFullYear();
+---
+
+<div class="pane-grid pane-grid--split">
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Isian</h2>
+		</div>
+
+		<form class="form-grid" id="license-form" autocomplete="off">
+			<div>
+				<label class="field-label" for="license-kind">Lisensi</label>
+				<select class="field-input" id="license-kind">
+					{licenseOptions.map((option) => <option value={option.id}>{option.label}</option>)}
+				</select>
+			</div>
+
+			<div>
+				<label class="field-label" for="license-year">Tahun</label>
+				<input
+					class="field-input"
+					id="license-year"
+					type="number"
+					min="1970"
+					max="2100"
+					value={currentYear}
+				/>
+			</div>
+
+			<div>
+				<label class="field-label" for="license-holder">Pemilik hak cipta</label>
+				<input
+					class="field-input"
+					id="license-holder"
+					type="text"
+					placeholder="Nama kamu atau organisasi"
+				/>
+				<p class="field-hint">Wajib diisi. Dipakai di baris copyright.</p>
+			</div>
+
+			<div>
+				<label class="field-label" for="license-project">Nama proyek</label>
+				<input
+					class="field-input"
+					id="license-project"
+					type="text"
+					placeholder="alat-pdf"
+				/>
+				<p class="field-hint">
+					Dipakai di bagian cara pakai GPL. Kalau kosong, nama pemilik yang dipakai.
+				</p>
+			</div>
+
+			<p class="field-hint">
+				Teks diambil dari naskah resmi. Ini templat, bukan nasihat hukum. Periksa lagi
+				sebelum dipakai.
+			</p>
+		</form>
+	</div>
+
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Isi LICENSE</h2>
+			<div class="pane-actions">
+				<button type="button" class="btn btn--secondary" id="license-copy" disabled>
+					Salin
+				</button>
+				<button
+					type="button"
+					class="btn btn--primary"
+					id="license-download"
+					disabled
+				>
+					Unduh LICENSE
+				</button>
+			</div>
+		</div>
+
+		<pre class="code-block" id="license-output" hidden><code id="license-code"></code></pre>
+		<p class="preview-empty" id="license-empty">
+			Isi pemilik hak cipta, teks lisensinya muncul di sini.
+		</p>
+		<div class="license-status-row">
+			<span class="spinner" data-license-spinner hidden aria-hidden="true"></span>
+			<p class="field-hint" id="license-status" role="status" aria-live="polite"></p>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { fillLicense, licenseOptions, type LicenseId } from '../../lib/license';
+	import { toast } from '../../lib/toast';
+
+	const kind = document.getElementById('license-kind') as HTMLSelectElement | null;
+	const year = document.getElementById('license-year') as HTMLInputElement | null;
+	const holder = document.getElementById('license-holder') as HTMLInputElement | null;
+	const project = document.getElementById('license-project') as HTMLInputElement | null;
+	const form = document.getElementById('license-form');
+	const output = document.getElementById('license-output');
+	const code = document.getElementById('license-code');
+	const empty = document.getElementById('license-empty');
+	const status = document.getElementById('license-status');
+	const spinner = document.querySelector<HTMLElement>('[data-license-spinner]');
+	const copy = document.getElementById('license-copy') as HTMLButtonElement | null;
+	const download = document.getElementById('license-download') as HTMLButtonElement | null;
+
+	if (
+		kind &&
+		year &&
+		holder &&
+		project &&
+		form &&
+		output &&
+		code &&
+		empty &&
+		status &&
+		copy &&
+		download
+	) {
+		const cache = new Map<string, string>();
+		let text = '';
+		let request = 0;
+
+		const paint = (value: string) => {
+			text = value;
+			const blank = value === '';
+			code.textContent = value;
+			output.hidden = blank;
+			empty.hidden = !blank;
+			copy.disabled = blank;
+			download.disabled = blank;
+		};
+
+		const setLoading = (busy: boolean) => {
+			if (spinner) spinner.hidden = !busy;
+		};
+
+		const update = async () => {
+			const current = ++request;
+			const option = licenseOptions.find((item) => item.id === kind.value);
+			if (!option) return;
+
+			if (holder.value.trim() === '') {
+				paint('');
+				setLoading(false);
+				status.textContent = 'Pemilik hak cipta masih kosong.';
+				return;
+			}
+
+			setLoading(Boolean(option.url));
+			status.textContent = option.url ? 'Memuat naskah lisensi…' : '';
+
+			try {
+				let template = option.text;
+				if (!template && option.url) {
+					template = cache.get(option.url);
+					if (!template) {
+						const response = await fetch(option.url);
+						if (!response.ok) throw new Error('Naskah lisensi tidak bisa dimuat.');
+						template = await response.text();
+						cache.set(option.url, template);
+					}
+				}
+				if (current !== request) return;
+				setLoading(false);
+
+				paint(
+					fillLicense(template ?? '', {
+						id: option.id as LicenseId,
+						year: Number(year.value) || new Date().getFullYear(),
+						holder: holder.value,
+						project: project.value,
+					}),
+				);
+				status.textContent =
+					option.id === 'GPL-3.0'
+						? 'GPL-3.0 mewajibkan kode sumber tetap terbuka saat kamu menyebarkan salinannya.'
+						: '';
+			} catch (error) {
+				if (current !== request) return;
+				setLoading(false);
+				paint('');
+				status.textContent =
+					error instanceof Error ? error.message : 'Gagal memuat naskah lisensi.';
+			}
+		};
+
+		form.addEventListener('input', () => void update());
+		form.addEventListener('change', () => void update());
+		form.addEventListener('submit', (event) => event.preventDefault());
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(text);
+			toast(copied ? 'Lisensi disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		download.addEventListener('click', () => {
+			downloadText('LICENSE', text, 'text/plain;charset=utf-8');
+			toast('Berkas LICENSE diunduh.');
+		});
+
+		void update();
+	}
+</script>
+
+<style>
+	.license-status-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.license-status-row .field-hint {
+		margin: 0;
+	}
+</style>

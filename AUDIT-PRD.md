@@ -6,46 +6,79 @@ Cakupan: status implementasi, bukti uji, celah, dan pekerjaan lanjutan.
 
 ## Ringkasan
 
-- Enam modul MVP P0 sudah bisa dipakai.
+- Tujuh belas alat sudah bisa dipakai: enam modul MVP P0, Utilitas Teks, QR Code, Kompres Gambar, Warna & Kontras, Data Palsu, Hash Teks & Berkas, Toolkit Teks, Hapus Metadata Foto, Cron Builder, Kode ke Gambar, dan Validator JSON Schema.
+- Berbagi sesi Draw/Diagram lewat link hanya-baca selesai: payload gzip + Base64 URL, tanpa backend.
+- Bahasa Indonesia/Inggris selesai untuk shell, beranda, katalog, palette, dan metadata 17 alat. Copy di dalam workspace alat masih Indonesia dan masuk tahap berikutnya.
 - Kelompok 1 (keamanan, sitemap, SEO dasar, halaman legal, Turnstile) selesai dan teruji.
-- Kelompok 2 (celah P0) selesai dan teruji, kecuali FR-SHARE-07 yang sengaja dicatat sebagai pekerjaan v1.1.
-- P1 yang belum: PDF ke gambar, putar/hapus halaman, embed draw.io, generator .gitignore/LICENSE, utilitas tambahan, lembar cetak pas foto, feather/kecerahan, favorit/alat terakhir, QR terpisah.
-- P2 dan v2 belum dikerjakan.
+- Kelompok 2 (celah P0) selesai dan teruji. FR-SHARE-07 yang tadinya ditunda kini selesai di Kelompok 3.
+- Kelompok 3 (P1) selesai pada 6 November 2026: PDF ke gambar, putar/hapus halaman, embed draw.io, generator .gitignore dan LICENSE, konversi JSON ↔ CSV/YAML, utilitas Base64/URL/JWT/UUID/timestamp, regex tester, diff checker, QR code terpisah, feather/kecerahan pas foto, lembar cetak 4R/A4, salin gambar ke clipboard, tema Excalidraw reaktif, favorit/alat terakhir, dan unggahan multipart resumable.
+- CSP dasar tidak lagi memakai `'unsafe-eval'`; pengecualian hanya di rute Pas Foto lewat middleware.
+- Tidak ada P1 yang tersisa. P2 dan v2 belum dikerjakan.
 - Keputusan terbuka: lisensi AGPL `@imgly/background-removal`, pengecualian CSP `'unsafe-eval'`, aset `og:image`, domain final, dan temuan `npm audit`.
 
 ## Status P0
 
 | Modul | Status | Catatan |
 |---|---|---|
-| Landing dan katalog | Sesuai | 6 alat, kategori, pencarian `/` dan `Ctrl+K`, tema terang/gelap |
+| Landing dan katalog | Sesuai | 17 alat, 7 kategori termasuk Utilitas, pencarian `/` dan `Ctrl+K`, tema terang/gelap, rak favorit dan terakhir dipakai |
 | Draw | Sesuai | Excalidraw, autosave localStorage, ekspor PNG/SVG/.excalidraw, impor lewat menu bawaan Excalidraw |
 | Diagram | Sesuai | 6 template, split view, tab Kode/Pratinjau di bawah 768 px, ekspor PNG/SVG, salin kode, penanda error baris, draf localStorage |
-| PDF | Sesuai | Gabung dengan drag-and-drop dan tombol ▲ ▼, pisah, kompres 3 tingkat, gambar ke PDF, semua di browser |
-| Pas Foto | Sesuai | Unggah atau kamera, hapus latar di browser, 4 warna, 3 ukuran 300 DPI, guide dan zoom, ekspor PNG/JPG |
-| Kirim File | Sesuai | Link 128-bit, QR, 1 jam/24 jam/7 hari, sandi, sekali unduh per berkas, laporan, rate limit, blokir ekstensi, Turnstile, cron pembersih |
-| Generator | Sesuai | Markdown GFM dengan highlight dan DOMPurify, README plus badge, JSON formatter/validator |
+| PDF | Sesuai | Gabung dengan drag-and-drop dan tombol ▲ ▼, pisah, kompres 3 tingkat, gambar ke PDF, PDF ke gambar, putar/hapus halaman, thumbnail dan status baca per berkas |
+| Pas Foto | Sesuai | Unggah atau kamera dengan pratinjau langsung, hapus latar, 4 warna, 3 ukuran 300 DPI, guide, zoom, kecerahan, feather, ekspor PNG/JPG, lembar 4R/A4 |
+| Kirim File | Sesuai | Link 128-bit, QR, 1 jam/24 jam/7 hari, sandi, sekali unduh per berkas, laporan, rate limit, blokir ekstensi, Turnstile, cron pembersih, unggah multipart resumable untuk berkas besar |
+| Generator | Sesuai | Markdown GFM dengan highlight dan DOMPurify, README plus badge, JSON formatter/validator, konversi JSON/CSV/YAML, .gitignore, LICENSE, Utilitas, dan QR |
+| Kanvas Gambar | Sesuai | Excalidraw lazy, autosave, tema reaktif, salin PNG ke clipboard, ekspor PNG/SVG/.excalidraw |
 
-Catatan FR-SHARE-07: unggahan yang gagal diulang dari awal per berkas, bukan multipart atau resumable per byte. UI sudah menyatakan ini dan menyarankan koneksi stabil atau memecah berkas besar. Pekerjaan resumable dicatat untuk v1.1.
+Catatan FR-SHARE-07: berkas di atas 8 MB diunggah per bagian lewat Worker, ETag disimpan di `upload_parts`, dan percobaan ulang melanjutkan dari bagian terakhir. Tombol Batalkan memanggil abort multipart. Migrasi `0005_multipart.sql` wajib diterapkan sebelum deploy.
 
 ## Status P1
 
 | Kebutuhan | Status |
 |---|---|
-| PDF ke gambar | Belum |
-| Putar dan hapus halaman PDF | Belum |
-| Embed draw.io di dalam halaman | Belum, sekarang masih tautan keluar |
-| Generator .gitignore dan LICENSE | Belum |
-| Utilitas Base64/URL/JWT/UUID/timestamp/QR | Belum, termasuk kategori Utilitas |
-| Regex tester dan diff checker | Belum |
-| Lembar cetak pas foto 4R/A4 | Belum |
-| Feather tepi dan kecerahan pas foto | Belum |
-| Favorit dan alat terakhir | Belum |
-| QR generator terpisah | Belum, QR baru ada di Kirim File |
-| Kecepatan unggah ulang per byte | Belum, lihat FR-SHARE-07 |
+| PDF ke gambar | Selesai. PNG/JPG, 96/150/300 DPI, unduh per halaman atau semua |
+| Putar dan hapus halaman PDF | Selesai. Putar 90° per halaman dan buang halaman sebelum disimpan |
+| Embed draw.io di dalam halaman | Selesai. Dialog berisi iframe diagrams.net; Save & Exit mengunduh berkas `.drawio` |
+| Generator .gitignore dan LICENSE | Selesai. Enam kelompok tumpukan, enam lisensi, teks resmi Apache dan GPL |
+| Utilitas Base64/URL/JWT/UUID/timestamp | Selesai. Halaman `/tools/utilitas/` dengan lima tab |
+| Konversi JSON ↔ CSV/YAML | Selesai. Tab Konversi di Generator, parser CSV sendiri, `yaml` 2.9.1 (ISC), 11 test |
+| Salin gambar ke clipboard | Selesai. Tombol di Kanvas Gambar memakai Clipboard API, PNG dari Excalidraw |
+| Tema gelap Excalidraw reaktif | Selesai. MutationObserver pada `data-theme` + listener preferensi sistem, tanpa reload |
+| Regex tester dan diff checker | Selesai. Tab Regex dan Diff di Utilitas, highlight aman tanpa innerHTML, batas 500 kecocokan dan 800 baris |
+| Lembar cetak pas foto 4R/A4 | Selesai. 4R dan A4 pada 300 DPI, jumlah foto dihitung otomatis |
+| Feather tepi dan kecerahan pas foto | Selesai. Slider kecerahan dan penghalusan alpha, ikut ke ekspor dan lembar cetak |
+| Favorit dan alat terakhir | Selesai. `localStorage`, tombol bintang di kartu dan halaman alat, rak Favorit dan Terakhir dipakai di beranda |
+| QR generator terpisah | Selesai. Halaman `/tools/qr/`, PNG dan SVG |
+| Kecepatan unggah ulang per byte | Selesai. Multipart 8 MB lewat Worker, ETag di D1, retry per bagian, abort, dan resume dari bagian terakhir |
+
+## Tambahan setelah P1
+
+| Alat | Status | Catatan |
+|---|---|---|
+| Kompres Gambar | Selesai | Resize, kompres, dan konversi JPG/PNG/WebP di browser, pratinjau sebelum/sesudah |
+| Warna & Kontras | Selesai | Rasio WCAG AA/AAA untuk teks biasa dan besar, palet turunan 10 langkah |
+| Data Palsu | Selesai | JSON/CSV, 1 sampai 200 baris, seed deterministik, 8 pilihan field |
+| Hash Teks & Berkas | Selesai | SHA-256/512/384/1 untuk teks dan berkas sampai 50 MB, pembanding hash |
+| Toolkit Teks | Selesai | Case converter, camel/snake/kebab, slug, lorem ipsum, statistik teks |
+| Hapus Metadata Foto | Selesai | Strip EXIF/GPS/XMP/komentar JPG dan chunk teks PNG tanpa re-encode |
+| Cron Builder | Selesai | 5 field standar lewat Croner, zona waktu pilihan, 5 jadwal berikutnya, penjelasan Indonesia |
+| Kode ke Gambar | Selesai | highlight.js inti, 10 bahasa, tema terang/gelap, padding/radius, PNG 2× |
+| Validator JSON Schema | Selesai | `@cfworker/json-schema` tanpa eval, draft 4/7/2019-09/2020-12, error per path |
+| Berbagi sesi Draw/Diagram | Selesai | Link `#sesi=` dengan gzip + Base64 URL, mode hanya-baca, tombol Buka sebagai draf |
+| Bahasa Indonesia/Inggris | Selesai bertahap | Toggle bahasa, kamus shell/katalog/metadata, pencarian dan filter ikut bahasa |
 
 ## Status P2 dan v2
 
-Belum dikerjakan: bahasa Inggris, PWA offline, akun opsional, berbagi sesi Draw/Diagram, code-to-image, mock data generator, cron builder, color palette checker.
+Belum dikerjakan: PWA offline, akun magic link, dan terjemahan copy workspace alat. Code-to-image, cron builder, color palette checker, mock data generator, berbagi sesi Draw/Diagram, serta i18n shell/katalog/metadata sudah selesai lebih awal di daftar tambahan.
+
+### Akun magic link (v2, ditunda)
+
+Ditunda atas keputusan pemilik proyek. Belum ada kode akun, token, atau sesi yang ditulis. Prasyarat sebelum pekerjaan dimulai:
+
+- Domain pengirim terverifikasi di Resend (SPF dan DKIM), lalu `RESEND_API_KEY` serta `AUTH_FROM_EMAIL` disimpan sebagai secret Worker. Jangan pernah menaruh nilainya di repo.
+- Halaman privasi diperbarui: email disimpan, token masuk, cookie sesi, masa simpan, dasar pemrosesan, dan cara menghapus akun.
+- Rate limit per email dan per IP untuk endpoint kirim link, plus cooldown. Token sekali pakai disimpan sebagai hash di D1 dengan masa berlaku 15 menit.
+- Sesi memakai cookie `HttpOnly`, `Secure`, `SameSite=Lax`, proteksi CSRF untuk POST, dan endpoint hapus akun.
+- Uji end-to-end dengan email sungguhan sebelum ditandai "Siap dipakai". Tanpa domain dan kunci Resend, fitur tidak boleh dianggap selesai.
 
 ## Status non-fungsional
 
@@ -55,7 +88,7 @@ Belum dikerjakan: bahasa Inggris, PWA offline, akun opsional, berbagi sesi Draw/
 | Responsif | Sebagian | 360/768/1280 untuk halaman utama, halaman unduh, dan Diagram sudah diuji. Audit semua alat ada di Kelompok 4. |
 | Aksesibilitas | Sebagian | Target 44 px, fokus, dan keyboard sudah spot-check. Audit kontras dan WCAG semua alat ada di Kelompok 4. |
 | Privasi | Sesuai | Alat client-side tidak mengunggah isi berkas. Kirim File memakai server dan menjelaskannya. Tidak ada akun, cookie pelacak, atau iklan. |
-| Keamanan | Sebagian | HTTPS, CSP, HSTS, XCTO, Referrer-Policy, Permissions-Policy, frame-ancestors, sanitasi Markdown, validasi server. CSP memakai pengecualian `'unsafe-eval'` untuk ONNX. |
+| Keamanan | Sesuai | HTTPS, CSP, HSTS, XCTO, Referrer-Policy, Permissions-Policy, frame-ancestors, sanitasi Markdown, validasi server. CSP dasar tanpa `'unsafe-eval'`; pengecualian hanya di `/tools/pas-foto` untuk ONNX. |
 | SEO | Sesuai | Judul, deskripsi, canonical, JSON-LD WebSite/SoftwareApplication, Open Graph per halaman, sitemap dan robots. `og:image` belum ada. |
 | Analitik | Belum | Direncanakan di Kelompok 4. |
 | Kompatibilitas | Belum | Baru diuji di Chrome. Firefox/Safari belum. |
@@ -77,24 +110,103 @@ Belum dikerjakan: bahasa Inggris, PWA offline, akun opsional, berbagi sesi Draw/
 - Gabung PDF: urutan bisa diubah dengan drag-and-drop, tombol ▲ ▼ tetap ada untuk keyboard dan HP.
 - Diagram: di bawah 768 px, panel Kode dan Pratinjau memakai tab. Di layar lebar tetap split view.
 - Pas Foto: tombol Ambil dari kamera memakai `getUserMedia`, pratinjau video, ambil foto, lalu proses yang sama seperti unggah. Kalau izin ditolak atau kamera tidak ada, pesan menjelaskan dan unggah file tetap tersedia.
-- Kirim File: teks jujur bahwa unggahan gagal diulang dari awal per berkas, plus saran untuk berkas besar.
+- Kirim File: berkas > 8 MB memakai multipart; retry melanjutkan dari bagian terakhir, dan UI menjelaskan itu.
 
 ## Bukti uji terakhir
 
-- `npm test`: 120 lulus.
-- `npm run check`: 0 error.
-- `npm run build`: sukses.
+- `npm test`: 293 lulus di 38 berkas.
+- `npm run check`: 0 error, 0 warning, 1 hint (`execCommand` deprecasi di clipboard).
+- `npm run build`: sukses dalam mode production, termasuk `/tools/cron/`, `/tools/code-to-image/`, `/tools/json-schema/`, `/tools/utilitas/`, `/tools/qr/`, dan endpoint multipart. Build dengan `NODE_ENV=development` membuang middleware header, jadi jangan dipakai untuk deploy.
 - Header, sitemap, robots, halaman legal, JSON-LD, dan CSP diuji lewat server hasil build.
 - Turnstile diuji dengan test key resmi Cloudflare: tanpa token ditolak, token diterima.
 - CSP semua alat: 0 violation setelah font self-host dan pengecualian ONNX.
 - PDF merge, split, kompres, gambar ke PDF; Diagram render; Draw mount; Pas Foto model dan unduhan; semuanya diuji di browser.
 
-## Pekerjaan v1.1 dan keputusan
+Uji browser 6 November 2026 memakai Chrome headless dan CDP pada hasil `npm run build`:
 
-1. FR-SHARE-07: multipart atau resumable per byte, supaya berkas besar tidak diulang dari awal.
-2. Ganti `@imgly/background-removal` atau penuhi kewajiban AGPL-3.0.
-3. Kalau Pas Foto diganti dengan pustaka tanpa `eval`, hapus `'unsafe-eval'` dari CSP.
-4. Tambah `og:image` setelah ada aset merek.
-5. Tetapkan domain final dan `PUBLIC_SITE_URL`.
-6. Putuskan temuan `npm audit` (lihat README).
-7. P1 yang belum dikerjakan pada tabel di atas.
+- Generator: `.gitignore` terisi dan tombol nonaktif saat kosong; MIT terisi nama pemilik; GPL memuat naskah resmi 35 KB.
+- Utilitas: Base64, JWT (termasuk status kedaluwarsa), UUID, timestamp, URL encode, regex tester (1 kecocokan berhasil ditandai), dan diff checker (+2 −1 dengan baris berwarna).
+- QR: status "256 px siap diunduh", spinner hilang, pratinjau PNG muncul, unduhan SVG memicu toast.
+- Diagram: indikator "Memuat diagram…" hilang setelah SVG dirender, tanpa error.
+- Beranda: 17 kartu alat, plus rak Favorit dan Terakhir dipakai. Bintang di kartu menyimpan ke `localStorage`, rak muncul, dan bintang di kartu rak bisa menghapus favorit.
+- Kompres Gambar: gambar 1600 × 1200 diproses menjadi JPG 351 KB (jujur ditandai 11% lebih besar), WebP 311 KB, dan 88 KB setelah dibatasi 800 px (72% lebih kecil); pratinjau, statistik, dan tombol unduh aktif.
+- Warna & Kontras: rasio awal 15.86:1 dengan semua badge lolos; `#777777` di latar terang turun ke 4.22:1 dan AA teks biasa berubah menjadi Gagal; tombol tukar dan salin HEX bekerja.
+- Data Palsu: 10 baris JSON dengan 4 field default, header CSV `id,nama,email,kota`, seed berbeda mengubah data, keadaan kosong muncul saat semua field dilepas, dan 5 baris dengan satu field bekerja.
+- Hash: berkas di-hash menjadi 64 karakter hex, SHA-256 `abc` sama dengan nilai rujukan, pembanding menampilkan badge Cocok, dan SHA-1 `abc` juga cocok dengan nilai rujukan.
+- Toolkit Teks: statistik 22 karakter dan 4 kata, Title Case "Halo Dunia, Apa Kabar?", camelCase, slug, dan lorem 2 kalimat bekerja.
+- Hapus Metadata Foto: JPEG uji mengandung "Exif" sebelum diproses dan tidak lagi setelahnya, 272 B metadata dibuang, pratinjau dan unduhan aktif.
+- Cron Builder: `0 9 * * *` dijelaskan "setiap hari pukul 09.00", preset 15 menit menghasilkan 5 jadwal, UTC 16.00 vs WIB 23.00 pada waktu yang sama, ekspresi tidak valid menampilkan error lalu pulih. Lolos 360/768/1280 tanpa overflow, keyboard mencapai field, kontras body 15.86/16.18 dan hint 5.38/6.8.
+- Kode ke Gambar: PNG 640 × 320 dengan latar terang rgb(250,248,245), tema gelap rgb(20,19,17), padding 64 menambah tinggi, kode Python ter-render, unduhan memicu toast. CSP dasar tetap aktif (inline script diblokir) dan tidak ada error konsol. Lolos 360/768/1280, keyboard, dan kontras.
+- Validator JSON Schema: contoh menghasilkan 4 masalah dengan path `$.umur` dan properti `extra`; data valid menghasilkan badge Valid dan 0 masalah; JSON rusak menampilkan baris dan kolom. Badge kontras 7.38 terang / 5.45 gelap, tombol utama 6.42/9.1. Lolos 360/768/1280 dan keyboard.
+- Berbagi sesi Diagram: link 167 karakter dibuka kembali dengan banner hanya-baca, textarea read-only, template nonaktif, SVG tetap dirender; Buka sebagai draf mengosongkan hash dan menyimpan draf.
+- Berbagi sesi Draw: link 184 karakter, Excalidraw terbuka dalam mode hanya-baca dengan banner; Buka sebagai draf menghapus banner dan menyimpan scene ke localStorage. Data sesi gzip pulang-pergi lulus 10 unit test.
+- Batas link sesi: token maksimal 7.000 karakter dan URL maksimal 8.000 karakter. Diagram 87.975 karakter ditolak dengan pesan "Diagram terlalu panjang untuk link (16.765 dari 7.000 karakter). Ringkas kode, lalu coba lagi." dan kotak link disembunyikan; link normal 167 karakter tetap dibuat. Link Draw terpotong (hash 7.500 karakter) menampilkan banner peringatan "Link sesi terpotong atau terlalu panjang..." dan memakai draf lokal; link valid 184 karakter tetap membuka mode hanya-baca tanpa peringatan. Empat unit test baru menguji batas token, batas URL, decode token panjang, dan sesi di bawah batas.
+- Bahasa Inggris: toggle EN mengganti hero, chips (Images/Diagrams/Documents), hitungan "17 tools", nama kartu, palette, dan footer. Pilihan bertahan saat pindah ke `/tools/pdf/`; judul "PDF Tools", usage, status "Ready to use", dan privasi "On your device" ikut berubah. Pencarian "drawing" menemukan Drawing Canvas, chip Images menyaring 3 alat gambar. Lolos 360/768/1280 tanpa overflow, tombol bahasa 44×44, kontras 6.8 terang / 5.38 gelap, dan keyboard mencapai "Ganti bahasa".
+- PDF: dua berkas diunggah, masing-masing menampilkan thumbnail halaman pertama dan "✓ Siap · 3/2 halaman"; tombol gabung dan pisah aktif setelah selesai dibaca; gabung menghasilkan toast sukses tanpa error.
+- Generator konversi: JSON → CSV → JSON bolak-balik menghasilkan 2 objek; JSON → YAML memuat daftar; YAML → JSON kembali 2 objek tanpa error.
+- Kanvas Gambar: tema berubah tanpa reload (kelas `theme--dark` mengikuti toggle), `getBlob('png')` menghasilkan PNG, dan tombol Salin gambar menulis ke clipboard dengan toast sukses.
+- CSP: CSP dasar terbukti aktif karena inline script diblokir di halaman Draw; header `/tools/pas-foto` memuat `'unsafe-eval'`, dan model latar tetap berjalan sampai "✓ Latar dihapus".
+- Pas Foto end-to-end dengan gambar asli: model latar selesai, kartu pratinjau menampilkan nama, ukuran, dan "✓ Latar dihapus", slider kecerahan/feather diterapkan, dan lembar 4R berisi 9 foto 3×4.
+- Kirim File: berkas 9 MB dan gambar tampil sebagai kartu dengan thumbnail/ekstensi, ukuran, status "Siap diunggah", dan progress keseluruhan 0%; tombol hapus bekerja. Endpoint sesi mengembalikan 503 saat R2 belum dikonfigurasi, dan UI menampilkan pesan itu tanpa spinner menggantung.
+- Layout 360 px: QR, Generator (tab wrap dua baris), dan Utilitas tidak meluber horizontal.
+
+Batasan uji: jalur multipart ke R2 belum dijalankan end-to-end karena kredensial R2 tidak tersedia di mesin uji. Yang diuji adalah perencanaan bagian, XML complete, signature R2, alur UI, serta jalur error. Setelah migrasi `0005_multipart.sql` diterapkan dan secret R2 tersedia, uji manual yang disarankan: unggah berkas > 8 MB, putuskan koneksi di tengah, lalu tekan Ulangi dan pastikan bagian yang selesai tidak dikirim ulang.
+
+## Audit dependensi
+
+`npm audit`: 14 temuan (2 low, 1 moderate, 11 high) turun menjadi **7 temuan** (2 low, 2 moderate, 3 high).
+
+Sudah diperbaiki dengan override satu mayor:
+
+- `lodash-es` 4.17.21 → 4.18.1 (menutup 7 temuan).
+- `nanoid` 3.3.3 di Excalidraw → 3.3.20.
+
+Masih butuh keputusan karena lompat mayor atau downgrade paket langsung:
+
+| Temuan | Severity | Opsi | Catatan |
+|---|---|---|---|
+| `@excalidraw/excalidraw` | moderate | downgrade 0.17.6 | breaking |
+| `@excalidraw/mermaid-to-excalidraw` | moderate | ikut downgrade Excalidraw | transitive |
+| `@imgly/background-removal` | high | downgrade 1.1.5 | breaking, Pas Foto berisiko |
+| `katex` 0.16.47 | low | override 0.19.1 | 0.x minor |
+| `mermaid` 11.x nested | low | override 12.3.0 | lompat mayor |
+| `nanoid` 4.0.2 | high | override 5.1.16 | lompat mayor |
+| `zod` 3.x di imgly | high | override 4.6.7 | lompat mayor |
+
+## Lisensi dependensi
+
+| Paket | Lisensi |
+|---|---|
+| Astro, @astrojs/*, React, React DOM, Excalidraw, Mermaid, marked, pdf-lib, qrcode, aws4fetch, croner, @cfworker/json-schema | MIT |
+| yaml | ISC |
+| pdfjs-dist | Apache-2.0 |
+| DOMPurify | MPL-2.0 OR Apache-2.0 |
+| highlight.js | BSD-3-Clause |
+| @fontsource-* | OFL-1.1 |
+| `@imgly/background-removal` | **AGPL-3.0** |
+
+Konsekuensi: semua dependensi permisif kecuali imgly. Jika imgly dipertahankan saat publik, proyek perlu dirilis AGPL-3.0 dan source tersedia untuk pengguna jaringan, atau imgly diganti dengan pustaka permisif (mis. MediaPipe Selfie Segmentation, Apache-2.0). `LICENSE` belum diubah.
+
+## Langkah manual deploy
+
+1. Terapkan migrasi D1: `npx wrangler d1 migrations apply toolsman-shares --remote` (termasuk `0005_multipart.sql`).
+2. Pastikan `NODE_ENV` tidak bernilai `development`, lalu `npm run build`.
+3. Cek `dist/server/virtual_astro_middleware.mjs` memuat `securityHeadersFor`; kalau tidak, middleware terbuang dan header keamanan tidak akan terpasang.
+4. Isi secret R2 dan Turnstile, lalu deploy Worker utama: `npx wrangler deploy --config dist/server/wrangler.json`.
+5. Deploy ulang Worker cleanup karena kini memanggil abort multipart: `cd workers/cleanup && npx wrangler deploy`.
+6. Verifikasi header: `/tools/draw` tanpa `'unsafe-eval'`, `/tools/pas-foto` dengan `'unsafe-eval'`.
+7. Uji multipart: unggah berkas > 8 MB, putuskan koneksi di tengah, tekan Ulangi, dan pastikan bagian yang selesai tidak dikirim ulang.
+8. Buka konsol DevTools di setiap alat (17 rute) dan pastikan tidak ada pelanggaran CSP. Minimal periksa Draw, Diagram, Pas Foto, PDF, Generator, Kirim File, QR, Kompres Gambar, Warna, Data Palsu, Hash, Toolkit Teks, Hapus Metadata, Cron, Kode ke Gambar, JSON Schema, dan Utilitas.
+9. Uji link hanya-baca: link normal harus terbuka, sesi sangat besar harus ditolak dengan pesan jelas, dan link yang terpotong harus menampilkan peringatan lalu memakai draf lokal.
+10. Cek `/akun/` belum ada dan tidak ditautkan; akun magic link tetap ditunda sampai prasyarat v2 terpenuhi.
+
+## Keputusan terbuka
+
+| Keputusan | Status | Yang dibutuhkan |
+|---|---|---|
+| Lisensi AGPL | Terbuka | `@imgly/background-removal` berlisensi AGPL-3.0. Pilih: rilis proyek sebagai AGPL-3.0 dengan source tersedia untuk pengguna jaringan, atau ganti ke pustaka permisif seperti MediaPipe (Apache-2.0). `LICENSE` belum diubah. |
+| Domain final | Terbuka | Tentukan domain, set `PUBLIC_SITE_URL`, lalu build ulang. Domain ini juga prasyarat verifikasi Resend kalau akun magic link dilanjutkan. |
+| `og:image` | Terbuka | Butuh aset merek 1200×630 dan penempatan meta `og:image` per halaman. |
+| Analitik | Terbuka | Pilih Plausible (tanpa cookie, `PUBLIC_PLAUSIBLE_DOMAIN`) atau tidak sama sekali. Perlu pembaruan halaman privasi sebelum diaktifkan. |
+| `npm audit` | Terbuka | 7 temuan tersisa (2 low, 2 moderate, 3 high). Semua perbaikan butuh lompat mayor atau downgrade langsung; lihat tabel audit dependensi. |
+| Multipart R2 | Terbuka | Jalankan uji end-to-end setelah kredensial R2 dan migrasi `0005_multipart.sql` tersedia. |

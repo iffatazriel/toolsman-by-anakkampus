@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, degrees } from 'pdf-lib';
 
 export type Orientation = 'portrait' | 'landscape' | 'auto';
 export type Margin = 'none' | 'small' | 'large';
@@ -30,6 +30,30 @@ export async function splitPdf(bytes: ArrayBuffer, pages: number[]): Promise<Uin
 		pages.map((page) => page - 1),
 	);
 	copied.forEach((page) => out.addPage(page));
+	return out.save();
+}
+
+export interface PageEdits {
+	rotations: number[];
+	removed: number[];
+}
+
+export async function editPdf(bytes: ArrayBuffer, edits: PageEdits): Promise<Uint8Array> {
+	const source = await PDFDocument.load(bytes);
+	const removed = new Set(edits.removed);
+	const keep = source.getPageIndices().filter((index) => !removed.has(index));
+	if (keep.length === 0) throw new Error('Minimal sisakan satu halaman.');
+
+	const out = await PDFDocument.create();
+	const copied = await out.copyPages(source, keep);
+	copied.forEach((page, position) => {
+		const extra = edits.rotations[keep[position]!] ?? 0;
+		if (extra !== 0) {
+			const current = page.getRotation().angle;
+			page.setRotation(degrees((((current + extra) % 360) + 360) % 360));
+		}
+		out.addPage(page);
+	});
 	return out.save();
 }
 

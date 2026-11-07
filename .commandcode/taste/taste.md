@@ -1,4 +1,6 @@
 - Never perform major/breaking dependency upgrades without asking first; propose them and wait for approval. Confidence: 0.9
 - Prefers concise end-of-task reports that separate what was fixed automatically from items that need the user's decision. Confidence: 0.75
 - Do not deploy to production on your own; hand the deploy/secret/dashboard commands to the user to run. Confidence: 0.85
-- Never label work "done" without test evidence (HTTP checks, headless browser runs, or unit tests). Confidence: 0.85
+- Never label a tool "ready" without test evidence: unit tests for logic, HTTP checks, and headless-browser QA that also passes 360/768/1280 viewport widths, keyboard navigation, and contrast in both light and dark themes. Confidence: 0.9
+- Wants every async flow in the UI to show explicit state feedback: a success preview after a file is accepted/uploaded (thumbnail, name, size, "✓ ready") plus a loading/spinner state for any operation that can take time, so users are never left guessing. Confidence: 0.85
+- Always treat the project's PRD as the authoritative reference when planning scope, evaluating completeness, or proposing new features; cross-check against it before declaring work done or suggesting additions. Confidence: 0.85

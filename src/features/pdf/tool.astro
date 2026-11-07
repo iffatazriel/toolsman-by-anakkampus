@@ -8,6 +8,8 @@ const tabs = [
 	{ id: 'pisah', label: 'Pisah' },
 	{ id: 'kompres', label: 'Kompres' },
 	{ id: 'gambar', label: 'Gambar → PDF' },
+	{ id: 'ke-gambar', label: 'PDF → Gambar' },
+	{ id: 'halaman', label: 'Putar & hapus' },
 ];
 ---
 
@@ -97,6 +99,57 @@ const tabs = [
 				<p class="alert" data-error="gambar" role="alert" hidden><span></span></p>
 			</div>
 		</div>
+
+		<div data-panel="ke-gambar" class="tool-panel" hidden>
+			<div class="pdf-panel">
+				<Dropzone id="ke-gambar-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<div class="pdf-meta" data-meta="ke-gambar" hidden></div>
+				<div class="form-grid">
+					<div>
+						<span class="field-label">Format gambar</span>
+						<div class="segmented" role="radiogroup" aria-label="Format gambar">
+							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-image-format="png">PNG</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-image-format="jpeg">JPG</button>
+						</div>
+					</div>
+					<div>
+						<span class="field-label">Resolusi</span>
+						<div class="segmented" role="radiogroup" aria-label="Resolusi gambar">
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-dpi="96">96 DPI</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-dpi="150">150 DPI</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-dpi="300">300 DPI</button>
+						</div>
+					</div>
+				</div>
+				<p class="field-hint">300 DPI paling tajam, tapi butuh memori lebih besar untuk PDF dengan banyak halaman.</p>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--primary" data-run="ke-gambar" disabled>Ubah jadi gambar</button>
+				</div>
+				<div data-progress="ke-gambar" hidden><Progress label="Membuat gambar" value={0} /></div>
+				<p class="alert" data-error="ke-gambar" role="alert" hidden><span></span></p>
+				<div data-image-result="ke-gambar" hidden>
+					<div class="pane-actions">
+						<button type="button" class="btn btn--secondary" data-download-all="ke-gambar">Unduh semua</button>
+					</div>
+					<p class="field-hint">Peramban bisa memblokir unduhan beruntun. Kalau itu terjadi, pakai tombol Unduh di tiap halaman.</p>
+					<ol class="file-list" data-image-list aria-label="Hasil gambar per halaman"></ol>
+				</div>
+			</div>
+		</div>
+
+		<div data-panel="halaman" class="tool-panel" hidden>
+			<div class="pdf-panel">
+				<Dropzone id="halaman-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<div class="pdf-meta" data-meta="halaman" hidden></div>
+				<p class="field-hint">Tombol ↻ memutar halaman 90°. Tombol Hapus membuang halaman dari hasil. Perubahan baru tersimpan setelah kamu menekan Simpan.</p>
+				<ol class="page-list" data-page-list aria-label="Halaman PDF"></ol>
+				<div class="pane-actions">
+					<button type="button" class="btn btn--primary" data-run="halaman" disabled>Simpan PDF dan unduh</button>
+				</div>
+				<div data-progress="halaman" hidden><Progress label="Menyimpan" value={0} /></div>
+				<p class="alert" data-error="halaman" role="alert" hidden><span></span></p>
+			</div>
+		</div>
 	</Tabs>
 </div>
 
@@ -105,9 +158,18 @@ const tabs = [
 	import { toast } from '../../lib/toast';
 	import { runPdfTask } from './pdf-client';
 	import type { CompressLevel, Margin, Orientation } from './pdf-ops';
-	import { PDFDocument } from 'pdf-lib';
 
-	type Named = { file: File; id: string };
+	type ReadState = 'reading' | 'ready' | 'failed';
+
+	type Named = {
+		file: File;
+		id: string;
+		status: ReadState;
+		pages?: number;
+		previewUrl?: string;
+		thumbUrl?: string;
+		error?: string;
+	};
 
 	const $ = <T extends HTMLElement>(selector: string, root: ParentNode = document) =>
 		root.querySelector<T>(selector);
@@ -140,6 +202,21 @@ const tabs = [
 
 	const readBytes = (file: File) => file.arrayBuffer();
 
+	const revoke = (url?: string) => {
+		if (url) URL.revokeObjectURL(url);
+	};
+
+	const readPdfInfo = async (file: File) => {
+		const task = runPdfTask({ op: 'preview', file: await readBytes(file) });
+		const result = await task.promise;
+		const previewUrl = result.preview
+			? URL.createObjectURL(
+					new Blob([result.preview.bytes as BlobPart], { type: result.preview.mime }),
+				)
+			: undefined;
+		return { pages: result.pageCount ?? 0, previewUrl };
+	};
+
 	const download = (name: string, bytes: Uint8Array, mime = 'application/pdf') => {
 		const blob = new Blob([bytes as BlobPart], { type: mime });
 		const url = URL.createObjectURL(blob);
@@ -159,6 +236,7 @@ const tabs = [
 		items.forEach((item, index) => {
 			const li = document.createElement('li');
 			li.className = 'file-card';
+			li.dataset.state = item.status;
 
 			if (name === 'gabung') {
 				li.draggable = true;
@@ -194,13 +272,47 @@ const tabs = [
 				});
 			}
 
+			const thumb = document.createElement('span');
+			thumb.className = 'file-card__thumb';
+			const imageUrl = item.previewUrl ?? item.thumbUrl;
+			if (imageUrl) {
+				const img = document.createElement('img');
+				img.src = imageUrl;
+				img.alt = '';
+				img.loading = 'lazy';
+				thumb.append(img);
+			} else if (item.status === 'reading') {
+				const spinner = document.createElement('span');
+				spinner.className = 'spinner';
+				spinner.setAttribute('aria-hidden', 'true');
+				thumb.append(spinner);
+			} else {
+				thumb.textContent = 'PDF';
+			}
+
+			const info = document.createElement('span');
+			info.className = 'file-card__info';
+
 			const label = document.createElement('span');
 			label.className = 'file-card__name';
 			label.textContent = item.file.name;
 
-			const size = document.createElement('span');
-			size.className = 'file-card__size';
-			size.textContent = formatBytes(item.file.size);
+			const meta = document.createElement('span');
+			meta.className = 'file-card__meta';
+			if (item.status === 'reading') {
+				meta.textContent = 'Membaca PDF…';
+			} else if (item.status === 'failed') {
+				meta.textContent = item.error ?? 'Tidak bisa dibaca';
+				meta.classList.add('is-failed');
+			} else if (item.pages !== undefined) {
+				meta.textContent = `✓ Siap · ${item.pages} halaman · ${formatBytes(item.file.size)}`;
+				meta.classList.add('is-ready');
+			} else {
+				meta.textContent = `✓ Siap · ${formatBytes(item.file.size)}`;
+				meta.classList.add('is-ready');
+			}
+
+			info.append(label, meta);
 
 			const up = document.createElement('button');
 			up.type = 'button';
@@ -232,12 +344,14 @@ const tabs = [
 			remove.setAttribute('aria-label', `Hapus ${item.file.name}`);
 			remove.textContent = '×';
 			remove.addEventListener('click', () => {
-				items.splice(index, 1);
+				const [removed] = items.splice(index, 1);
+				revoke(removed?.previewUrl);
+				revoke(removed?.thumbUrl);
 				renderList(name, items, onChange);
 				onChange();
 			});
 
-			li.append(label, size, up, down, remove);
+			li.append(thumb, info, up, down, remove);
 			list.append(li);
 		});
 	};
@@ -257,12 +371,40 @@ const tabs = [
 	let margin: Margin = 'small';
 	let compressResult: { before: number; after: number } | null = null;
 
+	let toImageFile: File | null = null;
+	let imageFormat: 'png' | 'jpeg' = 'png';
+	let imageDpi = 150;
+	let renderedImages: { name: string; mime: string; bytes: Uint8Array }[] = [];
+
+	let pageFile: File | null = null;
+	let pageCount = 0;
+	let pageRotations: number[] = [];
+	let pageRemoved: boolean[] = [];
+	let splitPreviewUrl: string | undefined;
+	let compressPreviewUrl: string | undefined;
+	let toImagePreviewUrl: string | undefined;
+	let pagePreviewUrl: string | undefined;
+
+	const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
 	const updateGabung = () => {
-		runButton('gabung')!.disabled = mergeItems.length < 2;
+		runButton('gabung')!.disabled =
+			mergeItems.length < 2 || mergeItems.some((item) => item.status !== 'ready');
 	};
 
 	const updateGambar = () => {
-		runButton('gambar')!.disabled = imageItems.length === 0;
+		runButton('gambar')!.disabled =
+			imageItems.length === 0 || imageItems.some((item) => item.status !== 'ready');
+	};
+
+	const updateToImage = () => {
+		runButton('ke-gambar')!.disabled = toImageFile === null;
+	};
+
+	const updatePageEdit = () => {
+		const kept = pageCount - pageRemoved.filter(Boolean).length;
+		const changed = pageRotations.some((angle) => angle !== 0) || pageRemoved.some(Boolean);
+		runButton('halaman')!.disabled = pageFile === null || kept === 0 || !changed;
 	};
 
 	const updateSplit = () => {
@@ -281,37 +423,185 @@ const tabs = [
 		runButton('pisah')!.disabled = !result.ok;
 	};
 
+	const readItems = async (items: Named[], done: () => void) => {
+		for (const item of items) {
+			try {
+				const info = await readPdfInfo(item.file);
+				item.pages = info.pages;
+				item.previewUrl = info.previewUrl;
+				item.status = 'ready';
+			} catch {
+				item.status = 'failed';
+				item.error = 'PDF tidak bisa dibaca';
+			}
+			done();
+		}
+	};
+
 	const addMergeFiles = (files: FileList | null) => {
 		if (!files) return;
-		Array.from(files).forEach((file) => mergeItems.push({ file, id: nextUid() }));
+		const added: Named[] = Array.from(files).map((file) => ({
+			file,
+			id: nextUid(),
+			status: 'reading',
+		}));
+		mergeItems.push(...added);
 		renderList('gabung', mergeItems, updateGabung);
 		updateGabung();
+		void readItems(added, () => {
+			renderList('gabung', mergeItems, updateGabung);
+			updateGabung();
+		});
 	};
 
 	const addImageFiles = (files: FileList | null) => {
 		if (!files) return;
-		Array.from(files).forEach((file) => imageItems.push({ file, id: nextUid() }));
+		Array.from(files).forEach((file) =>
+			imageItems.push({
+				file,
+				id: nextUid(),
+				status: 'ready',
+				thumbUrl: URL.createObjectURL(file),
+			}),
+		);
 		renderList('gambar', imageItems, updateGambar);
 		updateGambar();
 	};
 
-	const countPages = async (file: File): Promise<number> => {
-		const doc = await PDFDocument.load(await readBytes(file), { ignoreEncryption: true });
-		return doc.getPageCount();
-	};
-
-	const showPdfMeta = (name: string, file: File, pages: number) => {
+	const renderMetaCard = (
+		name: string,
+		file: File,
+		options: { loading?: boolean; pages?: number; previewUrl?: string; error?: string },
+	) => {
 		const meta = $<HTMLElement>(`[data-meta="${name}"]`);
 		if (!meta) return;
 		meta.hidden = false;
 		meta.innerHTML = '';
-		const line = document.createElement('p');
+
+		const card = document.createElement('div');
+		card.className = 'meta-card';
+
+		const thumb = document.createElement('span');
+		thumb.className = 'meta-card__thumb';
+		if (options.previewUrl) {
+			const img = document.createElement('img');
+			img.src = options.previewUrl;
+			img.alt = '';
+			thumb.append(img);
+		} else if (options.loading) {
+			const spinner = document.createElement('span');
+			spinner.className = 'spinner';
+			spinner.setAttribute('aria-hidden', 'true');
+			thumb.append(spinner);
+		} else {
+			thumb.textContent = 'PDF';
+		}
+
+		const info = document.createElement('span');
+		info.className = 'meta-card__info';
+
+		const line = document.createElement('span');
 		line.className = 'file-card__name';
 		line.textContent = file.name;
-		const sub = document.createElement('p');
-		sub.className = 'field-hint';
-		sub.textContent = `${pages} halaman · ${formatBytes(file.size)}`;
-		meta.append(line, sub);
+
+		const sub = document.createElement('span');
+		sub.className = 'file-card__meta';
+		if (options.loading) {
+			sub.textContent = 'Membaca PDF…';
+		} else if (options.error) {
+			sub.textContent = options.error;
+			sub.classList.add('is-failed');
+		} else {
+			sub.textContent = `✓ Siap · ${options.pages ?? 0} halaman · ${formatBytes(file.size)}`;
+			sub.classList.add('is-ready');
+		}
+
+		info.append(line, sub);
+		card.append(thumb, info);
+		meta.append(card);
+	};
+
+	const showPdfLoading = (name: string, file: File) =>
+		renderMetaCard(name, file, { loading: true });
+
+	const showPdfMeta = (name: string, file: File, pages: number, previewUrl?: string) =>
+		renderMetaCard(name, file, { pages, previewUrl });
+
+	const renderPageList = () => {
+		const list = $<HTMLOListElement>('[data-page-list]');
+		if (!list) return;
+		list.innerHTML = '';
+
+		for (let index = 0; index < pageCount; index += 1) {
+			const li = document.createElement('li');
+			li.className = 'page-card';
+			if (pageRemoved[index]) li.classList.add('page-card--removed');
+
+			const name = document.createElement('span');
+			name.className = 'page-card__name';
+			name.textContent = `Halaman ${index + 1}`;
+
+			const angle = document.createElement('span');
+			angle.className = 'page-card__angle';
+			angle.textContent = `${pageRotations[index] ?? 0}°`;
+
+			const rotate = document.createElement('button');
+			rotate.type = 'button';
+			rotate.className = 'icon-button';
+			rotate.setAttribute('aria-label', `Putar halaman ${index + 1} 90 derajat`);
+			rotate.textContent = '↻';
+			rotate.addEventListener('click', () => {
+				pageRotations[index] = ((pageRotations[index] ?? 0) + 90) % 360;
+				renderPageList();
+				updatePageEdit();
+			});
+
+			const remove = document.createElement('button');
+			remove.type = 'button';
+			remove.className = 'icon-button';
+			remove.setAttribute('aria-pressed', pageRemoved[index] ? 'true' : 'false');
+			remove.textContent = pageRemoved[index] ? 'Batalkan' : 'Hapus';
+			remove.setAttribute('aria-label', `Hapus halaman ${index + 1}`);
+			remove.addEventListener('click', () => {
+				pageRemoved[index] = !pageRemoved[index];
+				renderPageList();
+				updatePageEdit();
+			});
+
+			li.append(name, angle, rotate, remove);
+			list.append(li);
+		}
+	};
+
+	const renderImageResults = () => {
+		const box = $<HTMLElement>('[data-image-result="ke-gambar"]');
+		const list = $<HTMLOListElement>('[data-image-list]');
+		if (!box || !list) return;
+		list.innerHTML = '';
+		box.hidden = renderedImages.length === 0;
+
+		renderedImages.forEach((image) => {
+			const li = document.createElement('li');
+			li.className = 'file-card';
+
+			const name = document.createElement('span');
+			name.className = 'file-card__name';
+			name.textContent = image.name;
+
+			const size = document.createElement('span');
+			size.className = 'file-card__size';
+			size.textContent = formatBytes(image.bytes.byteLength);
+
+			const save = document.createElement('button');
+			save.type = 'button';
+			save.className = 'btn btn--secondary';
+			save.textContent = 'Unduh';
+			save.setAttribute('aria-label', `Unduh ${image.name}`);
+			save.addEventListener('click', () => download(image.name, image.bytes, image.mime));
+
+			li.append(name, size, save);
+			list.append(li);
+		});
 	};
 
 	document.querySelector<HTMLInputElement>('#gabung-input')?.addEventListener('change', (event) => {
@@ -329,17 +619,28 @@ const tabs = [
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+
+		splitFile = null;
+		splitPageCount = 0;
+		updateSplit();
+		showPdfLoading('pisah', file);
+
 		try {
-			const pages = await countPages(file);
+			const info = await readPdfInfo(file);
+			revoke(splitPreviewUrl);
+			splitPreviewUrl = info.previewUrl;
 			splitFile = file;
-			splitPageCount = pages;
-			showPdfMeta('pisah', file, pages);
-			setError('pisah', null);
+			splitPageCount = info.pages;
+			showPdfMeta('pisah', file, info.pages, info.previewUrl);
 			updateSplit();
 		} catch {
+			revoke(splitPreviewUrl);
+			splitPreviewUrl = undefined;
 			splitFile = null;
 			splitPageCount = 0;
-			setError('pisah', 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.');
+			renderMetaCard('pisah', file, {
+				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+			});
 			updateSplit();
 		}
 	});
@@ -351,18 +652,121 @@ const tabs = [
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+
+		compressFile = null;
+		compressResult = null;
+		runButton('kompres')!.disabled = true;
+		renderCompare();
+		showPdfLoading('kompres', file);
+
 		try {
-			const pages = await countPages(file);
+			const info = await readPdfInfo(file);
+			revoke(compressPreviewUrl);
+			compressPreviewUrl = info.previewUrl;
 			compressFile = file;
-			compressResult = null;
-			showPdfMeta('kompres', file, pages);
-			setError('kompres', null);
+			showPdfMeta('kompres', file, info.pages, info.previewUrl);
 			runButton('kompres')!.disabled = false;
-			renderCompare();
 		} catch {
+			revoke(compressPreviewUrl);
+			compressPreviewUrl = undefined;
 			compressFile = null;
-			setError('kompres', 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.');
+			runButton('kompres')!.disabled = true;
+			renderMetaCard('kompres', file, {
+				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+			});
 		}
+	});
+
+	document.querySelector<HTMLInputElement>('#ke-gambar-input')?.addEventListener('change', async (event) => {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0] ?? null;
+		input.value = '';
+		if (!file) return;
+
+		toImageFile = null;
+		renderedImages = [];
+		renderImageResults();
+		updateToImage();
+		showPdfLoading('ke-gambar', file);
+
+		try {
+			const info = await readPdfInfo(file);
+			revoke(toImagePreviewUrl);
+			toImagePreviewUrl = info.previewUrl;
+			toImageFile = file;
+			showPdfMeta('ke-gambar', file, info.pages, info.previewUrl);
+			updateToImage();
+		} catch {
+			revoke(toImagePreviewUrl);
+			toImagePreviewUrl = undefined;
+			toImageFile = null;
+			renderMetaCard('ke-gambar', file, {
+				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+			});
+			updateToImage();
+		}
+	});
+
+	document.querySelector<HTMLInputElement>('#halaman-input')?.addEventListener('change', async (event) => {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0] ?? null;
+		input.value = '';
+		if (!file) return;
+
+		pageFile = null;
+		pageCount = 0;
+		pageRotations = [];
+		pageRemoved = [];
+		renderPageList();
+		updatePageEdit();
+		showPdfLoading('halaman', file);
+
+		try {
+			const info = await readPdfInfo(file);
+			revoke(pagePreviewUrl);
+			pagePreviewUrl = info.previewUrl;
+			pageFile = file;
+			pageCount = info.pages;
+			pageRotations = new Array(info.pages).fill(0);
+			pageRemoved = new Array(info.pages).fill(false);
+			showPdfMeta('halaman', file, info.pages, info.previewUrl);
+			renderPageList();
+			updatePageEdit();
+		} catch {
+			revoke(pagePreviewUrl);
+			pagePreviewUrl = undefined;
+			pageFile = null;
+			pageCount = 0;
+			pageRotations = [];
+			pageRemoved = [];
+			renderPageList();
+			renderMetaCard('halaman', file, {
+				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+			});
+			updatePageEdit();
+		}
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-image-format]').forEach((button) => {
+		button.addEventListener('click', () => {
+			imageFormat = button.dataset.imageFormat as 'png' | 'jpeg';
+			document.querySelectorAll<HTMLButtonElement>('[data-image-format]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+			renderedImages = [];
+			renderImageResults();
+		});
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-dpi]').forEach((button) => {
+		button.addEventListener('click', () => {
+			imageDpi = Number(button.dataset.dpi);
+			document.querySelectorAll<HTMLButtonElement>('[data-dpi]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+			renderedImages = [];
+			renderImageResults();
+		});
 	});
 
 	const renderCompare = () => {
@@ -479,6 +883,71 @@ const tabs = [
 			renderCompare();
 		}
 	});
+
+	runButton('ke-gambar')?.addEventListener('click', async () => {
+		if (!toImageFile || busy.has('ke-gambar')) return;
+		busy.add('ke-gambar');
+		const button = runButton('ke-gambar');
+		if (button) button.disabled = true;
+		setError('ke-gambar', null);
+		setProgress('ke-gambar', 0, 0, 'Menyiapkan…');
+
+		const file = toImageFile;
+		const task = runPdfTask(
+			{
+				op: 'to-images',
+				file: await readBytes(file),
+				format: imageFormat,
+				scale: imageDpi / 72,
+			},
+			(done, total) => setProgress('ke-gambar', done, total, ''),
+		);
+		try {
+			const result = await task.promise;
+			renderedImages = result.images ?? [];
+			renderImageResults();
+			toast(
+				renderedImages.length > 1
+					? `${renderedImages.length} gambar siap diunduh.`
+					: 'Gambar siap diunduh.',
+			);
+		} catch (error) {
+			setError(
+				'ke-gambar',
+				error instanceof Error ? error.message : 'Gagal membuat gambar.',
+			);
+		} finally {
+			hideProgress('ke-gambar');
+			busy.delete('ke-gambar');
+			updateToImage();
+		}
+	});
+
+	document
+		.querySelector<HTMLButtonElement>('[data-download-all="ke-gambar"]')
+		?.addEventListener('click', async () => {
+			for (const image of renderedImages) {
+				download(image.name, image.bytes, image.mime);
+				await delay(300);
+			}
+		});
+
+	runButton('halaman')?.addEventListener('click', async () => {
+		if (!pageFile) return;
+		const file = pageFile;
+		const kept = pageCount - pageRemoved.filter(Boolean).length;
+		if (kept === 0) return;
+		const removed = pageRemoved.flatMap((value, index) => (value ? [index] : []));
+		await run(
+			'halaman',
+			{
+				op: 'edit',
+				file: await readBytes(file),
+				edits: { rotations: pageRotations, removed },
+			},
+			`${file.name.replace(/\.pdf$/i, '')}-diubah.pdf`,
+		);
+	});
 </script>
 
 <style>
@@ -498,13 +967,58 @@ const tabs = [
 
 	.file-card {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto 44px 44px 44px;
+		grid-template-columns: 52px minmax(0, 1fr) 44px 44px 44px;
 		align-items: center;
 		gap: var(--space-2);
 		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
 		background: var(--surface);
+	}
+
+	.file-card[data-state='failed'] {
+		border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+	}
+
+	.file-card__thumb {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 52px;
+		height: 66px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+	}
+
+	.file-card__thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.file-card__info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.file-card__meta {
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.file-card__meta.is-ready {
+		color: var(--success);
+	}
+
+	.file-card__meta.is-failed {
+		color: var(--danger);
 	}
 
 	.file-card[draggable='true'] {
@@ -545,6 +1059,41 @@ const tabs = [
 		background: var(--surface);
 	}
 
+	.meta-card {
+		display: grid;
+		grid-template-columns: 52px minmax(0, 1fr);
+		align-items: center;
+		gap: var(--space-3);
+	}
+
+	.meta-card__thumb {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 52px;
+		height: 66px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+	}
+
+	.meta-card__thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.meta-card__info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
 	.fieldset {
 		margin: 0;
 		padding: 0;
@@ -582,5 +1131,57 @@ const tabs = [
 
 	.pdf-panel .alert {
 		margin: 0;
+	}
+
+	[data-image-list] .file-card {
+		grid-template-columns: minmax(0, 1fr) auto auto;
+	}
+
+	[data-image-list] .file-card .btn {
+		min-height: 44px;
+	}
+
+	.page-list {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.page-card {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto 44px auto;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.page-card--removed {
+		opacity: 0.55;
+	}
+
+	.page-card--removed .page-card__name {
+		text-decoration: line-through;
+	}
+
+	.page-card__name {
+		font-size: 0.9375rem;
+	}
+
+	.page-card__angle {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.page-card .icon-button {
+		width: 44px;
+		height: 44px;
+		font-size: 0.75rem;
 	}
 </style>

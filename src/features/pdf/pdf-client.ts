@@ -1,10 +1,12 @@
-import type { WorkerRequest, WorkerResponse } from './pdf.worker';
+import type { OutputImage, PreviewImage, WorkerRequest, WorkerResponse } from './pdf.worker';
 
 type Distribute<T> = T extends { id: number } ? Omit<T, 'id'> : never;
 
 export interface PdfResult {
 	bytes: Uint8Array;
 	pageCount?: number;
+	images?: OutputImage[];
+	preview?: PreviewImage;
 }
 
 let worker: Worker | null = null;
@@ -34,7 +36,12 @@ function getWorker(): Worker {
 		if (message.type === 'error') {
 			task.reject(new Error(message.message));
 		} else {
-			task.resolve({ bytes: message.bytes, pageCount: message.pageCount });
+			task.resolve({
+				bytes: message.bytes,
+				pageCount: message.pageCount,
+				images: message.images,
+				preview: message.preview,
+			});
 		}
 	};
 	worker.onerror = () => {

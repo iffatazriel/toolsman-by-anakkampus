@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { imagesToPdf, mergePdfs, splitPdf } from './pdf-ops';
+import { editPdf, imagesToPdf, mergePdfs, splitPdf } from './pdf-ops';
 
 const PNG_1X1 = Uint8Array.from(
 	atob(
@@ -32,6 +32,36 @@ describe('splitPdf', () => {
 		const split = await splitPdf(toBuffer(await makePdf(4)), [2, 4]);
 		const doc = await PDFDocument.load(split);
 		expect(doc.getPageCount()).toBe(2);
+	});
+});
+
+describe('editPdf', () => {
+	it('memutar halaman yang diminta tanpa mengubah yang lain', async () => {
+		const result = await editPdf(toBuffer(await makePdf(3)), {
+			rotations: [90, 0, 180],
+			removed: [],
+		});
+		const doc = await PDFDocument.load(result);
+		expect(doc.getPageCount()).toBe(3);
+		expect(doc.getPage(0).getRotation().angle).toBe(90);
+		expect(doc.getPage(1).getRotation().angle).toBe(0);
+		expect(doc.getPage(2).getRotation().angle).toBe(180);
+	});
+
+	it('membuang halaman yang dihapus dan menjaga urutan sisanya', async () => {
+		const result = await editPdf(toBuffer(await makePdf(4)), {
+			rotations: [0, 0, 0, 90],
+			removed: [1, 2],
+		});
+		const doc = await PDFDocument.load(result);
+		expect(doc.getPageCount()).toBe(2);
+		expect(doc.getPage(1).getRotation().angle).toBe(90);
+	});
+
+	it('menolak kalau semua halaman dihapus', async () => {
+		await expect(
+			editPdf(toBuffer(await makePdf(2)), { rotations: [0, 0], removed: [0, 1] }),
+		).rejects.toThrow('Minimal sisakan satu halaman.');
 	});
 });
 

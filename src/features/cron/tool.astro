@@ -1,0 +1,300 @@
+---
+import { cronTimezones } from './cron';
+---
+
+<div class="tool-shell cron-shell">
+	<div class="pane-grid pane-grid--split">
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">Ekspresi</h2>
+				<select class="field-input cron-preset" id="cron-preset">
+					<option value="">Pilih contoh…</option>
+					<option value="* * * * *">Setiap menit</option>
+					<option value="*/15 * * * *">Setiap 15 menit</option>
+					<option value="0 * * * *">Setiap jam</option>
+					<option value="0 9 * * *">Setiap hari 09.00</option>
+					<option value="30 8 * * 1-5">Hari kerja 08.30</option>
+					<option value="0 7 * * 0">Setiap Minggu 07.00</option>
+					<option value="0 0 1 * *">Tanggal 1 tiap bulan 00.00</option>
+				</select>
+			</div>
+
+			<div class="cron-fields">
+				<div>
+					<label class="field-label" for="cron-minute">Menit</label>
+					<input class="field-input field-mono" id="cron-minute" type="text" value="0" spellcheck="false" />
+					<p class="field-hint">0–59</p>
+				</div>
+				<div>
+					<label class="field-label" for="cron-hour">Jam</label>
+					<input class="field-input field-mono" id="cron-hour" type="text" value="9" spellcheck="false" />
+					<p class="field-hint">0–23</p>
+				</div>
+				<div>
+					<label class="field-label" for="cron-day">Tanggal</label>
+					<input class="field-input field-mono" id="cron-day" type="text" value="*" spellcheck="false" />
+					<p class="field-hint">1–31</p>
+				</div>
+				<div>
+					<label class="field-label" for="cron-month">Bulan</label>
+					<input class="field-input field-mono" id="cron-month" type="text" value="*" spellcheck="false" />
+					<p class="field-hint">1–12</p>
+				</div>
+				<div>
+					<label class="field-label" for="cron-weekday">Hari</label>
+					<input class="field-input field-mono" id="cron-weekday" type="text" value="*" spellcheck="false" />
+					<p class="field-hint">0–6, Minggu = 0</p>
+				</div>
+			</div>
+
+			<div>
+				<label class="field-label" for="cron-timezone">Zona waktu</label>
+				<select class="field-input" id="cron-timezone">
+					{cronTimezones.map((zone) => <option value={zone.id}>{zone.label}</option>)}
+				</select>
+			</div>
+
+			<div class="cron-expression">
+				<p class="field-label">Ekspresi cron</p>
+				<code id="cron-expression">0 9 * * *</code>
+				<button type="button" class="btn btn--secondary" id="cron-copy">Salin</button>
+			</div>
+
+			<p class="cron-explain" id="cron-explain" aria-live="polite"></p>
+			<div class="alert" id="cron-error" role="alert" hidden>
+				<p id="cron-error-text"></p>
+			</div>
+		</div>
+
+		<div class="pane">
+			<div class="pane__head">
+				<h2 class="pane__title">5 jadwal berikutnya</h2>
+			</div>
+			<ol class="cron-runs" id="cron-runs"></ol>
+			<p class="field-hint">
+				Format standar 5 field: menit, jam, tanggal, bulan, hari. Tanpa detik dan tanpa
+				sintaks Quartz.
+			</p>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { toast } from '../../lib/toast';
+	import { previewCron } from './cron';
+
+	const fields = {
+		minute: document.getElementById('cron-minute') as HTMLInputElement | null,
+		hour: document.getElementById('cron-hour') as HTMLInputElement | null,
+		day: document.getElementById('cron-day') as HTMLInputElement | null,
+		month: document.getElementById('cron-month') as HTMLInputElement | null,
+		weekday: document.getElementById('cron-weekday') as HTMLInputElement | null,
+	};
+	const preset = document.getElementById('cron-preset') as HTMLSelectElement | null;
+	const timezone = document.getElementById('cron-timezone') as HTMLSelectElement | null;
+	const expressionText = document.getElementById('cron-expression');
+	const copy = document.getElementById('cron-copy');
+	const explanation = document.getElementById('cron-explain');
+	const runs = document.getElementById('cron-runs') as HTMLOListElement | null;
+	const errorBox = document.getElementById('cron-error');
+	const errorText = document.getElementById('cron-error-text');
+
+	if (
+		fields.minute &&
+		fields.hour &&
+		fields.day &&
+		fields.month &&
+		fields.weekday &&
+		preset &&
+		timezone &&
+		expressionText &&
+		copy &&
+		explanation &&
+		runs &&
+		errorBox &&
+		errorText
+	) {
+		let timer: number | undefined;
+
+		const expression = () =>
+			[
+				fields.minute!.value,
+				fields.hour!.value,
+				fields.day!.value,
+				fields.month!.value,
+				fields.weekday!.value,
+			]
+				.map((value) => value.trim() || '*')
+				.join(' ');
+
+		const formatRun = (date: Date) =>
+			new Intl.DateTimeFormat('id-ID', {
+				timeZone: timezone.value,
+				weekday: 'long',
+				day: '2-digit',
+				month: 'long',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false,
+				timeZoneName: 'short',
+			}).format(date);
+
+		const update = () => {
+			const value = expression();
+			expressionText.textContent = value;
+			const result = previewCron(value, timezone.value, 5);
+
+			if (!result.ok) {
+				errorBox.hidden = false;
+				errorText.textContent = result.error;
+				explanation.textContent = '';
+				runs.innerHTML = '';
+				return;
+			}
+
+			errorBox.hidden = true;
+			errorText.textContent = '';
+			explanation.textContent = result.explanation;
+			runs.innerHTML = '';
+
+			result.runs.forEach((date, index) => {
+				const item = document.createElement('li');
+				item.className = 'cron-run';
+
+				const marker = document.createElement('span');
+				marker.className = 'cron-run__num';
+				marker.textContent = String(index + 1);
+
+				const label = document.createElement('span');
+				label.textContent = formatRun(date);
+
+				item.append(marker, label);
+				runs.append(item);
+			});
+		};
+
+		const schedule = () => {
+			window.clearTimeout(timer);
+			timer = window.setTimeout(update, 200);
+		};
+
+		Object.values(fields).forEach((field) => {
+			field?.addEventListener('input', () => {
+				preset.value = '';
+				schedule();
+			});
+		});
+
+		preset.addEventListener('change', () => {
+			const parts = preset.value.split(' ');
+			if (parts.length !== 5) return;
+			fields.minute!.value = parts[0]!;
+			fields.hour!.value = parts[1]!;
+			fields.day!.value = parts[2]!;
+			fields.month!.value = parts[3]!;
+			fields.weekday!.value = parts[4]!;
+			update();
+		});
+
+		timezone.addEventListener('change', update);
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(expressionText.textContent ?? '');
+			toast(copied ? 'Ekspresi cron disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		update();
+	}
+</script>
+
+<style>
+	.cron-shell {
+		padding: var(--space-4);
+	}
+
+	.cron-preset {
+		width: auto;
+		min-width: 190px;
+	}
+
+	.cron-fields {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+		gap: var(--space-3);
+	}
+
+	.field-mono {
+		font-family: var(--font-mono);
+		font-size: 0.9375rem;
+	}
+
+	.cron-expression {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.cron-expression .field-label {
+		width: 100%;
+		margin: 0;
+	}
+
+	.cron-expression code {
+		flex: 1 1 180px;
+		font-family: var(--font-mono);
+		font-size: 1rem;
+	}
+
+	.cron-explain {
+		padding: var(--space-3);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+		font-size: 0.9375rem;
+	}
+
+	.cron-explain:empty {
+		display: none;
+	}
+
+	.cron-runs {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.cron-run {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+		font-size: 0.9375rem;
+	}
+
+	.cron-run__num {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border-radius: 999px;
+		background: var(--accent-soft);
+		color: var(--text);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		flex: none;
+	}
+</style>

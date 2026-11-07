@@ -14,27 +14,31 @@ const ready = tools.filter((tool) => tool.status === 'siap').length;
 
 		<p>
 			Toolsman adalah kumpulan alat untuk mahasiswa informatika dan developer
-			pemula: gambar di kanvas, diagram, olah PDF, pas foto, kirim file, dan
-			generator teks. Gratis, tanpa akun, dan sebagian besar diproses di browser.
+			pemula: gambar di kanvas, diagram, olah PDF, pas foto, kirim file, generator
+			teks, utilitas, dan QR code. Gratis, tanpa akun, dan sebagian besar diproses
+			di browser.
 		</p>
 
 		<h2>Sampai mana pembangunannya</h2>
 		<p>
-			{ready} dari {tools.length} modul MVP sudah bisa dipakai: Kanvas Gambar, Diagram
-			Mermaid, Alat PDF (gabung, pisah, kompres, gambar ke PDF), Pas Foto, Kirim File,
-			dan Generator Teks.
+			{ready} dari {tools.length} modul sudah bisa dipakai: Kanvas Gambar, Diagram
+			Mermaid, Alat PDF (gabung, pisah, kompres, gambar ke PDF, PDF ke gambar, putar
+			dan hapus halaman), Pas Foto, Kirim File, Generator Teks, Utilitas Teks, QR
+			Code, Kompres Gambar, Warna &amp; Kontras, Data Palsu, Hash Teks &amp; Berkas,
+			Toolkit Teks, Hapus Metadata Foto, Cron Builder, Kode ke Gambar, dan Validator
+			JSON Schema.
 		</p>
 		<p>
-			Yang belum dikerjakan adalah fitur P1 di PRD: PDF ke gambar, putar atau hapus
-			halaman, embed draw.io di dalam halaman, lembar cetak pas foto, generator
-			.gitignore dan LICENSE, utilitas Base64/JWT/Regex, QR code terpisah, serta
-			penanda alat terakhir dan favorit.
+			Semua kebutuhan P1 di PRD sudah masuk. Yang tersisa adalah daftar P2: pilihan
+			bahasa Inggris, PWA offline untuk alat client-side, akun opsional, dan berbagi
+			sesi Draw atau Diagram.
 		</p>
 
 		<h2 id="privasi">Privasi</h2>
 		<p>
-			Draw, diagram, PDF, pas foto, dan generator memproses file di browser. Isi file
-			tidak diunggah ke server.
+			Draw, diagram, PDF, pas foto, generator, utilitas, QR, kompres gambar, warna,
+			data palsu, hash, toolkit teks, hapus metadata, cron, kode ke gambar, dan
+			validator schema memproses isi di browser. Isi file tidak diunggah ke server.
 		</p>
 		<ul>
 			<li>

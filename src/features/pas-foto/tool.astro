@@ -9,7 +9,18 @@ import Progress from '../../components/ui/Progress.astro';
 		<li class="steps__item" data-step-item="2">2 Latar</li>
 		<li class="steps__item" data-step-item="3">3 Ukuran &amp; posisi</li>
 		<li class="steps__item" data-step-item="4">4 Unduh</li>
+		<li class="steps__item" data-step-item="5">5 Lembar cetak</li>
 	</ol>
+
+	<div class="upload-preview" data-photo-preview hidden>
+		<span class="upload-preview__thumb">
+			<img data-photo-preview-img alt="" />
+		</span>
+		<span class="upload-preview__info">
+			<span class="upload-preview__name" data-photo-preview-name></span>
+			<span class="upload-preview__status" data-photo-preview-status role="status" aria-live="polite"></span>
+		</span>
+	</div>
 
 	<div class="photo-step" data-step="1">
 		<Dropzone id="foto-input" label="Pilih foto wajah" accept="image/jpeg,image/png,image/webp" hint="JPG, PNG, atau WEBP, maks. 10 MB. Foto tidak dikirim ke server." />
@@ -71,6 +82,16 @@ import Progress from '../../components/ui/Progress.astro';
 			<label class="field-label" for="foto-zoom">Zoom</label>
 			<input id="foto-zoom" type="range" min="1" max="2" step="0.05" value="1" />
 		</div>
+		<div class="zoom-row">
+			<label class="field-label" for="foto-brightness">Kecerahan</label>
+			<input id="foto-brightness" type="range" min="-40" max="40" step="5" value="0" />
+			<p class="field-hint" id="foto-brightness-value">0%</p>
+		</div>
+		<div class="zoom-row">
+			<label class="field-label" for="foto-feather">Haluskan tepi</label>
+			<input id="foto-feather" type="range" min="0" max="12" step="1" value="0" />
+			<p class="field-hint" id="foto-feather-value">0 px</p>
+		</div>
 		<p class="field-hint">Aturan pas foto tiap instansi bisa berbeda. Cek persyaratanmu.</p>
 	</div>
 
@@ -82,6 +103,32 @@ import Progress from '../../components/ui/Progress.astro';
 		<p class="field-hint" id="foto-dims"></p>
 	</div>
 
+	<div class="photo-step photo-step--sheet" data-step="5" hidden>
+		<div class="segmented" role="radiogroup" aria-label="Ukuran kertas">
+			<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-paper="4r">
+				4R
+			</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-paper="a4">
+				A4
+			</button>
+		</div>
+		<p class="field-hint" id="foto-sheet-hint"></p>
+		<div class="sheet-preview">
+			<canvas id="foto-sheet" aria-label="Pratinjau lembar cetak"></canvas>
+		</div>
+		<div class="pane-actions">
+			<button type="button" class="btn btn--secondary" id="sheet-png" disabled>
+				Unduh lembar PNG
+			</button>
+			<button type="button" class="btn btn--primary" id="sheet-jpg" disabled>
+				Unduh lembar JPG
+			</button>
+		</div>
+		<p class="field-hint">
+			Foto disusun dengan jarak potong di latar putih. Cetak tanpa penskalaan pada 300 DPI.
+		</p>
+	</div>
+
 	<div class="step-nav">
 		<button type="button" class="btn btn--secondary" id="foto-back" disabled>Kembali</button>
 		<button type="button" class="btn btn--primary" id="foto-next" disabled>Lanjut</button>
@@ -89,16 +136,22 @@ import Progress from '../../components/ui/Progress.astro';
 </div>
 
 <script>
+	import { formatBytes } from '../../lib/page-range';
 	import { toast } from '../../lib/toast';
+	import { enhancePixels } from './enhance';
+	import { papers, planSheet, type PaperId } from './print-sheet';
 	import { cropForFace, outputPixels, photoSizes, type PhotoSize } from './sizes';
 	import { loadPhotoModule } from './segment-client';
 
 	const step = { current: 1 };
-	let source: HTMLImageElement | null = null;
 	let cutout: HTMLCanvasElement | null = null;
 	let bgColor = '#DB1F26';
 	let sizeId: PhotoSize['id'] = '3x4';
 	let zoom = 1;
+	let brightness = 0;
+	let feather = 0;
+	let paperId: PaperId = '4r';
+	let previewUrl: string | null = null;
 	let face = { x: 0, y: 0, width: 0, height: 0 };
 
 	const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
@@ -106,7 +159,26 @@ import Progress from '../../components/ui/Progress.astro';
 	const back = $<HTMLButtonElement>('#foto-back')!;
 	const next = $<HTMLButtonElement>('#foto-next')!;
 	const canvas = $<HTMLCanvasElement>('#foto-canvas')!;
-	const ctx = canvas.getContext('2d')!;
+	const photoPreview = $<HTMLElement>('[data-photo-preview]');
+	const photoPreviewImg = $<HTMLImageElement>('[data-photo-preview-img]');
+	const photoPreviewName = $<HTMLElement>('[data-photo-preview-name]');
+	const photoPreviewStatus = $<HTMLElement>('[data-photo-preview-status]');
+
+	const currentSize = () => photoSizes.find((item) => item.id === sizeId)!;
+
+	const setPhotoStatus = (message: string, state: 'loading' | 'ready' | 'failed') => {
+		if (!photoPreviewStatus) return;
+		photoPreviewStatus.textContent = '';
+		photoPreviewStatus.classList.toggle('is-ready', state === 'ready');
+		photoPreviewStatus.classList.toggle('is-failed', state === 'failed');
+		if (state === 'loading') {
+			const spinner = document.createElement('span');
+			spinner.className = 'spinner';
+			spinner.setAttribute('aria-hidden', 'true');
+			photoPreviewStatus.append(spinner);
+		}
+		photoPreviewStatus.append(document.createTextNode(message));
+	};
 
 	const setStep = (value: number) => {
 		step.current = value;
@@ -117,9 +189,11 @@ import Progress from '../../components/ui/Progress.astro';
 			el.setAttribute('aria-current', Number(el.dataset.stepItem) === value ? 'step' : 'false');
 		});
 		back.disabled = value === 1;
-		next.disabled = value === 1 || value === 4;
-		next.textContent = value === 3 ? 'Lanjut ke unduh' : 'Lanjut';
+		next.disabled = value === 1 || value === 5;
+		next.textContent =
+			value === 3 ? 'Lanjut ke unduh' : value === 4 ? 'Lanjut ke lembar cetak' : 'Lanjut';
 		if (value === 3) draw();
+		if (value === 5) drawSheet();
 	};
 
 	const defaultFace = (image: HTMLImageElement) => ({
@@ -129,41 +203,59 @@ import Progress from '../../components/ui/Progress.astro';
 		height: image.naturalHeight * 0.4,
 	});
 
-	const draw = () => {
-		if (!source || !cutout) return;
-		const size = photoSizes.find((item) => item.id === sizeId)!;
-		const out = outputPixels(size, 300);
-		const scale = Math.min(360 / out.width, 480 / out.height);
-		canvas.width = Math.round(out.width * scale);
-		canvas.height = Math.round(out.height * scale);
-
+	const compose = (
+		target: HTMLCanvasElement,
+		width: number,
+		height: number,
+		featherScale: number,
+	) => {
+		if (!cutout) return null;
+		const size = currentSize();
 		const crop = cropForFace(face, size, cutout.width, cutout.height, zoom);
-		ctx.fillStyle = bgColor;
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
-		ctx.drawImage(
-			cutout,
-			crop.x,
-			crop.y,
-			crop.width,
-			crop.height,
-			0,
-			0,
-			canvas.width,
-			canvas.height,
-		);
+
+		const subject = document.createElement('canvas');
+		subject.width = width;
+		subject.height = height;
+		const subjectCtx = subject.getContext('2d');
+		if (!subjectCtx) return null;
+		subjectCtx.drawImage(cutout, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
+
+		const imageData = subjectCtx.getImageData(0, 0, width, height);
+		enhancePixels(imageData.data, width, height, {
+			brightness,
+			feather: feather * featherScale,
+		});
+		subjectCtx.putImageData(imageData, 0, 0);
+
+		target.width = width;
+		target.height = height;
+		const targetCtx = target.getContext('2d');
+		if (!targetCtx) return null;
+		targetCtx.fillStyle = bgColor;
+		targetCtx.fillRect(0, 0, width, height);
+		targetCtx.drawImage(subject, 0, 0);
+		return targetCtx;
+	};
+
+	const draw = () => {
+		if (!cutout) return;
+		const out = outputPixels(currentSize(), 300);
+		const scale = Math.min(360 / out.width, 480 / out.height);
+		const context = compose(canvas, Math.round(out.width * scale), Math.round(out.height * scale), scale);
+		if (!context) return;
 
 		const guide = $<HTMLInputElement>('#foto-guide');
 		if (guide?.checked) {
-			ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-			ctx.setLineDash([6, 4]);
-			ctx.lineWidth = 2;
-			ctx.beginPath();
-			ctx.ellipse(canvas.width / 2, canvas.height * 0.4, canvas.width * 0.28, canvas.height * 0.22, 0, 0, Math.PI * 2);
-			ctx.stroke();
-			ctx.beginPath();
-			ctx.moveTo(canvas.width * 0.1, canvas.height * 0.78);
-			ctx.lineTo(canvas.width * 0.9, canvas.height * 0.78);
-			ctx.stroke();
+			context.strokeStyle = 'rgba(255,255,255,0.85)';
+			context.setLineDash([6, 4]);
+			context.lineWidth = 2;
+			context.beginPath();
+			context.ellipse(canvas.width / 2, canvas.height * 0.4, canvas.width * 0.28, canvas.height * 0.22, 0, 0, Math.PI * 2);
+			context.stroke();
+			context.beginPath();
+			context.moveTo(canvas.width * 0.1, canvas.height * 0.78);
+			context.lineTo(canvas.width * 0.9, canvas.height * 0.78);
+			context.stroke();
 		}
 	};
 
@@ -172,7 +264,19 @@ import Progress from '../../components/ui/Progress.astro';
 		const image = new Image();
 		image.src = url;
 		await image.decode();
-		source = image;
+
+		cutout = null;
+		next.disabled = true;
+		setStep(1);
+
+		if (previewUrl) URL.revokeObjectURL(previewUrl);
+		previewUrl = URL.createObjectURL(file);
+		if (photoPreview && photoPreviewImg && photoPreviewName) {
+			photoPreviewImg.src = previewUrl;
+			photoPreviewName.textContent = `${file.name} · ${formatBytes(file.size)}`;
+			photoPreview.hidden = false;
+			setPhotoStatus('Membaca foto…', 'loading');
+		}
 
 		const modelBox = $<HTMLElement>('[data-model-box]')!;
 		modelBox.hidden = false;
@@ -184,7 +288,9 @@ import Progress from '../../components/ui/Progress.astro';
 				const percent = total > 0 ? Math.round((current / total) * 100) : 0;
 				bar.style.width = `${percent}%`;
 				if (label) label.textContent = `${percent}%`;
+				if (percent > 0) setPhotoStatus(`Menghapus latar… ${percent}%`, 'loading');
 			});
+			setPhotoStatus('Menghapus latar…', 'loading');
 			const blob = await removeBackground(file);
 			const bitmap = await createImageBitmap(blob);
 			cutout = document.createElement('canvas');
@@ -194,10 +300,12 @@ import Progress from '../../components/ui/Progress.astro';
 			face = defaultFace(image);
 			modelBox.hidden = true;
 			next.disabled = false;
+			setPhotoStatus('✓ Latar dihapus. Foto siap diatur.', 'ready');
 			setStep(2);
 		} catch (error) {
 			modelBox.hidden = true;
 			const message = error instanceof Error ? error.message : 'Gagal memproses foto.';
+			setPhotoStatus(`Gagal: ${message}`, 'failed');
 			const errorBox = $<HTMLElement>('[data-photo-error]')!;
 			errorBox.textContent = message;
 			errorBox.hidden = false;
@@ -331,32 +439,45 @@ import Progress from '../../components/ui/Progress.astro';
 		draw();
 	});
 
+	$<HTMLInputElement>('#foto-brightness')?.addEventListener('input', (event) => {
+		brightness = Number((event.target as HTMLInputElement).value);
+		const label = $<HTMLElement>('#foto-brightness-value');
+		if (label) label.textContent = `${brightness}%`;
+		draw();
+	});
+
+	$<HTMLInputElement>('#foto-feather')?.addEventListener('input', (event) => {
+		feather = Number((event.target as HTMLInputElement).value);
+		const label = $<HTMLElement>('#foto-feather-value');
+		if (label) label.textContent = `${feather} px`;
+		draw();
+	});
+
 	$<HTMLInputElement>('#foto-guide')?.addEventListener('change', draw);
+
+	const saveBlob = (blob: Blob, filename: string) => {
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = filename;
+		document.body.append(link);
+		link.click();
+		link.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 1000);
+	};
 
 	const download = (type: 'png' | 'jpg') => {
 		if (!cutout) return;
-		const size = photoSizes.find((item) => item.id === sizeId)!;
+		const size = currentSize();
 		const out = outputPixels(size, 300);
 		const exportCanvas = document.createElement('canvas');
-		exportCanvas.width = out.width;
-		exportCanvas.height = out.height;
-		const exportCtx = exportCanvas.getContext('2d')!;
-		const crop = cropForFace(face, size, cutout.width, cutout.height, zoom);
-		exportCtx.fillStyle = bgColor;
-		exportCtx.fillRect(0, 0, out.width, out.height);
-		exportCtx.drawImage(cutout, crop.x, crop.y, crop.width, crop.height, 0, 0, out.width, out.height);
+		const exportCtx = compose(exportCanvas, out.width, out.height, 1);
+		if (!exportCtx) return;
 
 		const mime = type === 'png' ? 'image/png' : 'image/jpeg';
 		exportCanvas.toBlob((blob) => {
 			if (!blob) return;
-			const url = URL.createObjectURL(blob);
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = `pas-foto-${sizeId}.${type}`;
-			document.body.append(link);
-			link.click();
-			link.remove();
-			setTimeout(() => URL.revokeObjectURL(url), 1000);
+			saveBlob(blob, `pas-foto-${sizeId}.${type}`);
 			toast('Pas foto diunduh.');
 		}, mime, 0.95);
 	};
@@ -364,8 +485,96 @@ import Progress from '../../components/ui/Progress.astro';
 	$<HTMLButtonElement>('#foto-png')?.addEventListener('click', () => download('png'));
 	$<HTMLButtonElement>('#foto-jpg')?.addEventListener('click', () => download('jpg'));
 
+	const sheetCanvas = $<HTMLCanvasElement>('#foto-sheet')!;
+	const sheetHint = $<HTMLElement>('#foto-sheet-hint')!;
+	const sheetPng = $<HTMLButtonElement>('#sheet-png')!;
+	const sheetJpg = $<HTMLButtonElement>('#sheet-jpg')!;
+
+	const photoTile = () => {
+		if (!cutout) return null;
+		const out = outputPixels(currentSize(), 300);
+		const tile = document.createElement('canvas');
+		return compose(tile, out.width, out.height, 1) ? tile : null;
+	};
+
+	const drawSheet = () => {
+		const paper = papers.find((item) => item.id === paperId)!;
+		const tile = photoTile();
+		if (!tile) return;
+
+		const plan = planSheet(paper, tile.width, tile.height);
+		sheetHint.textContent =
+			plan.count > 0
+				? `${plan.count} foto ${currentSize().label} per lembar ${paper.label} (${paper.description}).`
+				: `Foto ${currentSize().label} tidak muat di kertas ${paper.label}.`;
+		sheetPng.disabled = plan.count === 0;
+		sheetJpg.disabled = plan.count === 0;
+
+		const scale = Math.min(360 / paper.widthPx, 480 / paper.heightPx);
+		sheetCanvas.width = Math.round(paper.widthPx * scale);
+		sheetCanvas.height = Math.round(paper.heightPx * scale);
+		const context = sheetCanvas.getContext('2d');
+		if (!context) return;
+		context.fillStyle = '#ffffff';
+		context.fillRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+
+		for (const placement of plan.placements) {
+			context.drawImage(
+				tile,
+				placement.x * scale,
+				placement.y * scale,
+				placement.width * scale,
+				placement.height * scale,
+			);
+		}
+	};
+
+	const downloadSheet = (type: 'png' | 'jpg') => {
+		const paper = papers.find((item) => item.id === paperId)!;
+		const tile = photoTile();
+		if (!tile) return;
+
+		const plan = planSheet(paper, tile.width, tile.height);
+		if (plan.count === 0) return;
+
+		const sheet = document.createElement('canvas');
+		sheet.width = paper.widthPx;
+		sheet.height = paper.heightPx;
+		const context = sheet.getContext('2d');
+		if (!context) return;
+		context.fillStyle = '#ffffff';
+		context.fillRect(0, 0, sheet.width, sheet.height);
+		for (const placement of plan.placements) {
+			context.drawImage(tile, placement.x, placement.y, placement.width, placement.height);
+		}
+
+		const mime = type === 'png' ? 'image/png' : 'image/jpeg';
+		sheet.toBlob(
+			(blob) => {
+				if (!blob) return;
+				saveBlob(blob, `pas-foto-lembar-${paper.id}.${type}`);
+				toast('Lembar cetak diunduh.');
+			},
+			mime,
+			0.95,
+		);
+	};
+
+	document.querySelectorAll<HTMLButtonElement>('[data-paper]').forEach((button) => {
+		button.addEventListener('click', () => {
+			paperId = button.dataset.paper as PaperId;
+			document.querySelectorAll<HTMLButtonElement>('[data-paper]').forEach((other) => {
+				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
+			});
+			drawSheet();
+		});
+	});
+
+	sheetPng.addEventListener('click', () => downloadSheet('png'));
+	sheetJpg.addEventListener('click', () => downloadSheet('jpg'));
+
 	back.addEventListener('click', () => setStep(Math.max(1, step.current - 1)));
-	next.addEventListener('click', () => setStep(Math.min(4, step.current + 1)));
+	next.addEventListener('click', () => setStep(Math.min(5, step.current + 1)));
 
 	const dims = $<HTMLElement>('#foto-dims');
 	const updateDims = () => {
@@ -525,5 +734,86 @@ import Progress from '../../components/ui/Progress.astro';
 		display: flex;
 		justify-content: space-between;
 		gap: var(--space-3);
+	}
+
+	.sheet-preview {
+		display: flex;
+		justify-content: center;
+		padding: var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.sheet-preview canvas {
+		width: auto;
+		height: auto;
+		max-width: 100%;
+		max-height: 480px;
+		border-radius: var(--radius-sm);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.upload-preview {
+		display: grid;
+		grid-template-columns: 64px minmax(0, 1fr);
+		align-items: center;
+		gap: var(--space-3);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+	}
+
+	.upload-preview[hidden] {
+		display: none;
+	}
+
+	.upload-preview__thumb {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 64px;
+		height: 80px;
+		overflow: hidden;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+	}
+
+	.upload-preview__thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.upload-preview__info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.upload-preview__name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.9375rem;
+	}
+
+	.upload-preview__status {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-size: 0.8125rem;
+		color: var(--text-muted);
+	}
+
+	.upload-preview__status.is-ready {
+		color: var(--success);
+	}
+
+	.upload-preview__status.is-failed {
+		color: var(--danger);
 	}
 </style>

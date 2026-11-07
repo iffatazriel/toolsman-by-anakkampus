@@ -33,6 +33,8 @@ export const meta: ToolMeta = {
 		'Pisah: pilih satu PDF, tulis halaman seperti 1-3,5, lalu unduh.',
 		'Kompres: pilih PDF dan tingkatnya. Ukuran sebelum dan sesudah ditampilkan.',
 		'Gambar → PDF: pilih JPG atau PNG, atur orientasi dan margin, lalu unduh.',
+		'PDF → Gambar: pilih format PNG atau JPG dan resolusinya, lalu unduh tiap halaman.',
+		'Putar & hapus: putar halaman 90°, buang halaman yang tidak perlu, lalu simpan.',
 	],
 	privacyDetail:
 		'Berkasmu tidak dikirim ke server. Semua proses berjalan di worker browser.',

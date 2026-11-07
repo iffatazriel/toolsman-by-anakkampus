@@ -1,0 +1,917 @@
+---
+import Tabs from '../../components/ui/Tabs.astro';
+
+const tabs = [
+	{ id: 'base64', label: 'Base64' },
+	{ id: 'url', label: 'URL' },
+	{ id: 'jwt', label: 'JWT' },
+	{ id: 'uuid', label: 'UUID' },
+	{ id: 'timestamp', label: 'Timestamp' },
+	{ id: 'regex', label: 'Regex' },
+	{ id: 'diff', label: 'Diff' },
+];
+---
+
+<div class="tool-shell">
+	<Tabs label="Pilihan utilitas" items={tabs}>
+		<div data-panel="base64" class="tool-panel">
+			<div class="pane-grid pane-grid--split">
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Masukan</h2>
+						<div class="pane-actions">
+							<button type="button" class="btn btn--secondary" data-base64="encode">
+								Encode
+							</button>
+							<button type="button" class="btn btn--secondary" data-base64="decode">
+								Decode
+							</button>
+						</div>
+					</div>
+					<label class="sr-only" for="base64-input">Teks atau Base64</label>
+					<textarea
+						id="base64-input"
+						class="code-area"
+						spellcheck="false"
+						placeholder="Halo, dunia!"></textarea>
+					<p class="field-hint">
+						Decode menerima Base64 standar maupun URL-safe, dengan atau tanpa padding.
+					</p>
+					<div class="alert" id="base64-error" role="alert" hidden>
+						<p id="base64-error-text"></p>
+					</div>
+				</div>
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Hasil</h2>
+						<button type="button" class="btn btn--primary" id="base64-copy" disabled>
+							Salin
+						</button>
+					</div>
+					<pre class="code-block" id="base64-output" hidden><code id="base64-code"></code></pre>
+					<p class="preview-empty" id="base64-empty">Tekan Encode atau Decode.</p>
+				</div>
+			</div>
+		</div>
+
+		<div data-panel="url" class="tool-panel" hidden>
+			<div class="pane-grid pane-grid--split">
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Masukan</h2>
+						<div class="pane-actions">
+							<button type="button" class="btn btn--secondary" data-url="encode">
+								Encode
+							</button>
+							<button type="button" class="btn btn--secondary" data-url="decode">
+								Decode
+							</button>
+						</div>
+					</div>
+					<label class="sr-only" for="url-input">Teks atau URL encoding</label>
+					<textarea
+						id="url-input"
+						class="code-area"
+						spellcheck="false"
+						placeholder="cari=pas foto &amp; ukuran=3x4"></textarea>
+					<p class="field-hint">
+						Encode mengubah seluruh karakter khusus. Untuk query utuh, encode tiap nilai saja.
+					</p>
+					<div class="alert" id="url-error" role="alert" hidden>
+						<p id="url-error-text"></p>
+					</div>
+				</div>
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Hasil</h2>
+						<button type="button" class="btn btn--primary" id="url-copy" disabled>
+							Salin
+						</button>
+					</div>
+					<pre class="code-block" id="url-output" hidden><code id="url-code"></code></pre>
+					<p class="preview-empty" id="url-empty">Tekan Encode atau Decode.</p>
+				</div>
+			</div>
+		</div>
+
+		<div data-panel="jwt" class="tool-panel" hidden>
+			<div class="pane-grid pane-grid--split">
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Token JWT</h2>
+					</div>
+					<label class="sr-only" for="jwt-input">Token JWT</label>
+					<textarea
+						id="jwt-input"
+						class="code-area"
+						spellcheck="false"
+						placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.tanda-tangan"></textarea>
+					<div class="alert" id="jwt-error" role="alert" hidden>
+						<p id="jwt-error-text"></p>
+					</div>
+					<p class="field-hint" id="jwt-expiry" role="status" aria-live="polite">
+						Header dan payload dibaca di browser. Tanda tangan tidak diverifikasi.
+					</p>
+				</div>
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Hasil</h2>
+						<button type="button" class="btn btn--primary" id="jwt-copy" disabled>
+							Salin JSON
+						</button>
+					</div>
+					<h3 class="field-label">Header</h3>
+					<pre class="code-block code-block--short" id="jwt-header" hidden><code></code></pre>
+					<h3 class="field-label">Payload</h3>
+					<pre class="code-block code-block--short" id="jwt-payload" hidden><code></code></pre>
+					<p class="preview-empty" id="jwt-empty">Tempel token untuk membaca isinya.</p>
+				</div>
+			</div>
+		</div>
+
+		<div data-panel="uuid" class="tool-panel" hidden>
+			<div class="pane-grid pane-grid--split">
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Jumlah</h2>
+					</div>
+					<label class="field-label" for="uuid-count">Berapa UUID?</label>
+					<input
+						class="field-input"
+						id="uuid-count"
+						type="number"
+						min="1"
+						max="50"
+						value="5"
+					/>
+					<div class="pane-actions">
+						<button type="button" class="btn btn--primary" id="uuid-generate">
+							Buat UUID
+						</button>
+					</div>
+					<p class="field-hint">
+						Dibuat dengan crypto.randomUUID, versi 4. Satu sampai 50 sekaligus.
+					</p>
+				</div>
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Hasil</h2>
+						<button type="button" class="btn btn--primary" id="uuid-copy" disabled>
+							Salin semua
+						</button>
+					</div>
+					<pre class="code-block" id="uuid-output" hidden><code id="uuid-code"></code></pre>
+					<p class="preview-empty" id="uuid-empty">Belum ada UUID.</p>
+				</div>
+			</div>
+		</div>
+
+		<div data-panel="timestamp" class="tool-panel" hidden>
+			<div class="pane-grid pane-grid--split">
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Masukan</h2>
+					</div>
+					<label class="field-label" for="ts-input">
+						Unix detik, milidetik, atau tanggal
+					</label>
+					<input
+						class="field-input"
+						id="ts-input"
+						type="text"
+						placeholder="1700000000 atau 2026-11-06T08:00:00Z"
+					/>
+					<div class="pane-actions">
+						<button type="button" class="btn btn--secondary" id="ts-now">Sekarang</button>
+						<button type="button" class="btn btn--primary" id="ts-convert">Ubah</button>
+					</div>
+					<p class="field-hint">
+						Angka di bawah 13 digit dibaca sebagai detik. Teks lain dibaca sebagai tanggal.
+					</p>
+					<div class="alert" id="ts-error" role="alert" hidden>
+						<p id="ts-error-text"></p>
+					</div>
+				</div>
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Hasil</h2>
+					</div>
+					<dl class="ts-list" id="ts-output" hidden>
+						<div class="ts-row">
+							<dt>Unix detik</dt>
+							<dd><code id="ts-seconds"></code></dd>
+						</div>
+						<div class="ts-row">
+							<dt>Unix milidetik</dt>
+							<dd><code id="ts-millis"></code></dd>
+						</div>
+						<div class="ts-row">
+							<dt>ISO 8601</dt>
+							<dd><code id="ts-iso"></code></dd>
+						</div>
+						<div class="ts-row">
+							<dt>Waktu lokal</dt>
+							<dd><code id="ts-local"></code></dd>
+						</div>
+					</dl>
+					<p class="preview-empty" id="ts-empty">Isi masukan lalu tekan Ubah.</p>
+				</div>
+			</div>
+		</div>
+
+		<div data-panel="regex" class="tool-panel" hidden>
+			<div class="pane-grid pane-grid--split">
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Pola dan teks uji</h2>
+					</div>
+					<label class="field-label" for="regex-pattern">Pattern</label>
+					<input
+						class="field-input field-mono"
+						id="regex-pattern"
+						type="text"
+						spellcheck="false"
+						placeholder="\b\w+@\w+\.\w+\b"
+					/>
+					<fieldset class="regex-flags">
+						<legend class="field-label">Flag</legend>
+						<label class="check-row"><input type="checkbox" value="i" data-flag /> i (abaikan besar-kecil)</label>
+						<label class="check-row"><input type="checkbox" value="m" data-flag /> m (multibaris)</label>
+						<label class="check-row"><input type="checkbox" value="s" data-flag /> s (titik termasuk baris baru)</label>
+						<label class="check-row"><input type="checkbox" value="u" data-flag /> u (unicode)</label>
+					</fieldset>
+					<label class="field-label" for="regex-input">Teks uji</label>
+					<textarea
+						id="regex-input"
+						class="code-area code-area--short"
+						spellcheck="false"
+						placeholder="budi@contoh.com dan sari@contoh.id"></textarea>
+					<p class="field-hint" id="regex-status" role="status" aria-live="polite">
+						Pencarian selalu global. Hasil dibatasi 500 kecocokan.
+					</p>
+					<div class="alert" id="regex-error" role="alert" hidden>
+						<p id="regex-error-text"></p>
+					</div>
+				</div>
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Hasil</h2>
+						<p class="section-meta" id="regex-count"></p>
+					</div>
+					<pre class="regex-preview" id="regex-preview" aria-label="Teks dengan kecocokan ditandai"></pre>
+					<ol class="regex-list" id="regex-list" aria-label="Daftar kecocokan"></ol>
+				</div>
+			</div>
+		</div>
+
+		<div data-panel="diff" class="tool-panel" hidden>
+			<div class="diff-grid">
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Teks lama</h2>
+					</div>
+					<label class="sr-only" for="diff-before">Teks lama</label>
+					<textarea id="diff-before" class="code-area code-area--short" spellcheck="false"></textarea>
+				</div>
+				<div class="pane">
+					<div class="pane__head">
+						<h2 class="pane__title">Teks baru</h2>
+					</div>
+					<label class="sr-only" for="diff-after">Teks baru</label>
+					<textarea id="diff-after" class="code-area code-area--short" spellcheck="false"></textarea>
+				</div>
+			</div>
+			<div class="pane diff-result">
+				<div class="pane__head">
+					<h2 class="pane__title">Perbedaan</h2>
+					<p class="section-meta" id="diff-stats"></p>
+				</div>
+				<p class="field-hint" id="diff-empty">
+					Isi kedua teks. Baris yang berubah ditandai hijau atau merah.
+				</p>
+				<ol class="diff-list" id="diff-list" aria-label="Daftar perbedaan baris"></ol>
+				<p class="field-hint" id="diff-note" hidden></p>
+			</div>
+		</div>
+	</Tabs>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { toast } from '../../lib/toast';
+	import { diffLines } from './diff';
+	import { highlightSegments, runRegex } from './regex';
+	import {
+		decodeBase64,
+		decodeJwt,
+		decodeUrl,
+		encodeBase64,
+		encodeUrl,
+		generateUuids,
+		jwtExpiry,
+		parseTimestamp,
+	} from './utils';
+
+	const copy = async (text: string, message = 'Disalin.') => {
+		const copied = await copyText(text);
+		toast(copied ? message : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+	};
+
+	const showError = (
+		box: HTMLElement | null,
+		text: HTMLElement | null,
+		message: string | null,
+	) => {
+		if (!box || !text) return;
+		box.hidden = message === null;
+		text.textContent = message ?? '';
+	};
+
+	const setupBinary = (
+		prefix: string,
+		encode: (value: string) => string,
+		decode: (value: string) => string,
+		errorMessage: string,
+	) => {
+		const input = document.getElementById(`${prefix}-input`) as HTMLTextAreaElement | null;
+		const output = document.getElementById(`${prefix}-output`);
+		const code = document.getElementById(`${prefix}-code`);
+		const empty = document.getElementById(`${prefix}-empty`);
+		const errorBox = document.getElementById(`${prefix}-error`);
+		const errorText = document.getElementById(`${prefix}-error-text`);
+		const copyButton = document.getElementById(`${prefix}-copy`) as HTMLButtonElement | null;
+		if (!input || !output || !code || !empty || !copyButton) return;
+
+		let result = '';
+		const paint = () => {
+			const blank = result === '';
+			code.textContent = result;
+			output.hidden = blank;
+			empty.hidden = !blank;
+			copyButton.disabled = blank;
+		};
+
+		const run = (mode: string | undefined) => {
+			showError(errorBox, errorText, null);
+			if (input.value === '') {
+				result = '';
+				paint();
+				return;
+			}
+
+			try {
+				result = mode === 'decode' ? decode(input.value) : encode(input.value);
+				paint();
+			} catch {
+				result = '';
+				paint();
+				showError(errorBox, errorText, errorMessage);
+			}
+		};
+
+		document.querySelectorAll<HTMLButtonElement>(`[data-${prefix}]`).forEach((button) => {
+			button.addEventListener('click', () => run(button.dataset[prefix]));
+		});
+
+		copyButton.addEventListener('click', () => void copy(result));
+		paint();
+	};
+
+	setupBinary('base64', encodeBase64, decodeBase64, 'Base64 tidak valid atau hasilnya bukan teks UTF-8.');
+	setupBinary('url', encodeUrl, decodeUrl, 'Persen encoding tidak valid.');
+
+	const jwtInput = document.getElementById('jwt-input') as HTMLTextAreaElement | null;
+	const jwtHeader = document.getElementById('jwt-header');
+	const jwtPayload = document.getElementById('jwt-payload');
+	const jwtEmpty = document.getElementById('jwt-empty');
+	const jwtError = document.getElementById('jwt-error');
+	const jwtErrorText = document.getElementById('jwt-error-text');
+	const jwtExpiryText = document.getElementById('jwt-expiry');
+	const jwtCopy = document.getElementById('jwt-copy') as HTMLButtonElement | null;
+	const jwtDefaultNote =
+		'Header dan payload dibaca di browser. Tanda tangan tidak diverifikasi.';
+
+	let jwtJson = '';
+
+	if (
+		jwtInput &&
+		jwtHeader &&
+		jwtPayload &&
+		jwtEmpty &&
+		jwtError &&
+		jwtErrorText &&
+		jwtExpiryText &&
+		jwtCopy
+	) {
+		const paintJwt = (value: string) => {
+			jwtJson = value;
+			const blank = value === '';
+			jwtHeader.hidden = blank;
+			jwtPayload.hidden = blank;
+			jwtEmpty.hidden = !blank;
+			jwtCopy.disabled = blank;
+		};
+
+		const readJwt = () => {
+			showError(jwtError, jwtErrorText, null);
+			const value = jwtInput.value.trim();
+			if (value === '') {
+				paintJwt('');
+				jwtHeader.querySelector('code')!.textContent = '';
+				jwtPayload.querySelector('code')!.textContent = '';
+				jwtExpiryText.textContent = jwtDefaultNote;
+				return;
+			}
+
+			try {
+				const parts = decodeJwt(value);
+				const header = JSON.stringify(parts.header, null, 2);
+				const payload = JSON.stringify(parts.payload, null, 2);
+				jwtHeader.querySelector('code')!.textContent = header;
+				jwtPayload.querySelector('code')!.textContent = payload;
+				paintJwt(JSON.stringify({ header: parts.header, payload: parts.payload }, null, 2));
+
+				const expiry = jwtExpiry(parts.payload);
+				if (!expiry) {
+					jwtExpiryText.textContent = 'Payload tidak punya exp. Tanda tangan tetap tidak diverifikasi.';
+				} else if (expiry.expired) {
+					jwtExpiryText.textContent = `Kedaluwarsa ${expiry.at.toLocaleString('id-ID')}. Tanda tangan tidak diverifikasi.`;
+				} else {
+					jwtExpiryText.textContent = `Berlaku sampai ${expiry.at.toLocaleString('id-ID')}. Tanda tangan tidak diverifikasi.`;
+				}
+			} catch {
+				paintJwt('');
+				jwtHeader.querySelector('code')!.textContent = '';
+				jwtPayload.querySelector('code')!.textContent = '';
+				jwtExpiryText.textContent = jwtDefaultNote;
+				showError(
+					jwtError,
+					jwtErrorText,
+					'Token tidak bisa dibaca. Pastikan header dan payload berisi JSON yang valid.',
+				);
+			}
+		};
+
+		jwtInput.addEventListener('input', readJwt);
+		jwtCopy.addEventListener('click', () => void copy(jwtJson, 'JWT disalin.'));
+		paintJwt('');
+	}
+
+	const uuidCount = document.getElementById('uuid-count') as HTMLInputElement | null;
+	const uuidGenerate = document.getElementById('uuid-generate');
+	const uuidOutput = document.getElementById('uuid-output');
+	const uuidCode = document.getElementById('uuid-code');
+	const uuidEmpty = document.getElementById('uuid-empty');
+	const uuidCopy = document.getElementById('uuid-copy') as HTMLButtonElement | null;
+
+	if (
+		uuidCount &&
+		uuidGenerate &&
+		uuidOutput &&
+		uuidCode &&
+		uuidEmpty &&
+		uuidCopy
+	) {
+		let ids: string[] = [];
+
+		const generate = () => {
+			ids = generateUuids(Number(uuidCount.value));
+			uuidCode.textContent = ids.join('\n');
+			uuidOutput.hidden = ids.length === 0;
+			uuidEmpty.hidden = ids.length > 0;
+			uuidCopy.disabled = ids.length === 0;
+		};
+
+		uuidGenerate.addEventListener('click', generate);
+		uuidCopy.addEventListener('click', () => void copy(ids.join('\n'), 'UUID disalin.'));
+		generate();
+	}
+
+	const tsInput = document.getElementById('ts-input') as HTMLInputElement | null;
+	const tsNow = document.getElementById('ts-now');
+	const tsConvert = document.getElementById('ts-convert');
+	const tsOutput = document.getElementById('ts-output');
+	const tsEmpty = document.getElementById('ts-empty');
+	const tsError = document.getElementById('ts-error');
+	const tsErrorText = document.getElementById('ts-error-text');
+	const tsSeconds = document.getElementById('ts-seconds');
+	const tsMillis = document.getElementById('ts-millis');
+	const tsIso = document.getElementById('ts-iso');
+	const tsLocal = document.getElementById('ts-local');
+
+	if (
+		tsInput &&
+		tsNow &&
+		tsConvert &&
+		tsOutput &&
+		tsEmpty &&
+		tsError &&
+		tsErrorText &&
+		tsSeconds &&
+		tsMillis &&
+		tsIso &&
+		tsLocal
+	) {
+		const convert = () => {
+			showError(tsError, tsErrorText, null);
+			try {
+				const info = parseTimestamp(tsInput.value);
+				tsSeconds.textContent = String(info.unixSeconds);
+				tsMillis.textContent = String(info.unixMillis);
+				tsIso.textContent = info.iso;
+				tsLocal.textContent = info.local;
+				tsOutput.hidden = false;
+				tsEmpty.hidden = true;
+			} catch (error) {
+				tsOutput.hidden = true;
+				tsEmpty.hidden = false;
+				showError(
+					tsError,
+					tsErrorText,
+					error instanceof Error ? error.message : 'Masukan tidak bisa dibaca.',
+				);
+			}
+		};
+
+		tsConvert.addEventListener('click', convert);
+		tsInput.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter') convert();
+		});
+		tsNow.addEventListener('click', () => {
+			tsInput.value = String(Math.floor(Date.now() / 1000));
+			convert();
+		});
+	}
+
+	const regexPattern = document.getElementById('regex-pattern') as HTMLInputElement | null;
+	const regexInput = document.getElementById('regex-input') as HTMLTextAreaElement | null;
+	const regexPreview = document.getElementById('regex-preview');
+	const regexList = document.getElementById('regex-list') as HTMLOListElement | null;
+	const regexCount = document.getElementById('regex-count');
+	const regexStatus = document.getElementById('regex-status');
+	const regexError = document.getElementById('regex-error');
+	const regexErrorText = document.getElementById('regex-error-text');
+	const flagBoxes = Array.from(document.querySelectorAll<HTMLInputElement>('[data-flag]'));
+
+	if (
+		regexPattern &&
+		regexInput &&
+		regexPreview &&
+		regexList &&
+		regexCount &&
+		regexStatus &&
+		regexError &&
+		regexErrorText
+	) {
+		const renderRegex = () => {
+			showError(regexError, regexErrorText, null);
+			regexPreview.textContent = '';
+			regexList.innerHTML = '';
+			regexCount.textContent = '';
+
+			const pattern = regexPattern.value;
+			if (pattern === '') {
+				regexStatus.textContent = 'Isi pattern untuk mulai mencari.';
+				return;
+			}
+
+			const flags = flagBoxes
+				.filter((box) => box.checked)
+				.map((box) => box.value)
+				.join('');
+
+			try {
+				const result = runRegex(pattern, flags, regexInput.value);
+				for (const segment of highlightSegments(regexInput.value, result.matches)) {
+					if (segment.match) {
+						const mark = document.createElement('mark');
+						mark.textContent = segment.text;
+						if (segment.text === '') mark.className = 'mark--empty';
+						regexPreview.append(mark);
+					} else {
+						regexPreview.append(document.createTextNode(segment.text));
+					}
+				}
+
+				result.matches.forEach((match, index) => {
+					const li = document.createElement('li');
+					li.className = 'regex-row';
+
+					const number = document.createElement('span');
+					number.className = 'regex-row__num';
+					number.textContent = String(index + 1);
+
+					const position = document.createElement('span');
+					position.className = 'regex-row__at';
+					position.textContent = `@${match.index}`;
+
+					const text = document.createElement('code');
+					text.textContent = match.text === '' ? '(kosong)' : match.text;
+
+					li.append(number, position, text);
+
+					if (match.groups.length > 0) {
+						const groups = document.createElement('span');
+						groups.className = 'regex-row__groups';
+						groups.textContent = match.groups
+							.map((group, groupIndex) => `$${groupIndex + 1}=${group}`)
+							.join(' ');
+						li.append(groups);
+					}
+
+					regexList.append(li);
+				});
+
+				regexCount.textContent = `${result.matches.length} cocok${result.truncated ? ' (dipotong)' : ''}`;
+				regexStatus.textContent =
+					result.matches.length === 0 ? 'Tidak ada yang cocok.' : '';
+			} catch (error) {
+				regexStatus.textContent = '';
+				showError(
+					regexError,
+					regexErrorText,
+					error instanceof Error ? error.message : 'Pattern tidak valid.',
+				);
+			}
+		};
+
+		regexPattern.addEventListener('input', renderRegex);
+		regexInput.addEventListener('input', renderRegex);
+		flagBoxes.forEach((box) => box.addEventListener('change', renderRegex));
+		renderRegex();
+	}
+
+	const diffBefore = document.getElementById('diff-before') as HTMLTextAreaElement | null;
+	const diffAfter = document.getElementById('diff-after') as HTMLTextAreaElement | null;
+	const diffList = document.getElementById('diff-list') as HTMLOListElement | null;
+	const diffStats = document.getElementById('diff-stats');
+	const diffEmpty = document.getElementById('diff-empty');
+	const diffNote = document.getElementById('diff-note');
+
+	if (diffBefore && diffAfter && diffList && diffStats && diffEmpty && diffNote) {
+		let diffTimer: number | undefined;
+
+		const renderDiff = () => {
+			const result = diffLines(diffBefore.value, diffAfter.value);
+			diffList.innerHTML = '';
+			diffNote.hidden = true;
+
+			if (diffBefore.value === '' && diffAfter.value === '') {
+				diffEmpty.hidden = false;
+				diffEmpty.textContent = 'Isi kedua teks. Baris yang berubah ditandai hijau atau merah.';
+				diffStats.textContent = '';
+				return;
+			}
+
+			if (result.truncated) {
+				diffEmpty.hidden = false;
+				diffEmpty.textContent =
+					'Teks lebih dari 800 baris di salah satu sisi. Pendekkan dulu supaya bisa dibandingkan.';
+				diffStats.textContent = '';
+				return;
+			}
+
+			diffEmpty.hidden = true;
+			diffStats.textContent = `+${result.added} −${result.removed}`;
+
+			const visible = result.rows.slice(0, 500);
+			for (const row of visible) {
+				const li = document.createElement('li');
+				li.className = `diff-row diff-row--${row.kind}`;
+
+				const oldNumber = document.createElement('span');
+				oldNumber.className = 'diff-row__num';
+				oldNumber.textContent = row.oldLine === null ? '' : String(row.oldLine);
+
+				const newNumber = document.createElement('span');
+				newNumber.className = 'diff-row__num';
+				newNumber.textContent = row.newLine === null ? '' : String(row.newLine);
+
+				const marker = document.createElement('span');
+				marker.className = 'diff-row__mark';
+				marker.textContent =
+					row.kind === 'added' ? '+' : row.kind === 'removed' ? '−' : ' ';
+
+				const text = document.createElement('code');
+				text.textContent = row.text === '' ? ' ' : row.text;
+
+				li.append(oldNumber, newNumber, marker, text);
+				diffList.append(li);
+			}
+
+			if (result.rows.length > visible.length) {
+				diffNote.hidden = false;
+				diffNote.textContent = `${result.rows.length - visible.length} baris lagi tidak ditampilkan.`;
+			}
+		};
+
+		const scheduleDiff = () => {
+			window.clearTimeout(diffTimer);
+			diffTimer = window.setTimeout(renderDiff, 180);
+		};
+
+		diffBefore.addEventListener('input', scheduleDiff);
+		diffAfter.addEventListener('input', scheduleDiff);
+		renderDiff();
+	}
+</script>
+
+<style>
+	.code-block--short {
+		min-height: 120px;
+		max-height: 240px;
+		font-size: 0.8125rem;
+	}
+
+	.ts-list {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+	}
+
+	.ts-list[hidden] {
+		display: none;
+	}
+
+	.ts-row {
+		display: grid;
+		grid-template-columns: minmax(0, 140px) minmax(0, 1fr);
+		gap: var(--space-3);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+	}
+
+	.ts-row dt {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: 0.875rem;
+	}
+
+	.ts-row dd {
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.ts-row code {
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+	}
+
+	.field-mono {
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+	}
+
+	.code-area--short {
+		min-height: 180px;
+	}
+
+	.regex-flags {
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.regex-preview {
+		min-height: 180px;
+		max-height: 320px;
+		margin: 0;
+		padding: var(--space-3);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+		font-family: var(--font-mono);
+		font-size: 0.875rem;
+		line-height: 1.6;
+		white-space: pre-wrap;
+		overflow: auto;
+		overflow-wrap: anywhere;
+	}
+
+	.regex-preview:empty::before {
+		content: 'Hasil akan muncul di sini.';
+		color: var(--text-muted);
+	}
+
+	.regex-preview mark {
+		border-radius: 2px;
+		background: color-mix(in srgb, var(--accent) 40%, transparent);
+		color: var(--text);
+	}
+
+	.regex-preview .mark--empty {
+		display: inline-block;
+		width: 2px;
+		height: 1em;
+		vertical-align: text-bottom;
+		background: var(--accent);
+	}
+
+	.regex-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		max-height: 320px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		overflow: auto;
+	}
+
+	.regex-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-2);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+	}
+
+	.regex-row__num {
+		min-width: 1.5rem;
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.regex-row__at {
+		color: var(--text-muted);
+	}
+
+	.regex-row code {
+		overflow-wrap: anywhere;
+	}
+
+	.regex-row__groups {
+		color: var(--text-muted);
+		font-size: 0.75rem;
+	}
+
+	.diff-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4);
+	}
+
+	@media (min-width: 900px) {
+		.diff-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	.diff-result {
+		margin-top: var(--space-4);
+	}
+
+	.diff-list {
+		display: flex;
+		flex-direction: column;
+		max-height: 420px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		overflow: auto;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+	}
+
+	.diff-row {
+		display: grid;
+		grid-template-columns: 3rem 3rem 1.5rem minmax(0, 1fr);
+		gap: var(--space-2);
+		padding: 1px var(--space-2);
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	.diff-row__num {
+		color: var(--text-muted);
+		text-align: right;
+		user-select: none;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.diff-row__mark {
+		text-align: center;
+	}
+
+	.diff-row--added {
+		background: color-mix(in srgb, var(--success) 12%, transparent);
+	}
+
+	.diff-row--removed {
+		background: color-mix(in srgb, var(--danger) 12%, transparent);
+	}
+
+	.diff-row code {
+		font-family: inherit;
+	}
+</style>

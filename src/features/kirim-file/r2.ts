@@ -1,4 +1,5 @@
 import { AwsClient } from 'aws4fetch';
+import { completeXml, parseUploadId } from './multipart';
 
 export interface R2Env {
 	R2_ACCOUNT_ID: string;
@@ -58,5 +59,89 @@ export async function deleteObject(env: R2Env, key: string): Promise<void> {
 	const response = await client(env).fetch(objectUrl(env, key), { method: 'DELETE' });
 	if (!response.ok && response.status !== 404) {
 		throw new Error(`Gagal menghapus objek ${key}: ${response.status}`);
+	}
+}
+
+function multipartUrl(
+	env: R2Env,
+	key: string,
+	query: Record<string, string | number>,
+): string {
+	const url = new URL(objectUrl(env, key));
+	for (const [name, value] of Object.entries(query)) {
+		url.searchParams.set(name, String(value));
+	}
+	return url.toString();
+}
+
+export async function createMultipartUpload(
+	env: R2Env,
+	key: string,
+	contentType: string,
+): Promise<string> {
+	const response = await client(env).fetch(`${objectUrl(env, key)}?uploads`, {
+		method: 'POST',
+		headers: { 'Content-Type': contentType },
+	});
+	if (!response.ok) {
+		throw new Error(`Gagal memulai unggahan multipart: ${response.status}`);
+	}
+
+	const uploadId = parseUploadId(await response.text());
+	if (!uploadId) throw new Error('Penyimpanan tidak memberi UploadId.');
+	return uploadId;
+}
+
+export async function uploadPart(
+	env: R2Env,
+	key: string,
+	uploadId: string,
+	partNumber: number,
+	data: ArrayBuffer,
+): Promise<string> {
+	const response = await client(env).fetch(
+		multipartUrl(env, key, { partNumber, uploadId }),
+		{ method: 'PUT', body: data },
+	);
+	if (!response.ok) {
+		throw new Error(`Bagian ${partNumber} gagal diunggah: ${response.status}`);
+	}
+
+	const etag = response.headers.get('ETag');
+	if (!etag) throw new Error('Penyimpanan tidak mengirim ETag bagian.');
+	return etag;
+}
+
+export async function completeMultipartUpload(
+	env: R2Env,
+	key: string,
+	uploadId: string,
+	parts: { partNumber: number; etag: string }[],
+): Promise<void> {
+	const response = await client(env).fetch(multipartUrl(env, key, { uploadId }), {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/xml' },
+		body: completeXml(parts),
+	});
+	if (!response.ok) {
+		throw new Error(`Gagal menyelesaikan unggahan multipart: ${response.status}`);
+	}
+
+	const body = await response.text();
+	if (/<Error>/i.test(body)) {
+		throw new Error('Penyimpanan menolak penyelesaian unggahan multipart.');
+	}
+}
+
+export async function abortMultipartUpload(
+	env: R2Env,
+	key: string,
+	uploadId: string,
+): Promise<void> {
+	const response = await client(env).fetch(multipartUrl(env, key, { uploadId }), {
+		method: 'DELETE',
+	});
+	if (!response.ok && response.status !== 404) {
+		throw new Error(`Gagal membatalkan unggahan multipart: ${response.status}`);
 	}
 }

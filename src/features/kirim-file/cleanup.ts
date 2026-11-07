@@ -1,5 +1,5 @@
 import type { SharesDb, ShareFileRow } from './db';
-import { deleteObject, type R2Env } from './r2';
+import { abortMultipartUpload, deleteObject, type R2Env } from './r2';
 
 export interface CleanupEnv extends R2Env {
 	DB: SharesDb;
@@ -20,10 +20,14 @@ export async function removeExpiredShares(env: CleanupEnv, now = Date.now()): Pr
 			.all<ShareFileRow>();
 
 		for (const file of files) {
+			if (file.upload_id) {
+				await abortMultipartUpload(env, file.object_key, file.upload_id).catch(() => {});
+			}
 			await deleteObject(env, file.object_key);
 		}
 
 		await env.DB.prepare("UPDATE shares SET status = 'deleted' WHERE id = ?").bind(share.id).run();
+		await env.DB.prepare('DELETE FROM upload_parts WHERE share_id = ?').bind(share.id).run();
 		await env.DB.prepare('DELETE FROM share_files WHERE share_id = ?').bind(share.id).run();
 	}
 

@@ -81,15 +81,17 @@ Mahasiswa dan developer pemula biasanya harus membuka banyak situs berbeda untuk
 - Regex tester, Diff checker
 - QR code generator
 - Kompres & konversi gambar
+- Utilitas teks, warna & kontras, hash, data palsu, hapus metadata foto
+- **Cron expression builder** (5 field, zona waktu, 5 jadwal berikutnya)
+- **Code-to-image** (highlight.js, tema, padding, radius, PNG)
+- **JSON Schema validator** (error per path dalam bahasa Indonesia)
+- **Berbagi sesi Draw/Diagram** via link hanya-baca, data terkompresi di URL
+- **Pilihan bahasa Indonesia/Inggris** untuk shell, katalog, dan metadata alat
 
 ### v2.0 — Lanjutan
-- Code-to-image
-- Mock data generator (JSON/CSV)
-- Cron expression builder
-- Color palette & contrast checker
 - Akun opsional (simpan riwayat & favorit)
 - PWA offline untuk alat client-side
-- Berbagi sesi Draw/Diagram via link (kolaborasi ringan)
+- Terjemahan copy di dalam workspace semua alat
 
 ## 7. Kebutuhan Fungsional
 
@@ -99,7 +101,7 @@ Mahasiswa dan developer pemula biasanya harus membuka banyak situs berbeda untuk
 
 | ID | Kebutuhan | Prioritas |
 |---|---|---|
-| FR-HOME-01 | Beranda menampilkan grid kartu alat berdasarkan kategori (Gambar, Diagram, Dokumen, Foto, Berbagi, Generator). | P0 |
+| FR-HOME-01 | Beranda menampilkan grid kartu alat berdasarkan kategori (Gambar, Diagram, Dokumen, Foto, Berbagi, Generator, Utilitas). | P0 |
 | FR-HOME-02 | Pencarian alat instan (nama + sinonim), dapat dibuka dengan pintasan `/` atau `Ctrl+K`. | P0 |
 | FR-HOME-03 | Mode terang/gelap, mengikuti preferensi sistem dan dapat diubah manual. | P0 |
 | FR-HOME-04 | Alat terakhir dipakai & favorit disimpan di `localStorage` (tanpa akun). | P1 |

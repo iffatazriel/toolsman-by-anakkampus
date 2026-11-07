@@ -1,0 +1,109 @@
+---
+import { defaultGitignoreGroups, gitignoreGroups } from '../../lib/gitignore';
+---
+
+<div class="pane-grid pane-grid--split">
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Pilih tumpukan</h2>
+		</div>
+		<p class="field-hint">
+			Centang yang dipakai proyekmu. Aturan digabung dengan judul per kelompok, jadi
+			masih gampang dihapus manual.
+		</p>
+
+		<div class="check-grid">
+			{
+				gitignoreGroups.map((group) => (
+					<label class="check-row">
+						<input
+							type="checkbox"
+							value={group.id}
+							checked={defaultGitignoreGroups.includes(group.id)}
+							data-gitignore-group
+						/>
+						{group.label}
+					</label>
+				))
+			}
+		</div>
+	</div>
+
+	<div class="pane">
+		<div class="pane__head">
+			<h2 class="pane__title">Isi .gitignore</h2>
+			<div class="pane-actions">
+				<button type="button" class="btn btn--secondary" id="gitignore-copy" disabled>
+					Salin
+				</button>
+				<button
+					type="button"
+					class="btn btn--primary"
+					id="gitignore-download"
+					disabled
+				>
+					Unduh .gitignore
+				</button>
+			</div>
+		</div>
+
+		<pre class="code-block" id="gitignore-output" hidden><code id="gitignore-code"></code></pre>
+		<p class="preview-empty" id="gitignore-empty">
+			Pilih minimal satu kelompok, isinya muncul di sini.
+		</p>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { buildGitignore } from '../../lib/gitignore';
+	import { toast } from '../../lib/toast';
+
+	const boxes = Array.from(
+		document.querySelectorAll<HTMLInputElement>('[data-gitignore-group]'),
+	);
+	const output = document.getElementById('gitignore-output');
+	const code = document.getElementById('gitignore-code');
+	const empty = document.getElementById('gitignore-empty');
+	const copy = document.getElementById('gitignore-copy') as HTMLButtonElement | null;
+	const download = document.getElementById('gitignore-download') as HTMLButtonElement | null;
+
+	if (boxes.length > 0 && output && code && empty && copy && download) {
+		let text = '';
+
+		const update = () => {
+			text = buildGitignore(
+				boxes.filter((box) => box.checked).map((box) => box.value),
+			);
+			const blank = text === '';
+			code.textContent = text;
+			output.hidden = blank;
+			empty.hidden = !blank;
+			copy.disabled = blank;
+			download.disabled = blank;
+		};
+
+		boxes.forEach((box) => box.addEventListener('change', update));
+
+		copy.addEventListener('click', async () => {
+			const copied = await copyText(text);
+			toast(copied ? '.gitignore disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		});
+
+		download.addEventListener('click', () => {
+			downloadText('.gitignore', text, 'text/plain;charset=utf-8');
+			toast('Berkas .gitignore diunduh.');
+		});
+
+		update();
+	}
+</script>
+
+<style>
+	.check-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 0 var(--space-3);
+	}
+</style>
