@@ -1,68 +1,612 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Icon from '../components/ui/Icon.astro';
+import { siteConfig } from '../../site.config';
+import { absoluteUrl } from '../lib/site';
 import { tools } from '../lib/tools';
+import { categories } from '../lib/tool-types';
+import { promptIndex } from '../lib/prompts';
 
-const ready = tools.filter((tool) => tool.status === 'siap').length;
+const ready = tools.filter((tool) => tool.status === 'siap');
+const localCount = ready.filter((tool) => tool.privacy === 'lokal').length;
+
+// Grup diambil dari katalog, jadi daftar alat di halaman ini tidak pernah
+// menyimpang dari yang benar-benar ada.
+const groups = categories
+	.map((category) => ({
+		...category,
+		items: ready.filter((tool) => tool.category === category.id),
+	}))
+	.filter((group) => group.items.length > 0);
+
+// Satu baris per kategori. Kalau kategori baru muncul tanpa keterangan di sini,
+// barisnya cukup kosong, bukan salah.
+const categoryNotes: Record<string, string> = {
+	gambar: 'Menggambar bebas, mengubah potongan kode jadi PNG, dan mengecilkan ukuran gambar.',
+	diagram: 'Menulis Mermaid di sebelah kiri, melihat hasilnya di sebelah kanan, lalu ekspor.',
+	dokumen: 'Gabung, pisah, kompres, putar, dan hapus halaman tanpa mengunggah PDF ke mana pun.',
+	foto: 'Hapus latar untuk pas foto, dan bersihkan metadata GPS sebelum foto dibagikan.',
+	berbagi: 'Unggah berkas, dapat link, link mati sendiri saat kedaluwarsa atau kuotanya habis.',
+	generator: 'Markdown, README, JSON, .gitignore, LICENSE, dan QR code dalam satu tempat.',
+	utilitas: 'Cron, hash, validator JSON Schema, data palsu, dan perkakas teks sehari-hari.',
+	ai: 'Pustaka prompt dengan variabel, pratinjau langsung, dan tombol salin.',
+};
+
+const githubUrl = siteConfig.githubUrl.trim();
+const promptCategories = [...new Set(promptIndex.map((prompt) => prompt.kategori))];
+
+const facts = [
+	{ label: 'Alat siap dipakai', value: String(ready.length) },
+	{ label: 'Diproses di browser', value: String(localCount) },
+	{ label: 'Kategori alat', value: String(groups.length) },
+	{ label: 'Prompt di Bank Prompt', value: String(promptIndex.length) },
+];
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'AboutPage',
+	name: 'Tentang Toolsman',
+	url: absoluteUrl('/tentang/'),
+	description:
+		'Alat apa saja yang ada di Toolsman, sampai mana pembangunannya, dan bagaimana berkasmu diperlakukan.',
+	inLanguage: 'id-ID',
+};
 ---
 
 <Layout
 	title="Tentang Toolsman"
-	description="Apa itu Toolsman, sampai mana pembangunannya, dan bagaimana file kamu diperlakukan."
+	description="Alat apa saja yang ada di Toolsman, sampai mana pembangunannya, dan bagaimana berkasmu diperlakukan."
+	jsonLd={jsonLd}
 >
-	<article class="container prose-page">
-		<h1>Tentang Toolsman</h1>
+	<article class="about container">
+		<header class="about-hero">
+			<h1 class="about-hero__title">Kotak perkakas untuk kuliah dan koding</h1>
+			<p class="about-hero__lead">
+				Toolsman mengumpulkan pekerjaan kecil yang sering muncul di tengah tugas:
+				menggabung PDF, mengecilkan gambar, membuat diagram, merapikan README, sampai
+				menyusun prompt. Semuanya jalan di browser tanpa akun, kecuali Kirim File yang
+				butuh server supaya link bisa dibuka orang lain.
+			</p>
+		</header>
 
-		<p>
-			Toolsman adalah kumpulan alat untuk mahasiswa informatika dan developer
-			pemula: gambar di kanvas, diagram, olah PDF, pas foto, kirim file, generator
-			teks, utilitas, dan QR code. Gratis, tanpa akun, dan sebagian besar diproses
-			di browser.
-		</p>
+		<dl class="about-facts">
+			{
+				facts.map((fact) => (
+					<div class="about-facts__item">
+						<dt class="about-facts__label">{fact.label}</dt>
+						<dd class="about-facts__value">{fact.value}</dd>
+					</div>
+				))
+			}
+		</dl>
 
-		<h2>Sampai mana pembangunannya</h2>
-		<p>
-			{ready} dari {tools.length} modul sudah bisa dipakai: Kanvas Gambar, Diagram
-			Mermaid, Alat PDF (gabung, pisah, kompres, gambar ke PDF, PDF ke gambar, putar
-			dan hapus halaman), Pas Foto, Kirim File, Generator Teks, Utilitas Teks, QR
-			Code, Kompres Gambar, Warna &amp; Kontras, Data Palsu, Hash Teks &amp; Berkas,
-			Toolkit Teks, Hapus Metadata Foto, Cron Builder, Kode ke Gambar, dan Validator
-			JSON Schema.
-		</p>
-		<p>
-			Semua kebutuhan P1 di PRD sudah masuk. Yang tersisa adalah daftar P2: pilihan
-			bahasa Inggris, PWA offline untuk alat client-side, akun opsional, dan berbagi
-			sesi Draw atau Diagram.
-		</p>
+		<div class="about-body">
+			<div class="about-main">
+				<section aria-labelledby="kenapa">
+					<h2 id="kenapa">Kenapa satu tempat</h2>
+					<p>
+						Pekerjaan kecil sering tersebar di banyak situs: satu situs untuk gabung PDF,
+						situs lain untuk mengecilkan gambar, situs ketiga untuk membuat diagram. Tiap
+						situs punya batas ukuran sendiri, kadang minta daftar akun, dan berkasnya
+						terlanjur diunggah ke server orang lain.
+					</p>
+					<p>
+						Toolsman menyatukan pekerjaan itu di satu tempat dengan dua aturan tetap:
+						berkasmu tidak meninggalkan perangkatmu, dan tidak ada yang perlu didaftarkan.
+						Kalau sebuah alat memang butuh server, batasnya ditulis terang di halaman alat
+						itu, bukan disembunyikan di balik kalimat pemasaran.
+					</p>
+				</section>
 
-		<h2 id="privasi">Privasi</h2>
-		<p>
-			Draw, diagram, PDF, pas foto, generator, utilitas, QR, kompres gambar, warna,
-			data palsu, hash, toolkit teks, hapus metadata, cron, kode ke gambar, dan
-			validator schema memproses isi di browser. Isi file tidak diunggah ke server.
-		</p>
-		<ul>
-			<li>
-				Kirim File memakai server karena link harus bisa dibuka orang lain. Berkas
-				disimpan sementara di Cloudflare R2, lalu dihapus otomatis saat link
-				kedaluwarsa atau kuota unduhannya habis.
-			</li>
-			<li>Kata sandi link disimpan sebagai hash PBKDF2, bukan teks biasa.</li>
-			<li>Tidak ada akun, tidak ada cookie pelacak, dan tidak ada iklan.</li>
-		</ul>
+				<section aria-labelledby="isi-alat">
+					<h2 id="isi-alat">Isi kotaknya</h2>
+					<p>
+						{ready.length} alat dalam {groups.length} kategori. Tidak ada yang perlu dipasang
+						atau didaftarkan.
+					</p>
 
-		<h2 id="syarat">Aturan pakai Kirim File</h2>
-		<p>
-			Jangan mengunggah berkas yang ilegal, berisi malware, atau melanggar hak cipta.
-			Link yang melanggar bisa dilaporkan lewat tombol "Laporkan link ini" di halaman
-			unduh. Laporan ditinjau, dan link bisa dihapus tanpa pemberitahuan.
-		</p>
+					<ul class="about-cats">
+						{
+							groups.map((group) => (
+								<li class="about-cat" data-category={group.id}>
+									<div class="about-cat__head">
+										<span class="about-cat__dot" aria-hidden="true" />
+										<h3 class="about-cat__name">{group.label}</h3>
+										<span class="about-cat__count">{group.items.length}</span>
+									</div>
+									{categoryNotes[group.id] && (
+										<p class="about-cat__note">{categoryNotes[group.id]}</p>
+									)}
+									<ul class="about-cat__tools">
+										{group.items.map((tool) => (
+											<li>
+												<a href={`/tools/${tool.slug}/`}>{tool.name}</a>
+											</li>
+										))}
+									</ul>
+								</li>
+							))
+						}
+					</ul>
+				</section>
 
-		<h2>Yang berikutnya</h2>
-		<p>
-			Setelah fitur P1 di atas, urutan v2 mengikuti PRD: PWA untuk alat client-side,
-			akun opsional, dan berbagi sesi Draw atau Diagram lewat link.
-		</p>
+				<section aria-labelledby="pembangunan">
+					<h2 id="pembangunan">Sampai mana pembangunannya</h2>
+					<p>
+						Semua rencana awal sudah terpasang, jadi seluruh alat di atas bisa dipakai
+						sekarang. Yang belum ada:
+					</p>
+					<ul>
+						<li>
+							<strong>Akun opsional</strong> untuk menyimpan riwayat dan favorit lintas
+							perangkat. Sekarang favorit hanya tersimpan di browser ini.
+						</li>
+						<li>
+							<strong>Mode offline</strong>. Alat client-side sudah tidak butuh server,
+							tapi halamannya belum bisa dibuka tanpa internet.
+						</li>
+						<li>
+							<strong>Terjemahan penuh.</strong> Shell situs dan Bank Prompt sudah bisa
+							berganti ke bahasa Inggris, isi di dalam alat lain belum.
+						</li>
+					</ul>
+				</section>
 
-		<p><a href="/#katalog">Lihat katalog alat</a></p>
+				<section aria-labelledby="privasi">
+					<h2 id="privasi">Bagaimana berkasmu diperlakukan</h2>
+					<p>
+						{localCount} dari {ready.length} alat memproses isi sepenuhnya di perangkatmu. Tidak ada
+						berkas yang dikirim ke server Toolsman, tidak ada akun, tidak ada cookie
+						pelacak, dan tidak ada iklan.
+					</p>
+					<p>
+						<strong>Kirim File</strong> satu-satunya yang memakai server, karena link harus
+						bisa dibuka orang lain. Berkas disimpan sementara di Cloudflare R2 dan dihapus
+						otomatis saat kedaluwarsa atau kuota unduhannya habis. Kata sandi link disimpan
+						sebagai hash PBKDF2, bukan teks biasa.
+					</p>
+					<p>
+						<strong>Bank Prompt</strong> hanya mengambil berkas indeks statis dari Toolsman
+						sendiri supaya daftar prompt bisa dicari. Isian variabelmu tidak ikut terkirim,
+						dan tidak ada permintaan ke layanan AI mana pun. Prompt baru sampai ke model AI
+						kalau kamu sendiri menempelkannya di sana.
+					</p>
+					<p>
+						Rinciannya ada di <a href="/privasi/">kebijakan privasi</a>.
+					</p>
+				</section>
+
+				<section aria-labelledby="aturan">
+					<h2 id="aturan">Aturan pakai Kirim File</h2>
+					<p>
+						Jangan mengunggah berkas yang ilegal, berisi malware, atau melanggar hak cipta.
+						Link yang melanggar bisa dilaporkan lewat tombol "Laporkan link ini" di halaman
+						unduh. Laporan ditinjau, dan link bisa dihapus tanpa pemberitahuan.
+						Selengkapnya di <a href="/syarat/">syarat penggunaan</a>.
+					</p>
+				</section>
+
+				<section aria-labelledby="lisensi">
+					<h2 id="lisensi">Lisensi dan kontribusi</h2>
+					<p>
+						Kode Toolsman dirilis MIT. Isi Bank Prompt memakai CC0-1.0 atau CC-BY-4.0 per
+						berkas, jadi prompt boleh dipakai ulang bebas. Atribusi pustaka pihak ketiga ada
+						di <a href="/lisensi/">halaman lisensi</a>.
+					</p>
+					{
+						githubUrl !== '' && (
+							<p>
+								Sumbernya terbuka di{' '}
+								<a href={githubUrl} target="_blank" rel="noopener noreferrer">
+									GitHub
+								</a>
+								. Prompt baru bisa dikirim lewat pull request; format dan aturannya ada di
+								<code>CONTRIBUTING-PROMPTS.md</code>, dan setiap PR ikut diperiksa
+								<code>npm run prompts:check</code>.
+							</p>
+						)
+					}
+				</section>
+
+				<section aria-labelledby="berikutnya">
+					<h2 id="berikutnya">Yang berikutnya</h2>
+					<p>
+						Rencana v2 berisi tiga hal: akun opsional, PWA supaya alat client-side bisa
+						dipakai tanpa internet, lalu terjemahan copy di dalam workspace semua alat.
+						Tidak ada tenggat untuk ketiganya.
+					</p>
+				</section>
+			</div>
+
+			<aside class="about-side" aria-labelledby="tautan">
+				<div class="about-side__block">
+					<h2 class="about-side__title" id="tautan">Tautan</h2>
+					<ul class="about-links">
+						<li>
+							<a href="/#katalog">
+								<span>Katalog alat</span>
+								<span class="about-links__hint">Semua kartu di satu halaman</span>
+							</a>
+						</li>
+						<li>
+							<a href="/tools/prompt/">
+								<span>Bank Prompt</span>
+								<span class="about-links__hint">
+									{promptIndex.length} prompt dalam {promptCategories.length} kategori
+								</span>
+							</a>
+						</li>
+						<li>
+							<a href="/privasi/">
+								<span>Kebijakan privasi</span>
+								<span class="about-links__hint">Apa yang diproses dan berapa lama</span>
+							</a>
+						</li>
+						<li>
+							<a href="/syarat/">
+								<span>Syarat penggunaan</span>
+								<span class="about-links__hint">Aturan, terutama Kirim File</span>
+							</a>
+						</li>
+						<li>
+							<a href="/lisensi/">
+								<span>Lisensi</span>
+								<span class="about-links__hint">MIT dan pustaka pihak ketiga</span>
+							</a>
+						</li>
+						{
+							githubUrl !== '' && (
+								<li>
+									<a href={githubUrl} target="_blank" rel="noopener noreferrer">
+										<span>GitHub</span>
+										<span class="about-links__hint">Source dan tempat kirim prompt</span>
+									</a>
+								</li>
+							)
+						}
+					</ul>
+				</div>
+
+				<div class="about-side__block about-side__block--plain">
+					<h2 class="about-side__title">Yang tidak ada di sini</h2>
+					<ul class="about-nope">
+						<li><Icon name="close" size={14} /> <span>Iklan dan pelacak</span></li>
+						<li><Icon name="close" size={14} /> <span>Akun wajib</span></li>
+						<li><Icon name="close" size={14} /> <span>Berkas yang disimpan selamanya</span></li>
+						<li><Icon name="close" size={14} /> <span>Kode yang dikirim ke server</span></li>
+					</ul>
+				</div>
+			</aside>
+		</div>
 	</article>
 </Layout>
+
+<style>
+	.about {
+		max-width: var(--page-max);
+		padding-block: var(--space-6) var(--space-9);
+	}
+
+	/* Hero: satu titik fokus, judul besar lalu satu paragraf panjang. */
+	.about-hero {
+		max-width: 62ch;
+	}
+
+	.about-hero__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(1.75rem, 4vw, 2.5rem);
+		font-weight: 800;
+		line-height: 1.15;
+		letter-spacing: -0.02em;
+		text-wrap: balance;
+	}
+
+	.about-hero__lead {
+		margin: var(--space-3) 0 0;
+		font-size: 1.0625rem;
+		color: var(--text-muted);
+	}
+
+	/* Angka kunci. Garis atas dan bawah saja, tanpa kotak, supaya tidak
+	   bersaing dengan kartu alat di beranda. */
+	.about-facts {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-4) var(--space-5);
+		margin: var(--space-6) 0 0;
+		padding: var(--space-4) 0;
+		border-block: 1px solid var(--border);
+	}
+
+	.about-facts__item {
+		display: flex;
+		flex-direction: column-reverse;
+		gap: 2px;
+	}
+
+	.about-facts__value {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 1.75rem;
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: -0.02em;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.about-facts__label {
+		font-size: 0.8125rem;
+		color: var(--text-muted);
+	}
+
+	.about-body {
+		display: grid;
+		gap: var(--space-7);
+		margin-top: var(--space-7);
+	}
+
+	.about-main {
+		max-width: 68ch;
+	}
+
+	.about-main h2 {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 1.25rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	/* Garis pemisah antar bagian: ritme dokumen, bukan hiasan. Bagian pertama
+	   tidak perlu karena sudah dipisah pita angka di atasnya. */
+	.about-main section + section {
+		margin-top: var(--space-6);
+		padding-top: var(--space-6);
+		border-top: 1px solid var(--border);
+	}
+
+	.about-main h2 + p {
+		margin-top: var(--space-2);
+	}
+
+	.about-main p,
+	.about-main ul {
+		margin-top: var(--space-3);
+		color: var(--text-muted);
+	}
+
+	.about-main ul {
+		padding-left: 1.25em;
+	}
+
+	.about-main li {
+		margin-top: var(--space-1);
+	}
+
+	.about-main strong {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	.about-main code {
+		padding: 0.1em 0.35em;
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+		font-family: var(--font-mono);
+		font-size: 0.875em;
+		color: var(--text);
+	}
+
+	.about-main a {
+		color: var(--text);
+		text-decoration: underline;
+		text-decoration-color: var(--border-strong);
+		text-underline-offset: 3px;
+	}
+
+	.about-main a:hover {
+		text-decoration-color: currentColor;
+	}
+
+	/* Daftar kategori: warna kategori dipakai sebagai titik kecil, bukan latar
+	   besar, mengikuti aturan yang sama dengan katalog. */
+	.about-cats {
+		display: grid;
+		gap: var(--space-4);
+		margin-top: var(--space-4);
+		padding: 0;
+		list-style: none;
+	}
+
+	/* Dua kolom di layar lebar: delapan kategori dalam satu kolom jadi terlalu
+	   panjang untuk dipindai. */
+	/* Dua kolom di layar lebar: delapan kategori dalam satu kolom jadi terlalu
+	   panjang untuk dipindai. */
+	@media (min-width: 720px) {
+		.about-cats {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: var(--space-4) var(--space-5);
+		}
+
+		/* Garis hanya di antara baris, jadi baris terakhir tetap bersih. */
+		.about-cat:last-child,
+		.about-cat:nth-last-child(-n + 2) {
+			padding-bottom: 0;
+			border-bottom: 0;
+		}
+	}
+
+	.about-cat {
+		padding-bottom: var(--space-4);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.about-cat:last-child {
+		padding-bottom: 0;
+		border-bottom: 0;
+	}
+
+	.about-cat__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.about-cat__dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--cat);
+		flex: none;
+	}
+
+	.about-cat__name {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 0.9375rem;
+		font-weight: 700;
+		color: var(--text);
+	}
+
+	.about-cat__count {
+		margin-left: auto;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.about-cat__note {
+		margin: var(--space-1) 0 0;
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.about-cat__tools {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-3);
+		margin: var(--space-2) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.about-cat__tools a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 28px;
+		font-size: 0.875rem;
+		color: var(--text);
+		text-decoration: underline;
+		text-decoration-color: var(--border-strong);
+		text-underline-offset: 3px;
+	}
+
+	.about-cat__tools a:hover {
+		text-decoration-color: var(--cat);
+	}
+
+	/* Kolom kanan: navigasi, bukan dekorasi. */
+	.about-side {
+		display: grid;
+		gap: var(--space-6);
+		align-content: start;
+	}
+
+	.about-side__block {
+		display: grid;
+		gap: var(--space-3);
+	}
+
+	.about-side__title {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.about-links {
+		display: grid;
+		gap: 1px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+		background: var(--border);
+	}
+
+	.about-links a {
+		display: grid;
+		gap: 2px;
+		padding: var(--space-3) var(--space-4);
+		background: var(--surface);
+		text-decoration: none;
+		min-height: 44px;
+	}
+
+	.about-links a:hover {
+		background: var(--surface-2);
+	}
+
+	.about-links a > span:first-child {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.about-links__hint {
+		font-size: 0.8125rem;
+		color: var(--text-muted);
+	}
+
+	.about-side__block--plain {
+		gap: var(--space-2);
+	}
+
+	.about-nope {
+		display: grid;
+		gap: var(--space-1);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.about-nope li {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: 0.15em 0;
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.about-nope :global(svg) {
+		flex: none;
+		color: var(--text-muted);
+	}
+
+	@media (min-width: 560px) {
+		.about-facts {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.about-body {
+			grid-template-columns: minmax(0, 68ch) minmax(0, 1fr);
+			gap: var(--space-8);
+			align-items: start;
+		}
+
+		.about-side {
+			position: sticky;
+			top: calc(var(--header-h) + var(--space-4));
+		}
+	}
+</style>
