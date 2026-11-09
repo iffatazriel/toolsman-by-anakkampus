@@ -118,3 +118,6 @@ Dengan mengirim prompt, kamu setuju prompt itu dirilis dengan lisensi yang
 kamu tulis di berkas: `CC0-1.0` (domain publik, bebas dipakai tanpa atribusi)
 atau `CC-BY-4.0` (bebas dipakai dengan atribusi ke `penulis`). Jangan kirim
 materi milik orang lain.
+
+Lisensi di sini hanya berlaku untuk isi `content/prompts/`. Kode situs dirilis
+MIT, lihat `LICENSE`.

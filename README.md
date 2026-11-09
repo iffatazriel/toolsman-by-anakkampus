@@ -277,9 +277,19 @@ Tujuh temuan yang tersisa semuanya butuh keputusan karena perbaikannya lompat ma
 
 Dampak praktisnya kecil: semua paket itu mengolah input pengguna sendiri di browser, bukan menerima masukan dari pihak lain. `npm audit fix --force` menurunkan `@excalidraw/excalidraw` ke 0.17.6 dan `@imgly/background-removal` ke 1.1.5, jadi belum dijalankan tanpa persetujuan. Pilihan paling aman jangka panjang adalah menunggu Excalidraw dan imgly memperbarui dependensinya.
 
-## Lisensi dependensi
+## Lisensi
 
-Proyek ini belum punya berkas `LICENSE`. Dependensi runtime yang ikut terkirim ke browser:
+| Bagian | Lisensi |
+|---|---|
+| Kode (semua isi repo selain `content/prompts/`) | MIT, lihat `LICENSE` |
+| Isi `content/prompts/` | CC0-1.0 atau CC-BY-4.0 per berkas, lihat field `lisensi` di tiap YAML |
+| Dependensi pihak ketiga | ikut lisensinya masing-masing, lihat tabel di bawah |
+
+Prompt sengaja tidak memakai MIT: CC0/CC-BY lebih pas untuk teks yang orang mau pakai ulang bebas. Panduan kontribusi prompt ada di `CONTRIBUTING-PROMPTS.md`.
+
+### Lisensi dependensi
+
+Dependensi runtime yang ikut terkirim ke browser:
 
 | Paket | Lisensi | Kewajiban utama |
 |---|---|---|
@@ -295,11 +305,11 @@ Proyek ini belum punya berkas `LICENSE`. Dependensi runtime yang ikut terkirim k
 | @fontsource-variable/inter, plus-jakarta-sans, jetbrains-mono | OFL-1.1 | sertakan OFL; jangan jual font sendiri atau ubah namanya |
 | **@imgly/background-removal** | **AGPL-3.0** | **pengguna jaringan berhak atas source versi yang berjalan** |
 
-Konsekuensi lisensi proyek:
+Konsekuensi lisensi:
 
-- Semua dependensi kecuali `@imgly/background-removal` adalah lisensi permisif (MIT/ISC/Apache/BSD/OFL), jadi proyek bisa dirilis MIT atau Apache-2.0 asalkan notice dependensi disertakan.
-- AGPL-3.0 di `@imgly/background-removal` adalah satu-satunya copyleft jaringan. Kalau Toolsman dipublikasikan dengan paket ini, opsi yang aman: (a) rilis proyek sebagai AGPL-3.0 dan sediakan source lengkap untuk pengguna jaringan, atau (b) ganti dengan pustaka penghapus latar berlisensi permisif (mis. MediaPipe Selfie Segmentation, Apache-2.0), lalu proyek bisa tetap MIT.
-- Jangan mencampur AGPL dengan lisensi proyek permisif tanpa keputusan eksplisit. `LICENSE` belum diubah.
+- Kode dirilis MIT. Semua dependensi kecuali `@imgly/background-removal` berlisensi permisif (MIT/ISC/Apache/BSD/OFL), jadi tidak ada benturan.
+- `@imgly/background-removal` berlisensi AGPL-3.0 dan dipakai Pas Foto. AGPL §13 mewajibkan pengguna jaringan bisa mendapat source versi yang berjalan; repo ini publik dan memuat seluruh source, jadi kewajiban itu terpenuhi tanpa perlu mengubah lisensi proyek.
+- Kalau nanti Pas Foto dijual, dipakai internal tanpa publikasi source, atau lisensi ini dipakai untuk produk komersial tertutup: ganti `@imgly/background-removal` dengan pustaka permisif (mis. MediaPipe Selfie Segmentation, Apache-2.0). Sampai saat itu, tidak ada yang perlu diubah.
 
 
 

@@ -238,8 +238,10 @@ menandainya sampai versi mayor dinaikkan.
 ## Lisensi dependensi
 
 Data diambil dari `node_modules/*/package.json` dan `npm ls --all` pada 9
-November 2026. `LICENSE` belum dibuat atau diubah; keputusan lisensi proyek ada
-di tangan pemilik.
+November 2026. Kode proyek kini dirilis MIT (lihat `LICENSE`), isi
+`content/prompts/` memakai CC0-1.0/CC-BY-4.0 per berkas, dan komponen
+`@imgly/background-removal` tetap AGPL-3.0 dengan source tersedia di repo
+publik.
 
 ### Dependensi langsung (runtime)
 
@@ -345,7 +347,7 @@ sebagian besar atribusi itu.
 
 | Keputusan | Status | Yang dibutuhkan |
 |---|---|---|
-| Lisensi AGPL | Terbuka | `@imgly/background-removal` berlisensi AGPL-3.0. Pilih: rilis proyek sebagai AGPL-3.0 dengan source tersedia untuk pengguna jaringan, atau ganti ke pustaka permisif seperti MediaPipe (Apache-2.0). `LICENSE` belum diubah. |
+| Lisensi AGPL | Selesai | Kode dirilis MIT (`LICENSE`). `@imgly/background-removal` tetap AGPL-3.0; kewajiban §13 terpenuhi karena repo publik memuat seluruh source. Ganti ke MediaPipe (Apache-2.0) hanya kalau Pas Foto nanti dijual atau source ditutup. |
 | Domain final | Terbuka | Tentukan domain, set `PUBLIC_SITE_URL`, lalu build ulang. Domain ini juga prasyarat verifikasi Resend kalau akun magic link dilanjutkan. |
 | `og:image` | Terbuka | Butuh aset merek 1200×630 dan penempatan meta `og:image` per halaman. |
 | Analitik | Terbuka | Pilih Plausible (tanpa cookie, `PUBLIC_PLAUSIBLE_DOMAIN`) atau tidak sama sekali. Perlu pembaruan halaman privasi sebelum diaktifkan. |
