@@ -1,0 +1,586 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Icon from '../../../components/ui/Icon.astro';
+import { prompts } from '../../../lib/prompts';
+import type { PromptEntry } from '../../../lib/prompt-schema';
+import {
+	promptAiLabel,
+	promptCategoryLabel,
+	promptLevelLabel,
+} from '../../../lib/prompt-taxonomy';
+import { absoluteUrl } from '../../../lib/site';
+
+export function getStaticPaths() {
+	return prompts.map((prompt) => ({ params: { id: prompt.id }, props: { prompt } }));
+}
+
+interface Props {
+	prompt: PromptEntry;
+}
+
+const { prompt } = Astro.props;
+const category = promptCategoryLabel(prompt.kategori);
+const level = promptLevelLabel(prompt.level);
+const ai = prompt.ai.map((id) => promptAiLabel(id)).join(' · ');
+const bahasa = prompt.bahasa === 'en' ? 'Inggris' : 'Indonesia';
+const learningNote = prompt.kategori === 'belajar' || prompt.kategori === 'laporan';
+
+const description = `${prompt.judul}. Prompt ${category.toLowerCase()} dengan ${prompt.variabel.length} variabel, siap diisi, disalin, atau diunduh. Gratis dan diproses di browser.`;
+
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'CreativeWork',
+	name: prompt.judul,
+	description,
+	url: absoluteUrl(`/tools/prompt/${prompt.id}/`),
+	inLanguage: prompt.bahasa === 'en' ? 'en' : 'id-ID',
+	license:
+		prompt.lisensi === 'CC0-1.0'
+			? 'https://creativecommons.org/publicdomain/zero/1.0/'
+			: 'https://creativecommons.org/licenses/by/4.0/',
+	author: { '@type': 'Person', name: prompt.penulis },
+	dateCreated: prompt.dibuat,
+	keywords: prompt.tag.join(', '),
+	isPartOf: { '@type': 'WebSite', name: 'Toolsman', url: absoluteUrl('/') },
+};
+---
+
+<Layout title={`${prompt.judul}, Toolsman`} description={description} jsonLd={jsonLd}>
+	<div
+		class="container prompt-detail"
+		data-prompt-detail
+		data-id={prompt.id}
+		data-judul={prompt.judul}
+		data-lisensi={prompt.lisensi}
+		data-penulis={prompt.penulis}
+		data-catatan={prompt.catatan}
+	>
+		<nav class="breadcrumb" aria-label="Breadcrumb">
+			<a href="/" data-i18n="tool.home">Beranda</a>
+			<span aria-hidden="true">/</span>
+			<a href="/#katalog" data-category-label="ai">AI</a>
+			<span aria-hidden="true">/</span>
+			<a href="/tools/prompt/">Bank Prompt</a>
+			<span aria-hidden="true">/</span>
+			<span aria-current="page">{prompt.judul}</span>
+		</nav>
+
+		<header class="prompt-head" data-category="ai">
+			<span class="tool-tile"><Icon name="sparkles" size={24} /></span>
+			<div class="prompt-head__text">
+				<p class="prompt-head__eyebrow">
+					<span data-meta-kategori={prompt.kategori}>{category}</span>
+					<span aria-hidden="true">·</span>
+					<span data-meta-level={prompt.level}>{level}</span>
+				</p>
+				<h1 class="prompt-head__title">{prompt.judul}</h1>
+			</div>
+			<button
+				type="button"
+				class="btn btn--ghost prompt-head__fav"
+				data-prompt-fav
+				aria-pressed="false"
+				data-p="detail.favorite"
+			>
+				<Icon name="star" size={16} />
+				<span data-p="filter.favorite">Favorit</span>
+			</button>
+		</header>
+
+		<div class="prompt-head__meta">
+			<span class="badge"><span data-meta-bahasa={prompt.bahasa}>{bahasa}</span></span>
+			<span class="badge"><span data-meta-ai={prompt.ai.join(',')}>{ai}</span></span>
+			<span class="badge">{prompt.lisensi}</span>
+			{learningNote && <span class="badge">{category}</span>}
+		</div>
+
+		{
+			learningNote && (
+				<p class="prompt-learnnote">
+					<Icon name="alert" size={16} />
+					<span data-p="note.learning">
+						Gunakan untuk belajar, bukan menyalin mentah. Tulis ulang dengan kata-katamu dan
+						sebutkan sumbernya.
+					</span>
+				</p>
+			)
+		}
+
+		<div class="prompt-detail__grid">
+			<div class="prompt-detail__main">
+				<section class="prompt-panel" aria-labelledby="vars-title">
+					<h2 class="prompt-panel__title" id="vars-title" data-p="detail.variables">
+						Isi variabel
+					</h2>
+					<p class="field-hint" data-p="detail.variablesHint">
+						Kosongkan yang belum kamu tahu. Pratinjau akan menandainya.
+					</p>
+					<div class="prompt-form" data-prompt-form>
+						{
+							prompt.variabel.map((variable) => (
+								<div class="prompt-field">
+									<label class="field-label" for={`var-${variable.nama}`}>
+										{variable.label}
+									</label>
+									{variable.tipe === 'panjang' ? (
+										<textarea
+											id={`var-${variable.nama}`}
+											class="field-input"
+											rows="5"
+											placeholder={variable.contoh}
+											data-var={variable.nama}
+										/>
+									) : variable.tipe === 'pilihan' ? (
+										<select
+											id={`var-${variable.nama}`}
+											class="field-input"
+											data-var={variable.nama}
+										>
+											<option value="">Pilih {variable.label.toLowerCase()}</option>
+											{variable.pilihan?.map((option) => (
+												<option value={option}>{option}</option>
+											))}
+										</select>
+									) : (
+										<input
+											id={`var-${variable.nama}`}
+											class="field-input"
+											type="text"
+											autocomplete="off"
+											placeholder={variable.contoh}
+											data-var={variable.nama}
+										/>
+									)}
+									<p class="field-hint">Contoh: {variable.contoh}</p>
+								</div>
+							))
+						}
+					</div>
+				</section>
+
+				<section class="prompt-panel" aria-labelledby="preview-title">
+					<div class="prompt-preview__head">
+						<h2 class="prompt-panel__title" id="preview-title" data-p="detail.preview">
+							Pratinjau prompt
+						</h2>
+						<div class="prompt-actions">
+							<button
+								type="button"
+								class="btn btn--secondary"
+								data-prompt-copy
+								data-p-aria="copy.aria"
+							>
+								<span data-p="detail.copy">Salin</span>
+							</button>
+							<button
+								type="button"
+								class="btn btn--primary"
+								data-prompt-download
+								data-p-aria="download.aria"
+							>
+								<span data-p="detail.download">Unduh .md</span>
+							</button>
+						</div>
+					</div>
+					<p class="prompt-missing" data-prompt-missing aria-live="polite" data-p="detail.complete">
+						Semua variabel terisi.
+					</p>
+					<pre
+						class="prompt-preview"
+						data-prompt-preview
+						tabindex="0"
+						aria-label="Pratinjau prompt akhir">{prompt.prompt}</pre>
+					<p class="field-hint" data-p="privacy">
+						Semua isian diproses di browser ini. Tidak ada yang dikirim ke server.
+					</p>
+				</section>
+			</div>
+
+			<aside class="prompt-panel prompt-aside" aria-labelledby="about-title">
+				<h2 class="prompt-panel__title" id="about-title" data-p="detail.about">
+					Tentang prompt ini
+				</h2>
+				<div class="prompt-note" data-prompt-note>{prompt.catatan}</div>
+				<dl class="prompt-meta">
+					<dt data-p="detail.license">Lisensi</dt>
+					<dd>{prompt.lisensi}</dd>
+					<dt data-p="detail.author">Penulis</dt>
+					<dd>{prompt.penulis}</dd>
+					<dt data-p="detail.created">Dibuat</dt>
+					<dd>{prompt.dibuat}</dd>
+					<dt data-p="detail.language">Bahasa</dt>
+					<dd><span data-meta-bahasa={prompt.bahasa}>{bahasa}</span></dd>
+					<dt data-p="detail.level">Level</dt>
+					<dd><span data-meta-level={prompt.level}>{level}</span></dd>
+					<dt data-p="detail.category">Kategori</dt>
+					<dd><span data-meta-kategori={prompt.kategori}>{category}</span></dd>
+					<dt data-p="detail.ai">Cocok untuk</dt>
+					<dd><span data-meta-ai={prompt.ai.join(',')}>{ai}</span></dd>
+					<dt data-p="detail.tags">Tag</dt>
+					<dd>{prompt.tag.join(' · ')}</dd>
+				</dl>
+				<a class="btn btn--secondary" href="/tools/prompt/" data-p="detail.all">Semua prompt</a>
+			</aside>
+		</div>
+	</div>
+</Layout>
+
+<script>
+	import { copyText } from '../../../lib/clipboard';
+	import { downloadText } from '../../../lib/download';
+	import {
+		PROMPT_FAVORITES_KEY,
+		PROMPT_RECENT_KEY,
+		readKeyedList,
+		recordKeyedRecent,
+		toggleKeyedItem,
+	} from '../../../lib/favorites';
+	import { readLang, type Lang } from '../../../lib/i18n';
+	import {
+		promptAiLabel,
+		promptCategoryLabel,
+		promptLevelLabel,
+	} from '../../../lib/prompt-taxonomy';
+	import { toast } from '../../../lib/toast';
+	import { assemblePrompt, missingVariables, promptMarkdown, promptSegments } from '../../../features/prompt/assemble';
+	import { renderNote } from '../../../features/prompt/render-note';
+	import { fillPromptText, initPromptStrings, promptText } from '../../../features/prompt/strings';
+
+	const root = document.querySelector<HTMLElement>('[data-prompt-detail]');
+	const preview = root?.querySelector<HTMLElement>('[data-prompt-preview]');
+
+	if (root && preview) {
+		const template = preview.textContent ?? '';
+		const fields = Array.from(
+			root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('[data-var]'),
+		);
+		const missingElement = root.querySelector<HTMLElement>('[data-prompt-missing]');
+		const copyButton = root.querySelector<HTMLButtonElement>('[data-prompt-copy]');
+		const downloadButton = root.querySelector<HTMLButtonElement>('[data-prompt-download]');
+		const favoriteButton = root.querySelector<HTMLButtonElement>('[data-prompt-fav]');
+		const note = root.querySelector<HTMLElement>('[data-prompt-note]');
+		const id = root.dataset.id ?? '';
+		let assembled = template;
+
+		const values = (): Record<string, string> =>
+			Object.fromEntries(fields.map((field) => [field.dataset.var ?? '', field.value]));
+
+		const paintMeta = (lang: Lang): void => {
+			root.querySelectorAll<HTMLElement>('[data-meta-kategori]').forEach((element) => {
+				element.textContent = promptCategoryLabel(element.dataset.metaKategori ?? '', lang);
+			});
+			root.querySelectorAll<HTMLElement>('[data-meta-level]').forEach((element) => {
+				element.textContent = promptLevelLabel(element.dataset.metaLevel ?? '', lang);
+			});
+			root.querySelectorAll<HTMLElement>('[data-meta-bahasa]').forEach((element) => {
+				element.textContent = promptText(lang, element.dataset.metaBahasa === 'en' ? 'detail.bahasa.en' : 'detail.bahasa.id');
+			});
+			root.querySelectorAll<HTMLElement>('[data-meta-ai]').forEach((element) => {
+				element.textContent = (element.dataset.metaAi ?? '')
+					.split(',')
+					.filter(Boolean)
+					.map((item) => promptAiLabel(item, lang))
+					.join(' · ');
+			});
+		};
+
+		const update = (): void => {
+			const lang = readLang();
+			const current = values();
+			const segments = promptSegments(template, current);
+			preview.replaceChildren(
+				...segments.map((segment) => {
+					if (segment.variable !== null && !segment.filled) {
+						const mark = document.createElement('mark');
+						mark.className = 'prompt-var-missing';
+						mark.textContent = segment.text;
+						return mark;
+					}
+					return document.createTextNode(segment.text);
+				}),
+			);
+			assembled = assemblePrompt(template, current);
+			const missing = missingVariables(template, current);
+			if (missingElement) {
+				missingElement.textContent = missing.length
+					? fillPromptText(promptText(lang, 'detail.missing'), { n: missing.length })
+					: promptText(lang, 'detail.complete');
+				missingElement.dataset.state = missing.length > 0 ? 'missing' : 'complete';
+			}
+			paintMeta(lang);
+		};
+
+		const syncFavorite = (): void => {
+			if (!favoriteButton) return;
+			const saved = readKeyedList(PROMPT_FAVORITES_KEY, localStorage).includes(id);
+			favoriteButton.setAttribute('aria-pressed', saved ? 'true' : 'false');
+			const label = promptText(readLang(), saved ? 'detail.unfavorite' : 'detail.favorite');
+			favoriteButton.setAttribute('aria-label', label);
+		};
+
+		fields.forEach((field) => {
+			field.addEventListener('input', update);
+			field.addEventListener('change', update);
+		});
+
+		copyButton?.addEventListener('click', async () => {
+			const copied = await copyText(assembled);
+			toast(copied ? promptText(readLang(), 'detail.copied') : promptText(readLang(), 'detail.copyFailed'), {
+				tone: copied ? 'success' : 'error',
+			});
+		});
+
+		downloadButton?.addEventListener('click', () => {
+			const markdown = promptMarkdown(
+				{
+					judul: root.dataset.judul ?? '',
+					catatan: root.dataset.catatan ?? '',
+					lisensi: root.dataset.lisensi ?? '',
+					penulis: root.dataset.penulis ?? '',
+				},
+				assembled,
+			);
+			downloadText(`${id}.md`, markdown);
+		});
+
+		favoriteButton?.addEventListener('click', () => {
+			toggleKeyedItem(PROMPT_FAVORITES_KEY, localStorage, id);
+			syncFavorite();
+		});
+
+		if (note) {
+			const rendered = renderNote(root.dataset.catatan ?? '');
+			if (rendered.trim() !== '') note.innerHTML = rendered;
+		}
+
+		if (id !== '') recordKeyedRecent(PROMPT_RECENT_KEY, localStorage, id);
+
+		document.addEventListener('lang:change', () => {
+			update();
+			syncFavorite();
+		});
+
+		initPromptStrings();
+		syncFavorite();
+		update();
+	}
+</script>
+
+<style>
+	.prompt-detail {
+		padding-bottom: var(--space-7);
+	}
+
+	.prompt-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-3);
+		margin-top: var(--space-2);
+	}
+
+	.prompt-head__text {
+		min-width: 0;
+	}
+
+	.prompt-head__eyebrow {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.prompt-head__title {
+		font-size: 1.75rem;
+		font-weight: 700;
+	}
+
+	.prompt-head__fav {
+		margin-left: auto;
+	}
+
+	.prompt-head__fav[aria-pressed='true'] {
+		color: var(--accent);
+	}
+
+	.prompt-head__fav[aria-pressed='true'] svg {
+		fill: currentColor;
+	}
+
+	.prompt-head__meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-top: var(--space-3);
+	}
+
+	.prompt-learnnote {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-2);
+		margin-top: var(--space-4);
+		padding: var(--space-3) var(--space-4);
+		border-left: 3px solid var(--accent);
+		border-radius: var(--radius-md);
+		background: var(--accent-soft);
+		font-size: 0.875rem;
+		color: var(--text);
+	}
+
+	.prompt-learnnote svg {
+		flex: none;
+		margin-top: 2px;
+	}
+
+	.prompt-detail__grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4);
+		margin-top: var(--space-5);
+	}
+
+	.prompt-detail__main {
+		display: grid;
+		gap: var(--space-4);
+		min-width: 0;
+	}
+
+	.prompt-panel {
+		display: grid;
+		gap: var(--space-3);
+		padding: var(--space-5);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		background: var(--surface);
+	}
+
+	.prompt-panel__title {
+		font-size: 1rem;
+		font-weight: 600;
+	}
+
+	.prompt-panel .field-hint {
+		margin-top: 0;
+	}
+
+	.prompt-form {
+		display: grid;
+		gap: var(--space-4);
+	}
+
+	.prompt-field {
+		display: grid;
+		gap: var(--space-1);
+	}
+
+	.prompt-field textarea.field-input {
+		min-height: 128px;
+		padding-block: var(--space-2);
+		line-height: 1.6;
+		resize: vertical;
+	}
+
+	.prompt-preview__head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+	}
+
+	.prompt-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	.prompt-missing {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.prompt-missing[data-state='missing'] {
+		color: var(--danger);
+	}
+
+	.prompt-preview {
+		max-height: 520px;
+		margin: 0;
+		padding: var(--space-4);
+		overflow: auto;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface-2);
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		line-height: 1.7;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	.prompt-preview:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	:global(.prompt-var-missing) {
+		padding: 0 3px;
+		border-radius: 4px;
+		background: var(--danger);
+		color: var(--bg);
+		font-weight: 600;
+	}
+
+	.prompt-aside {
+		align-content: start;
+	}
+
+	.prompt-note {
+		font-size: 0.875rem;
+		line-height: 1.65;
+		color: var(--text-muted);
+		white-space: pre-line;
+	}
+
+	:global(.prompt-note p) {
+		margin: 0 0 var(--space-2);
+	}
+
+	:global(.prompt-note p:last-child) {
+		margin-bottom: 0;
+	}
+
+	:global(.prompt-note strong) {
+		color: var(--text);
+	}
+
+	.prompt-meta {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: var(--space-2) var(--space-3);
+		margin: 0;
+		padding-top: var(--space-3);
+		border-top: 1px solid var(--border);
+		font-size: 0.875rem;
+	}
+
+	.prompt-meta dt {
+		color: var(--text-muted);
+	}
+
+	.prompt-meta dd {
+		min-width: 0;
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+
+	@media (min-width: 1024px) {
+		.prompt-detail__grid {
+			grid-template-columns: minmax(0, 1fr) 340px;
+			align-items: start;
+		}
+	}
+</style>

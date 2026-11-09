@@ -106,6 +106,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 <script>
 	import { formatBytes } from '../../lib/page-range';
+	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
 	import {
 		fitWithin,
@@ -192,12 +193,15 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			setTimeout(() => URL.revokeObjectURL(url), 1000);
 		};
 
+		const zone = dropzoneOf('img-input');
+
 		const process = async () => {
 			const source = bitmap;
 			if (!source || !file) return;
 			const current = ++job;
 			setError(null);
 			setStatus('Memproses…', true);
+			setDropzoneState(zone, 'processing');
 
 			try {
 				const max = Number(maxSelect.value);
@@ -245,13 +249,15 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				savingText.textContent =
 					saving > 0 ? `${saving}% lebih kecil` : saving === 0 ? 'Ukurannya sama' : `${Math.abs(saving)}% lebih besar`;
 				downloadButton.disabled = false;
-				setStatus('✓ Siap diunduh', false);
+				setStatus('Siap diunduh', false);
+				setDropzoneState(zone, 'done');
 			} catch (error) {
 				if (current !== job) return;
 				resultBlob = null;
 				downloadButton.disabled = true;
 				setStatus('Gagal memproses', false);
 				setError(error instanceof Error ? error.message : 'Gagal memproses gambar.');
+				setDropzoneState(zone, 'empty');
 			}
 		};
 
@@ -298,7 +304,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 			try {
 				bitmap = await createImageBitmap(selected);
-				previewStatus.textContent = `✓ Gambar siap · ${bitmap.width} × ${bitmap.height} px`;
+				previewStatus.textContent = `Gambar siap · ${bitmap.width} × ${bitmap.height} px`;
 				previewStatus.classList.add('is-ready');
 				void process();
 			} catch {
@@ -329,7 +335,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		downloadButton.addEventListener('click', () => {
 			if (!resultBlob || !file) return;
 			saveBlob(resultBlob, outputFileName(file.name, format));
-			toast('Gambar diunduh.');
+			toast('Gambar diunduh.', { tone: 'success' });
 		});
 	}
 </script>

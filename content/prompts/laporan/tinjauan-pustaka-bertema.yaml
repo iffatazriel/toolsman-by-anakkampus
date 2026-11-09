@@ -1,0 +1,39 @@
+id: tinjauan-pustaka-bertema
+judul: Kelompokkan temuan beberapa sumber jadi tinjauan bertema
+kategori: laporan
+tag: [tinjauan-pustaka, laporan, struktur]
+ai: [claude, gemini, umum]
+bahasa: id
+level: mahir
+variabel:
+  - nama: topik
+    label: Topik tinjauan
+    tipe: pendek
+    contoh: "Efek pembelajaran daring terhadap keterlibatan mahasiswa"
+  - nama: sumber
+    label: Catatan sumber
+    tipe: panjang
+    contoh: "Untuk setiap sumber tulis: penulis, tahun, temuan utama, dan metode singkat."
+  - nama: pertanyaan
+    label: Pertanyaan tinjauan
+    tipe: panjang
+    contoh: "Apa faktor yang paling sering dilaporkan menurunkan keterlibatan?"
+prompt: |
+  Susun kerangka tinjauan pustaka bertema untuk pertanyaan berikut: {{pertanyaan}}
+  Topik: {{topik}}
+
+  Catatan sumber saya:
+  {{sumber}}
+
+  Kerjakan:
+  1. Kelompokkan sumber ke 2 sampai 4 tema. Untuk setiap tema: satu kalimat klaim, sumber yang mendukung, dan sumber yang bertentangan bila ada.
+  2. Tandai sumber yang hanya mendukung sebagian atau metodenya berbeda jenis, karena tidak semua temuan bisa ditimbang sama.
+  3. Susun alur paragraf: mulai dari tema yang paling banyak dukungan, akhiri dengan kesenjangan yang belum terjawab.
+  4. Buat tabel ringkas: tema, sumber, temuan satu baris, arah dukungan.
+
+  Aturan: jangan menambah sumber atau sitasi baru. Jangan mengarang penulis, tahun, atau judul. Kalau catatan sumber terlalu tipis untuk satu tema, katakan terus terang dan jangan memaksa.
+catatan: |
+  Kerangka ini hanya menyusun catatan yang sudah kamu baca. Setiap sitasi tetap harus kamu buka dan cocokkan sendiri. Tinjauan pustaka bukan tempat mengarang kesimpulan bersama.
+penulis: Tim Toolsman
+lisensi: CC-BY-4.0
+dibuat: "2026-11-09"

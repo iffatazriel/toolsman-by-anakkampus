@@ -13,8 +13,9 @@ afterEach(() => {
 });
 
 describe('verifyTurnstile', () => {
-	it('melewati verifikasi kalau secret belum diatur (dev lokal)', async () => {
-		await expect(verifyTurnstile(undefined, '', '1.2.3.4')).resolves.toBe(true);
+	it('menolak, bukan melewati, kalau secret belum diatur', async () => {
+		await expect(verifyTurnstile(undefined, '', '1.2.3.4')).resolves.toBe(false);
+		await expect(verifyTurnstile(undefined, 'token', '1.2.3.4')).resolves.toBe(false);
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 

@@ -48,6 +48,25 @@ describe('validasi berkas', () => {
 		expect(validateFile({ name: 'a.bat', size: 10 })).toContain('tidak diizinkan');
 	});
 
+	it('menolak ekstensi eksekusi yang diminta di server', () => {
+		for (const ext of ['exe', 'msi', 'bat', 'cmd', 'com', 'scr', 'ps1', 'vbs', 'jar', 'apk', 'dmg', 'sh']) {
+			expect(isBlockedName(`berkas.${ext}`)).toBe(true);
+		}
+	});
+
+	it('menolak ekstensi ganda yang menyembunyikan eksekusi', () => {
+		expect(isBlockedName('laporan.pdf.exe')).toBe(true);
+		expect(isBlockedName('laporan.exe.pdf')).toBe(true);
+		expect(isBlockedName('foto.jpg.ps1')).toBe(true);
+		expect(isBlockedName('laporan.final.pdf')).toBe(false);
+	});
+
+	it('menolak karakter kontrol dan RTL override pada nama', () => {
+		expect(validateFile({ name: 'laporan\u0000.pdf', size: 10 })).toContain('tidak valid');
+		expect(validateFile({ name: 'laporan\u202Egnp.exe', size: 10 })).toContain('tidak valid');
+		expect(validateFile({ name: 'laporan.pdf', size: 10 })).toBeNull();
+	});
+
 	it('menolak berkas lebih dari 100 MB dan berkas kosong', () => {
 		expect(validateFile({ name: 'a.pdf', size: 101 * 1024 * 1024 })).toContain('100 MB');
 		expect(validateFile({ name: 'a.pdf', size: 0 })).toContain('kosong');

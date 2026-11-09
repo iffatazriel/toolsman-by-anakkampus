@@ -1,0 +1,45 @@
+id: tes-unit-dari-kasus-tepi
+judul: Tulis tes unit dari kasus tepi yang sering terlewat
+kategori: kode
+tag: [testing, javascript, python]
+ai: [umum, claude, gemini]
+bahasa: id
+level: menengah
+variabel:
+  - nama: bahasa
+    label: Bahasa dan test runner
+    tipe: pendek
+    contoh: "TypeScript dengan Vitest"
+  - nama: kode
+    label: Fungsi yang diuji
+    tipe: panjang
+    contoh: "Tempel satu fungsi beserta tipe masukannya."
+  - nama: perilaku
+    label: Perilaku yang dijanjikan
+    tipe: panjang
+    contoh: "Mengembalikan null kalau masukan kosong, melempar error kalau tipe salah."
+prompt: |
+  Tulis tes unit untuk fungsi berikut.
+
+  Lingkungan: {{bahasa}}
+  Perilaku yang dijanjikan: {{perilaku}}
+
+  Kode:
+  {{kode}}
+
+  Cakupan yang harus ada:
+  - Satu tes untuk jalur normal.
+  - Satu tes untuk setiap perilaku yang dijanjikan di atas.
+  - Kasus tepi: masukan kosong, nilai batas bawah dan atas, tipe salah, dan angka nol atau negatif bila relevan.
+  - Satu tes untuk hal yang justru tidak boleh terjadi, misalnya tidak boleh melempar error pada masukan wajar.
+
+  Aturan:
+  - Nama tes harus menjelaskan perilaku, bukan nama fungsi saja.
+  - Satu tes satu alasan gagal. Jangan menggabungkan banyak assert yang tidak berkaitan.
+  - Jangan menguji detail implementasi yang boleh berubah, seperti nama variabel lokal.
+  - Setelah kode tes, sebutkan perilaku yang belum teruji dan mengapa tidak diuji.
+catatan: |
+  Tes yang gagal memberi tahu lebih banyak daripada tes yang langsung hijau. Coba rusak fungsinya sedikit dan pastikan tesmu benar-benar menangkap. Jangan mengubah tes agar cocok dengan bug.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

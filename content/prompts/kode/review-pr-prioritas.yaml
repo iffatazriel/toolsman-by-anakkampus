@@ -1,0 +1,41 @@
+id: review-pr-prioritas
+judul: Review pull request dengan urutan prioritas
+kategori: kode
+tag: [code-review, refactor, testing]
+ai: [claude, chatgpt, copilot]
+bahasa: id
+level: mahir
+variabel:
+  - nama: diff
+    label: Diff atau ringkasan perubahan
+    tipe: panjang
+    contoh: "Tempel diff, atau ringkas berkas yang berubah dan tujuannya."
+  - nama: tujuan
+    label: Tujuan PR
+    tipe: pendek
+    contoh: "Menambahkan batas waktu pada sesi login"
+  - nama: risiko
+    label: Bagian yang paling kamu khawatirkan
+    tipe: panjang
+    contoh: "Logika perpanjangan sesi dan token yang sudah beredar."
+prompt: |
+  Review perubahan berikut untuk pull request: {{tujuan}}
+
+  Perubahan:
+  {{diff}}
+
+  Kekhawatiran saya: {{risiko}}
+
+  Beri review dalam urutan prioritas ini, dan hentikan analisis mendalam di tingkat yang belum aman:
+  1. Kebenaran: bug, kasus tepi, kondisi balapan, data yang bisa hilang.
+  2. Keamanan: masukan yang tidak diperiksa, izin yang salah, data sensitif masuk log.
+  3. Kinerja: hanya masalah yang nyata pada skala wajar, bukan mikro-optimasi.
+  4. Keterbacaan: nama, fungsi yang terlalu panjang, komentar yang menyesatkan.
+  5. Tes: perilaku yang belum dicakup.
+
+  Untuk setiap temuan: tingkat (penghalang, sebaiknya, catatan kecil), lokasi berupa nama berkas atau potongan kode, masalahnya, dan usulan perbaikan. Kalau tidak ada temuan di satu tingkat, tulis "tidak ada". Jangan mengarang masalah supaya review terlihat lengkap.
+catatan: |
+  Review yang baik bisa dijawab penulisnya. Tandai mana yang wajib dan mana yang selera. Jangan menyetujui PR hanya karena tesnya hijau.
+penulis: Tim Toolsman
+lisensi: CC-BY-4.0
+dibuat: "2026-11-09"

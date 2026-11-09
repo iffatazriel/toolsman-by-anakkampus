@@ -137,6 +137,7 @@ import Progress from '../../components/ui/Progress.astro';
 
 <script>
 	import { formatBytes } from '../../lib/page-range';
+	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
 	import { enhancePixels } from './enhance';
 	import { papers, planSheet, type PaperId } from './print-sheet';
@@ -282,6 +283,8 @@ import Progress from '../../components/ui/Progress.astro';
 		modelBox.hidden = false;
 		const bar = modelBox.querySelector<HTMLElement>('.progress__bar')!;
 		const label = modelBox.querySelector<HTMLElement>('.text-ink-muted');
+		const zone = dropzoneOf('foto-input');
+		setDropzoneState(zone, 'processing');
 
 		try {
 			const removeBackground = await loadPhotoModule((_key, current, total) => {
@@ -300,15 +303,18 @@ import Progress from '../../components/ui/Progress.astro';
 			face = defaultFace(image);
 			modelBox.hidden = true;
 			next.disabled = false;
-			setPhotoStatus('✓ Latar dihapus. Foto siap diatur.', 'ready');
+			setDropzoneState(zone, 'done');
+			setPhotoStatus('Latar dihapus. Foto siap diatur.', 'ready');
 			setStep(2);
 		} catch (error) {
 			modelBox.hidden = true;
+			setDropzoneState(zone, 'empty');
 			const message = error instanceof Error ? error.message : 'Gagal memproses foto.';
 			setPhotoStatus(`Gagal: ${message}`, 'failed');
 			const errorBox = $<HTMLElement>('[data-photo-error]')!;
 			errorBox.textContent = message;
 			errorBox.hidden = false;
+			toast(message, { tone: 'error' });
 		} finally {
 			URL.revokeObjectURL(url);
 		}
@@ -478,7 +484,7 @@ import Progress from '../../components/ui/Progress.astro';
 		exportCanvas.toBlob((blob) => {
 			if (!blob) return;
 			saveBlob(blob, `pas-foto-${sizeId}.${type}`);
-			toast('Pas foto diunduh.');
+			toast('Pas foto diunduh.', { tone: 'success' });
 		}, mime, 0.95);
 	};
 
@@ -553,7 +559,7 @@ import Progress from '../../components/ui/Progress.astro';
 			(blob) => {
 				if (!blob) return;
 				saveBlob(blob, `pas-foto-lembar-${paper.id}.${type}`);
-				toast('Lembar cetak diunduh.');
+				toast('Lembar cetak diunduh.', { tone: 'success' });
 			},
 			mime,
 			0.95,

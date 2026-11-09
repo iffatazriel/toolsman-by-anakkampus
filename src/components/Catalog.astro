@@ -1,6 +1,6 @@
 ---
 import type { ToolMeta } from '../lib/tool-types';
-import { categories } from '../lib/tool-types';
+import { categories, featuredSlugs } from '../lib/tool-types';
 import ToolCard from './ToolCard.astro';
 import Chip from './ui/Chip.astro';
 
@@ -9,6 +9,13 @@ interface Props {
 }
 
 const { tools } = Astro.props;
+
+const counts = new Map(categories.map((category) => [
+	category.id,
+	tools.filter((tool) => tool.category === category.id).length,
+]));
+
+const featured = new Set<string>(featuredSlugs);
 ---
 
 <section class="catalog container" id="katalog" aria-labelledby="katalog-title">
@@ -23,28 +30,44 @@ const { tools } = Astro.props;
 	</p>
 
 	<div class="chip-row" role="group" aria-label="Filter kategori">
-		<Chip label="Semua" value="semua" pressed />
-		{categories.map((category) => <Chip label={category.label} value={category.id} />)}
+		<Chip label="Semua" value="semua" count={tools.length} pressed />
+		{categories.map((category) => (
+			<Chip label={category.label} value={category.id} count={counts.get(category.id) ?? 0} />
+		))}
 	</div>
 
 	<p class="catalog-count" aria-live="polite" data-count>{tools.length} alat</p>
 
 	<ul class="tool-grid" data-tool-grid>
 		{
-			tools.map((tool) => (
+			tools.map((tool, index) => (
 				<li
+					class:list={['tool-grid__item', featured.has(tool.slug) && 'tool-grid__item--featured']}
 					data-tool
 					data-name={tool.name}
 					data-category={tool.category}
 					data-keywords={tool.keywords.join('|')}
+					style={`--i:${index}`}
 				>
-					<ToolCard tool={tool} />
+					<ToolCard tool={tool} featured={featured.has(tool.slug)} />
 				</li>
 			))
 		}
 	</ul>
 
 	<div class="empty-state" data-catalog-empty hidden>
+		<svg
+			class="empty-state__art"
+			viewBox="0 0 120 72"
+			role="presentation"
+			focusable="false"
+			aria-hidden="true"
+		>
+			<rect x="10.5" y="10.5" width="99" height="51" rx="8" />
+			<circle cx="44" cy="36" r="12" />
+			<path d="m53 45 12 12" />
+			<path d="M78 30h18M78 42h12" />
+		</svg>
 		<p class="empty-state__title" data-i18n="catalog.emptyTitle">Tidak ada alat yang cocok</p>
 		<p class="empty-state__body" data-empty-body>
 			Belum ada hasil untuk "..." di kategori yang dipilih. Coba kata lain seperti
@@ -78,6 +101,8 @@ const { tools } = Astro.props;
 	import { fill, readLang, t } from '../lib/i18n';
 	import { matches } from '../lib/search';
 
+	const FILTER_KEY = 'toolsman-filter';
+
 	const grid = document.querySelector<HTMLElement>('[data-tool-grid]');
 
 	if (grid) {
@@ -91,8 +116,33 @@ const { tools } = Astro.props;
 		const emptyBody = document.querySelector<HTMLElement>('[data-empty-body]');
 		const reset = document.querySelector<HTMLButtonElement>('[data-catalog-reset]');
 		const total = items.length;
-		let category = 'semua';
+		const validCategories = new Set(chips.map((chip) => chip.dataset.filter ?? 'semua'));
+
+		const readFilter = (): string => {
+			try {
+				const stored = localStorage.getItem(FILTER_KEY);
+				return stored && validCategories.has(stored) ? stored : 'semua';
+			} catch {
+				return 'semua';
+			}
+		};
+
+		const writeFilter = (value: string): void => {
+			try {
+				localStorage.setItem(FILTER_KEY, value);
+			} catch {
+				/* penyimpanan bisa diblokir; filter tetap jalan untuk sesi ini */
+			}
+		};
+
+		let category = readFilter();
 		let query = '';
+
+		const press = (value: string): void => {
+			chips.forEach((chip) =>
+				chip.setAttribute('aria-pressed', chip.dataset.filter === value ? 'true' : 'false'),
+			);
+		};
 
 		const apply = () => {
 			let visible = 0;
@@ -128,12 +178,8 @@ const { tools } = Astro.props;
 		chips.forEach((chip) => {
 			chip.addEventListener('click', () => {
 				category = chip.dataset.filter ?? 'semua';
-				chips.forEach((other) =>
-					other.setAttribute(
-						'aria-pressed',
-						other === chip ? 'true' : 'false',
-					),
-				);
+				press(category);
+				writeFilter(category);
 				apply();
 			});
 		});
@@ -146,17 +192,14 @@ const { tools } = Astro.props;
 		reset?.addEventListener('click', () => {
 			query = '';
 			category = 'semua';
+			writeFilter(category);
 			if (input) input.value = '';
-			chips.forEach((chip) =>
-				chip.setAttribute(
-					'aria-pressed',
-					chip.dataset.filter === 'semua' ? 'true' : 'false',
-				),
-			);
+			press(category);
 			apply();
 			input?.focus();
 		});
 
+		press(category);
 		document.addEventListener('lang:change', apply);
 		apply();
 	}

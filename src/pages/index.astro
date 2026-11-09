@@ -1,6 +1,7 @@
 ---
 import Catalog from '../components/Catalog.astro';
-import Input from '../components/ui/Input.astro';
+import HeroWorkbench from '../components/HeroWorkbench.astro';
+import Icon from '../components/ui/Icon.astro';
 import Layout from '../layouts/Layout.astro';
 import { tools } from '../lib/tools';
 import { SITE_DESCRIPTION, absoluteUrl } from '../lib/site';
@@ -13,6 +14,8 @@ const jsonLd = {
 	description: SITE_DESCRIPTION,
 	inLanguage: 'id-ID',
 };
+
+const examples = ['gabung pdf', 'flowchart', 'pas foto merah'];
 ---
 
 <Layout
@@ -20,33 +23,59 @@ const jsonLd = {
 	description={SITE_DESCRIPTION}
 	jsonLd={jsonLd}
 >
-	<section class="hero container" aria-labelledby="hero-title">
-		<h1 class="hero__title" id="hero-title" data-i18n="home.heroTitle">
-			Semua perkakas kuliahmu, satu kotak.
-		</h1>
-		<p class="hero__lede" data-i18n="home.heroLede">
-			Alat gambar, diagram, PDF, pas foto, kirim file, dan generator teks. Gratis
-			dan tanpa akun.
-		</p>
+	<section class="hero" aria-labelledby="hero-title">
+		<div class="container hero__grid">
+			<div class="hero__copy">
+				<h1 class="hero__title" id="hero-title" data-i18n="home.heroTitle">
+					Semua perkakas kuliahmu, satu kotak.
+				</h1>
 
-		<p class="status-note">
-			<span>
-				<strong data-i18n="home.readyCount" data-count-value={tools.length}>{tools.length} alat sudah bisa dipakai.</strong>
-				<span data-i18n="home.readyList">Gambar, diagram, PDF, foto, kirim file, teks, utilitas, QR, dan data uji. Gratis, tanpa akun.</span>
-			</span>
-		</p>
+				<p class="hero__lede" data-i18n="home.heroLede" data-count-value={tools.length}>
+					{tools.length} alat: kanvas gambar, diagram, PDF, pas foto, kirim file,
+					generator teks, sampai penghitung hash. Gratis, tanpa akun.
+				</p>
 
-		<div class="hero__search">
-			<Input
-				id="catalog-search"
-				label="Cari alat"
-				type="search"
-				placeholder="mis. gabung pdf atau flowchart"
-				hint="Tekan / atau Ctrl+K untuk membuka pencarian dari halaman mana saja."
-				i18nLabel="home.searchLabel"
-				i18nPlaceholder="home.searchPlaceholder"
-				i18nHint="home.searchHint"
-			/>
+				<div class="hero__search">
+					<label class="field-label" for="catalog-search" data-i18n="home.searchLabel">
+						Cari alat
+					</label>
+					<div class="hero__search-field">
+						<span class="hero__search-icon" aria-hidden="true">
+							<Icon name="search" size={20} />
+						</span>
+						<input
+							id="catalog-search"
+							class="field-input hero__input"
+							type="search"
+							placeholder="mis. gabung pdf atau flowchart"
+							autocomplete="off"
+							aria-describedby="catalog-search-hint"
+							data-i18n-placeholder="home.searchPlaceholder"
+						/>
+						<kbd class="kbd hero__kbd">Ctrl K</kbd>
+					</div>
+					<p class="field-hint" id="catalog-search-hint" data-i18n="home.searchHint">
+						Tekan / atau Ctrl K untuk membuka pencarian dari halaman mana saja.
+					</p>
+				</div>
+
+				<div class="hero__examples" role="group" aria-label="Contoh pencarian">
+					<span class="hero__examples-label" data-i18n="home.examplesLabel">Coba:</span>
+					{
+						examples.map((example) => (
+							<button type="button" class="chip chip--example" data-hero-example={example}>
+								{example}
+							</button>
+						))
+					}
+				</div>
+
+				<p class="hero__privacy" data-i18n="home.heroPrivacy">
+					File diproses di perangkatmu, kecuali Kirim File.
+				</p>
+			</div>
+
+			<HeroWorkbench />
 		</div>
 	</section>
 
@@ -145,6 +174,24 @@ const jsonLd = {
 		refresh();
 		document.addEventListener('favorites:change', refresh);
 		window.addEventListener('pageshow', refresh);
+	</script>
+
+	<script>
+		// Chip contoh mengisi kolom pencarian lalu memicu filter katalog yang
+		// sudah ada, tanpa logika pencarian kedua.
+		const input = document.querySelector<HTMLInputElement>('#catalog-search');
+
+		if (input) {
+			document.querySelectorAll<HTMLButtonElement>('[data-hero-example]').forEach((chip) => {
+				chip.addEventListener('click', () => {
+					const value = chip.dataset.heroExample ?? '';
+					input.value = value;
+					input.dispatchEvent(new Event('input', { bubbles: true }));
+					document.querySelector('#katalog')?.scrollIntoView({ block: 'start' });
+					input.focus({ preventScroll: true });
+				});
+			});
+		}
 	</script>
 
 	<style>

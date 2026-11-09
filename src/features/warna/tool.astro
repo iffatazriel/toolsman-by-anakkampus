@@ -146,7 +146,9 @@
 				button.setAttribute('aria-label', `Salin ${step.hex}`);
 				button.addEventListener('click', async () => {
 					const copied = await copyText(step.hex);
-					toast(copied ? `${step.hex} disalin.` : 'Gagal menyalin. Tulis manual.');
+					toast(copied ? `${step.hex} disalin.` : 'Gagal menyalin. Tulis manual.', {
+		tone: copied ? 'success' : 'error',
+	});
 				});
 
 				const label = document.createElement('span');

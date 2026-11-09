@@ -1,0 +1,43 @@
+id: rencana-30-hari-skill
+judul: Rencana 30 hari belajar satu keterampilan baru
+kategori: karier
+tag: [rencana, jadwal-belajar, produktivitas]
+ai: [umum, gemini, chatgpt]
+bahasa: id
+level: pemula
+variabel:
+  - nama: keterampilan
+    label: Keterampilan
+    tipe: pendek
+    contoh: "SQL untuk analisis data"
+  - nama: waktu_harian
+    label: Waktu per hari
+    tipe: pilihan
+    contoh: "45 menit"
+    pilihan: ["30 menit", "45 menit", "1 jam"]
+  - nama: tujuan_akhir
+    label: Bukti akhir yang diinginkan
+    tipe: pendek
+    contoh: "Bisa menjawab 10 soal SQL menengah tanpa melihat catatan"
+  - nama: batasan
+    label: Batasan
+    tipe: pendek
+    contoh: "Belajar lewat ponsel, tanpa biaya"
+prompt: |
+  Susun rencana 30 hari untuk belajar {{keterampilan}}, {{waktu_harian}} per hari.
+  Bukti akhir: {{tujuan_akhir}}
+  Batasan: {{batasan}}
+
+  Rencana harus:
+  - Dibagi empat minggu. Setiap minggu punya satu hasil yang bisa ditunjukkan, bukan hanya "selesai materi".
+  - Hari 1 sampai 6 belajar dan latihan, hari 7 untuk mengulang dan menutup celah.
+  - Setiap hari cukup dua sampai tiga kegiatan, dengan durasi masing-masing dalam menit.
+  - Tidak memakai tautan. Sebut jenis bahan yang dicari, misalnya "dokumentasi resmi" atau "latihan soal bergambar".
+  - Menyertakan satu proyek kecil di minggu keempat yang memakai seluruh bahan.
+
+  Aturan: jangan mengarang nama kursus, harga, atau durasi video. Kalau 30 hari tidak cukup untuk tujuan akhir, katakan dan usulkan tujuan yang lebih realistis. Akhiri dengan daftar tanda bahwa saya perlu memperlambat.
+catatan: |
+  Rencana ini hanya kerangka. Sesuaikan setelah minggu pertama berdasarkan kecepatanmu sendiri. Yang penting konsisten, bukan cepat.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

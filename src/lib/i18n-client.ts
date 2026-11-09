@@ -79,6 +79,8 @@ export function applyLanguage(lang: Lang): void {
 
 		const cat = item.querySelector<HTMLElement>('.palette__cat');
 		if (cat && item.dataset.category) cat.textContent = categoryName(lang, item.dataset.category);
+		// Judul kelompok palet dibaca ulang CommandPalette saat bahasa berganti.
+		if (item.dataset.category) item.dataset.paletteCat = categoryName(lang, item.dataset.category);
 
 		const base = item.dataset.baseSearch ?? item.dataset.search ?? '';
 		item.dataset.baseSearch = base;
@@ -89,9 +91,17 @@ export function applyLanguage(lang: Lang): void {
 		element.textContent = categoryName(lang, element.dataset.categoryLabel ?? '');
 	});
 
+	document.querySelectorAll<HTMLElement>('[data-footer-slug]').forEach((element) => {
+		const text = localizedTool(element.dataset.footerSlug ?? '', lang);
+		if (text) element.textContent = text.name;
+	});
+
 	document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((element) => {
 		const value = element.dataset.filter ?? '';
-		element.textContent = value === 'semua' ? t(lang, 'catalog.all') : categoryName(lang, value);
+		const label = element.querySelector<HTMLElement>('[data-filter-label]');
+		const text = value === 'semua' ? t(lang, 'catalog.all') : categoryName(lang, value);
+		if (label) label.textContent = text;
+		else element.textContent = text;
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-status-label]').forEach((element) => {

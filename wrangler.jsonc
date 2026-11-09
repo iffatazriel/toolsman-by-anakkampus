@@ -18,17 +18,17 @@
 	"ratelimits": [
 		{
 			"name": "UPLOAD_LIMIT",
-			"namespace_id": "1001",
+			"namespace_id": "300301",
 			"simple": { "limit": 10, "period": 60 }
 		},
 		{
 			"name": "REPORT_LIMIT",
-			"namespace_id": "1002",
+			"namespace_id": "300302",
 			"simple": { "limit": 5, "period": 60 }
 		},
 		{
 			"name": "PASSWORD_LIMIT",
-			"namespace_id": "1003",
+			"namespace_id": "300303",
 			"simple": { "limit": 10, "period": 60 }
 		}
 	]

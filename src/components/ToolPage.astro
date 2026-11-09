@@ -6,7 +6,8 @@ import {
 	privacyNote,
 	statusLabel,
 } from '../lib/tool-types';
-import { getToolUI, relatedTools } from '../lib/tools';
+import { relatedTools } from '../lib/tools';
+import { getToolUI } from '../lib/tool-ui';
 import Icon from './ui/Icon.astro';
 import ToolCard from './ToolCard.astro';
 
@@ -17,8 +18,23 @@ interface Props {
 const { tool } = Astro.props;
 const related = relatedTools(tool);
 const category = categoryLabel(tool.category);
-const LiveTool = getToolUI(tool.slug);
+const LiveTool = await getToolUI(tool.slug);
 const isLive = tool.status === 'siap' && LiveTool !== null;
+
+// Tiga pertanyaan selalu ada dan dijawab dari data alat itu sendiri, jadi
+// tidak ada jawaban karangan. Alat yang butuh penjelasan tambahan menaruh
+// `faq` di meta-nya.
+const faq = [
+	{
+		q: 'Apakah berkas saya diunggah ke server?',
+		a: tool.privacyDetail ?? privacyNote[tool.privacy],
+	},
+	...(tool.faq ?? []),
+	{
+		q: 'Perlu akun atau bayar?',
+		a: 'Tidak. Semua alat Toolsman gratis dan tanpa akun.',
+	},
+];
 ---
 
 <div class="container" data-tool-meta={tool.slug}>
@@ -110,6 +126,27 @@ const isLive = tool.status === 'siap' && LiveTool !== null;
 			<p class="field-hint">{tool.privacyDetail ?? privacyNote[tool.privacy]}</p>
 		</aside>
 	</div>
+
+	<section class="faq" id="faq" aria-labelledby="faq-title">
+		<h2 class="section-title" id="faq-title" data-i18n="tool.faq">Pertanyaan umum</h2>
+		<div class="faq__list">
+			{
+				faq.map((item) => (
+					<details class="faq__item">
+						<summary>{item.q}</summary>
+						<p>{item.a}</p>
+					</details>
+				))
+			}
+		</div>
+	</section>
+</div>
+
+<div class="tool-mobile-bar" data-mobile-bar>
+	<span class="tool-mobile-bar__name">{tool.name}</span>
+	<button type="button" class="btn btn--primary" data-copy-page data-i18n="tool.copyLink">
+		Salin link
+	</button>
 </div>
 
 <section class="related" aria-labelledby="lain-title">
@@ -128,11 +165,23 @@ const isLive = tool.status === 'siap' && LiveTool !== null;
 </section>
 
 <script>
+	import { copyText } from '../lib/clipboard';
 	import { recordRecent } from '../lib/favorites';
+	import { toast } from '../lib/toast';
 
 	const marker = document.querySelector<HTMLElement>('[data-recent-tool]');
 	const slug = marker?.dataset.recentTool ?? '';
 	if (slug !== '') recordRecent(localStorage, slug);
+
+	// Bar aksi ponsel: satu aksi yang berguna di semua alat, menyalin URL
+	// halaman supaya bisa ditempel ke chat.
+	document.querySelector<HTMLButtonElement>('[data-copy-page]')?.addEventListener('click', async () => {
+		const copied = await copyText(location.href);
+		toast(
+			copied ? 'Link halaman disalin.' : 'Gagal menyalin. Salin dari bilah alamat.',
+			{ tone: copied ? 'success' : 'error' },
+		);
+	});
 </script>
 
 <style>

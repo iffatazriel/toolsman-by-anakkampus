@@ -1,0 +1,37 @@
+id: jelaskan-dengan-analogi
+judul: Jelaskan konsep sulit lewat analogi, lalu batasnya
+kategori: belajar
+tag: [penjelasan, analogi]
+ai: [umum, claude, chatgpt]
+bahasa: id
+level: pemula
+variabel:
+  - nama: konsep
+    label: Konsep yang ingin dipahami
+    tipe: pendek
+    contoh: "rekursi dalam pemrograman"
+  - nama: latar_belakang
+    label: Latar belakangmu
+    tipe: pendek
+    contoh: "Mahasiswa semester 2, baru belajar Python"
+  - nama: analogi_dari
+    label: Analogi dari dunia nyata
+    tipe: pendek
+    contoh: "antrean di kantin"
+prompt: |
+  Jelaskan konsep berikut untuk saya: {{konsep}}.
+  Latar belakang saya: {{latar_belakang}}.
+  Gunakan analogi dari: {{analogi_dari}}.
+
+  Susun jawaban dalam empat lapis:
+  1. Analogy dulu. Jelaskan konsep lewat analogi tersebut dalam 4 sampai 6 kalimat, tanpa istilah teknis.
+  2. Petakan analogi ke istilah aslinya dalam tabel dua kolom: "di analogi" dan "di konsep".
+  3. Sebutkan dua titik tempat analogi ini tidak lagi akurat. Ini bagian penting, jangan dilewatkan.
+  4. Beri definisi formal yang ringkas, lalu satu contoh penerapan kecil yang bisa saya kerjakan sendiri dalam 2 menit.
+
+  Aturan: sesuaikan kosakata dengan latar belakang saya. Kalau saya perlu tahu satu prasyarat dulu, sebutkan di awal. Jangan memakai analogi tambahan yang membuat jawaban melebar.
+catatan: |
+  Analogi membantu masuk, tetapi sering menyembunyikan pengecualian. Baca bagian "batas analogi" sebelum menyimpulkan. Setelah paham, coba jelaskan ulang dengan kata-katamu sendiri.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

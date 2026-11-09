@@ -1,0 +1,41 @@
+id: judul-yang-tidak-berlebihan
+judul: Cari judul tulisan yang jelas, bukan yang heboh
+kategori: menulis
+tag: [judul, penyuntingan]
+ai: [umum, chatgpt, claude]
+bahasa: id
+level: pemula
+variabel:
+  - nama: topik
+    label: Topik tulisan
+    tipe: pendek
+    contoh: "Pengalaman pertama mengelola proyek kelompok"
+  - nama: sudut
+    label: Sudut pandang
+    tipe: pendek
+    contoh: "Kesalahan koordinasi yang paling sering terjadi"
+  - nama: pembaca
+    label: Target pembaca
+    tipe: pendek
+    contoh: "Mahasiswa yang baru mulai kerja kelompok"
+  - nama: jenis
+    label: Jenis tulisan
+    tipe: pilihan
+    contoh: Artikel blog
+    pilihan: [Artikel blog, Laporan, Esai akademik, Unggahan media sosial]
+prompt: |
+  Buat 10 pilihan judul untuk {{jenis}} tentang {{topik}}, dengan sudut {{sudut}}.
+  Pembaca: {{pembaca}}.
+
+  Aturan judul:
+  - Maksimal 12 kata. Semua kata penting harus ada di 6 kata pertama.
+  - Tanpa tanda seru, tanpa huruf kapital semua, tanpa "wajib", "rahasia", atau "terbukti".
+  - Tidak menjanjikan hasil yang tidak dibahas di isi.
+  - Setiap judul harus bisa dibaca sekali dan langsung dipahami maksudnya.
+
+  Keluarkan tabel empat kolom: judul, panjang kata, apa yang dijanjikan, dan risiko judul ini menyesatkan. Setelah tabel, pilih tiga terbaik dan jelaskan alasan singkatnya berdasarkan kejelasan, bukan daya tarik.
+catatan: |
+  Judul yang jujur lebih tahan lama daripada judul yang heboh. Pastikan isi tulisan benar-benar memenuhi janji judul yang kamu pilih.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

@@ -18,6 +18,7 @@ export interface ShareRow {
 	downloads: number;
 	reported: number;
 	password_hash: string | null;
+	takedown_at?: number | null;
 }
 
 export interface ShareFileRow {

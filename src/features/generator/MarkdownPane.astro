@@ -37,7 +37,7 @@ const toolbarItems: { action: ToolbarAction; label: string; icon: IconName }[] =
 						data-action={item.action}
 						aria-label={item.label}
 					>
-						<Icon name={item.icon} size={18} />
+						<Icon name={item.icon} size={20} />
 					</button>
 				))
 			}
@@ -118,12 +118,12 @@ const toolbarItems: { action: ToolbarAction; label: string; icon: IconName }[] =
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(input.value);
-			toast(copied ? 'Markdown disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Markdown disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText(markdownFilename(input.value), input.value);
-			toast('File .md diunduh.');
+			toast('File .md diunduh.', { tone: 'success' });
 		});
 
 		render();

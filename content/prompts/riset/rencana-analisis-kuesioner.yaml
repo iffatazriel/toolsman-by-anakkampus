@@ -1,0 +1,46 @@
+id: rencana-analisis-kuesioner
+judul: Rencana analisis kuesioner sebelum data terkumpul
+kategori: riset
+tag: [analisis, data, riset]
+ai: [claude, umum, gemini]
+bahasa: id
+level: mahir
+variabel:
+  - nama: tujuan
+    label: Tujuan penelitian
+    tipe: panjang
+    contoh: "Melihat hubungan antara jam tidur dan konsentrasi di kelas pagi."
+  - nama: variabel
+    label: Variabel dan cara mengukur
+    tipe: panjang
+    contoh: "Jam tidur: angka per malam. Konsentrasi: skala 1-5, lima pertanyaan."
+  - nama: jumlah_data
+    label: Perkiraan jumlah responden
+    tipe: pendek
+    contoh: "60"
+  - nama: alat
+    label: Alat analisis
+    tipe: pilihan
+    contoh: Spreadsheet
+    pilihan: [Spreadsheet, R, Python, SPSS]
+prompt: |
+  Susun rencana analisis untuk data kuesioner ini, sebelum saya mengumpulkan data.
+
+  Tujuan: {{tujuan}}
+  Variabel: {{variabel}}
+  Perkiraan responden: {{jumlah_data}}
+  Alat: {{alat}}
+
+  Rencanakan:
+  1. Bersihkan data: apa yang diperiksa sebelum analisis (jawaban kosong, duplikat, nilai di luar rentang) dan aturan membuang data.
+  2. Statistik deskriptif yang perlu untuk setiap variabel.
+  3. Uji yang sesuai untuk pertanyaan utama, beserta syaratnya. Kalau syaratnya belum bisa dipenuhi, sebutkan alternatif yang lebih sederhana.
+  4. Tabel atau grafik yang akan dibuat, dan pesan utama masing-masing.
+  5. Batas interpretasi: hal yang tidak boleh saya simpulkan dari data sebesar ini.
+
+  Aturan: sesuaikan dengan alat yang saya pakai. Jangan mengarang hasil atau nilai signifikansi. Kalau desain ini tidak cocok untuk tujuan saya, katakan sekarang dan usulkan perbaikan yang murah dilakukan.
+catatan: |
+  Putuskan uji sebelum melihat data supaya tidak memilih uji yang hasilnya paling bagus. Simpan data mentah, jangan hanya versi yang sudah diolah.
+penulis: Tim Toolsman
+lisensi: CC-BY-4.0
+dibuat: "2026-11-09"

@@ -1,0 +1,483 @@
+---
+import Icon from '../../components/ui/Icon.astro';
+import { prompts } from '../../lib/prompts';
+import { promptAi, promptCategories, promptLevels } from '../../lib/prompt-taxonomy';
+import { siteConfig } from '../../../site.config';
+
+const githubUrl = siteConfig.githubUrl.trim();
+const submitUrl =
+	githubUrl === '' ? '' : `${githubUrl.replace(/\/+$/, '')}/blob/main/CONTRIBUTING-PROMPTS.md`;
+
+const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
+---
+
+<div class="prompt-tool" data-prompt-tool>
+	<p class="prompt-tool__privacy">
+		<Icon name="laptop" size={16} />
+		<span data-p="privacy">
+			Semua pencarian dan isian diproses di browser ini. Tidak ada yang dikirim ke server.
+		</span>
+	</p>
+
+	<div class="prompt-search">
+		<label class="field-label" for="prompt-search" data-p="search.label">Cari prompt</label>
+		<div class="prompt-search__field">
+			<span class="prompt-search__icon" aria-hidden="true"><Icon name="search" size={20} /></span>
+			<input
+				id="prompt-search"
+				class="field-input prompt-search__input"
+				type="search"
+				autocomplete="off"
+				placeholder="mis. ringkas laporan, debug error, cv"
+				aria-describedby="prompt-search-hint"
+				data-prompt-search
+				data-p-placeholder="search.placeholder"
+			/>
+		</div>
+		<p class="field-hint" id="prompt-search-hint" data-p="search.hint">
+			Cari di judul, tag, dan cuplikan. Huruf besar-kecil dan aksen diabaikan.
+		</p>
+	</div>
+
+	<div class="prompt-filters">
+		<fieldset class="prompt-filtergroup" data-p-aria="filter.groupCategory">
+			<legend class="prompt-filtergroup__legend" data-p="filter.category">Kategori</legend>
+			<div class="chip-row">
+				<button
+					type="button"
+					class="chip"
+					data-prompt-kategori="semua"
+					aria-pressed="true"
+				>
+					<span data-p="filter.all">Semua</span>
+				</button>
+				{promptCategories.map((category) => (
+					<button
+						type="button"
+						class="chip"
+						data-prompt-kategori={category.id}
+						aria-pressed="false"
+					>
+						{category.label}
+					</button>
+				))}
+			</div>
+		</fieldset>
+
+		<div class="prompt-selects">
+			<div class="prompt-select">
+				<label class="field-label" for="prompt-ai" data-p="filter.ai">AI</label>
+				<select id="prompt-ai" class="field-input" data-prompt-ai data-p-aria="filter.groupAi">
+					<option value="semua" data-p="filter.all">Semua</option>
+					{promptAi.map((item) => <option value={item.id}>{item.label}</option>)}
+				</select>
+			</div>
+			<div class="prompt-select">
+				<label class="field-label" for="prompt-level" data-p="filter.level">Level</label>
+				<select
+					id="prompt-level"
+					class="field-input"
+					data-prompt-level
+					data-p-aria="filter.groupLevel"
+				>
+					<option value="semua" data-p="filter.all">Semua</option>
+					{promptLevels.map((item) => <option value={item.id}>{item.label}</option>)}
+				</select>
+			</div>
+			<button
+				type="button"
+				class="chip prompt-favchip"
+				data-prompt-favorites
+				aria-pressed="false"
+				data-p-aria="filter.favoriteOnly"
+			>
+				<Icon name="star" size={16} />
+				<span data-p="filter.favorite">Favorit</span>
+			</button>
+		</div>
+	</div>
+
+	<div class="prompt-results__head">
+		<p class="prompt-count" data-prompt-count aria-live="polite"></p>
+	</div>
+
+	<p class="prompt-loading" data-prompt-loading data-p="loading">Memuat indeks prompt…</p>
+	<p class="prompt-error" data-prompt-error data-p="loadError" hidden>
+		Indeks prompt gagal dimuat. Coba muat ulang halaman.
+	</p>
+
+	<ul
+		class="prompt-results"
+		data-prompt-results
+		aria-label="Daftar prompt"
+		data-p-aria="list.label"
+	></ul>
+
+	<noscript>
+		<p class="prompt-noscript">
+			JavaScript mati, jadi pencarian dan filter tidak jalan. Ini daftar lengkapnya:
+		</p>
+		<ul class="prompt-noscript__list">
+			{prompts.map((prompt) => (
+				<li>
+					<a href={`/tools/prompt/${prompt.id}/`}>{prompt.judul}</a>
+				</li>
+			))}
+		</ul>
+	</noscript>
+
+	<div class="empty-state" data-prompt-empty hidden>
+		<svg
+			class="empty-state__art"
+			viewBox="0 0 120 72"
+			role="presentation"
+			focusable="false"
+			aria-hidden="true"
+		>
+			<rect x="10.5" y="10.5" width="99" height="51" rx="8" />
+			<circle cx="44" cy="36" r="12" />
+			<path d="m53 45 12 12" />
+			<path d="M78 30h18M78 42h12" />
+		</svg>
+		<p class="empty-state__title" data-p="empty.title">Tidak ada prompt yang cocok</p>
+		<p class="empty-state__body" data-prompt-empty-body>
+			Belum ada hasil untuk pencarian atau filter ini. Coba kata yang lebih umum, hapus satu
+			filter, atau pilih salah satu saran di bawah.
+		</p>
+		<button type="button" class="btn btn--secondary mt-4" data-prompt-reset data-p="empty.reset">
+			Hapus semua filter
+		</button>
+		<div class="prompt-suggestions">
+			<span data-p="empty.try">Coba:</span>
+			{suggestions.map((suggestion) => (
+				<button
+					type="button"
+					class="chip chip--example"
+					data-prompt-suggestion={suggestion}
+				>
+					{suggestion}
+				</button>
+			))}
+		</div>
+	</div>
+
+	<div class="prompt-more">
+		<button type="button" class="btn btn--secondary" data-prompt-more hidden></button>
+	</div>
+
+	{
+		submitUrl !== '' && (
+			<div class="prompt-submit">
+				<a
+					class="btn btn--secondary"
+					href={submitUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<Icon name="github" size={16} />
+					<span data-p="submit">Kirim prompt</span>
+				</a>
+				<span class="field-hint" data-p="submitHint">
+					Punya prompt bagus? Ikuti format di panduan kontribusi.
+				</span>
+			</div>
+		)
+	}
+</div>
+
+<script>
+	import { initPromptList } from './prompt-list';
+	import { initPromptStrings } from './strings';
+
+	const root = document.querySelector<HTMLElement>('[data-prompt-tool]');
+	if (root) initPromptList(root);
+	initPromptStrings();
+</script>
+
+<style is:global>
+	.prompt-tool {
+		display: grid;
+		gap: var(--space-4);
+		min-width: 0;
+	}
+
+	.prompt-tool__privacy {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-2);
+		margin: 0;
+		font-size: 0.8125rem;
+		color: var(--text-muted);
+	}
+
+	.prompt-tool__privacy svg {
+		flex: none;
+		margin-top: 2px;
+	}
+
+	.prompt-search__field {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	.prompt-search__icon {
+		position: absolute;
+		left: var(--space-3);
+		display: inline-flex;
+		color: var(--text-muted);
+		pointer-events: none;
+	}
+
+	.prompt-search__input {
+		padding-left: calc(var(--space-3) + 26px);
+	}
+
+	.prompt-filters {
+		display: grid;
+		gap: var(--space-4);
+		padding: var(--space-4);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		background: var(--surface);
+	}
+
+	.prompt-filtergroup {
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	.prompt-filtergroup__legend {
+		padding: 0;
+		margin-bottom: var(--space-1);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.prompt-filtergroup .chip-row {
+		margin-top: 0;
+	}
+
+	.prompt-selects {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+		gap: var(--space-3);
+		align-items: end;
+	}
+
+	.prompt-select {
+		min-width: 0;
+	}
+
+	.prompt-favchip {
+		gap: var(--space-2);
+	}
+
+	.prompt-favchip[aria-pressed='true'] {
+		color: var(--text);
+	}
+
+	.prompt-favchip[aria-pressed='true'] svg {
+		fill: currentColor;
+	}
+
+	.prompt-results__head {
+		min-height: 20px;
+	}
+
+	.prompt-count {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.prompt-loading,
+	.prompt-error {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.prompt-error {
+		color: var(--danger);
+	}
+
+	.prompt-results {
+		display: grid;
+		gap: var(--space-3);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.prompt-results[hidden] {
+		display: none;
+	}
+
+	.prompt-card {
+		position: relative;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		background: var(--surface);
+		transition:
+			border-color var(--dur-fast) var(--ease),
+			box-shadow var(--dur-fast) var(--ease);
+	}
+
+	.prompt-card:hover {
+		border-color: var(--border-strong);
+		box-shadow: var(--shadow-md);
+	}
+
+	.prompt-card__link {
+		display: grid;
+		gap: var(--space-1);
+		padding: var(--space-4) var(--space-5);
+		padding-right: calc(var(--space-5) + 36px);
+		border-radius: inherit;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.prompt-card__top {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.prompt-card__cat {
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.prompt-card__title {
+		font-family: var(--font-display);
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.45;
+	}
+
+	.prompt-card__desc {
+		display: -webkit-box;
+		overflow: hidden;
+		font-size: 0.875rem;
+		line-height: 1.55;
+		color: var(--text-muted);
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+
+	.prompt-card__meta {
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		line-height: 1.6;
+		color: var(--text-muted);
+	}
+
+	.prompt-card__fav {
+		position: absolute;
+		top: var(--space-2);
+		right: var(--space-2);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border: 0;
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--text-muted);
+	}
+
+	.prompt-card__fav:hover {
+		background: var(--surface-2);
+		color: var(--text);
+	}
+
+	.prompt-card__fav[aria-pressed='true'] {
+		color: var(--accent);
+	}
+
+	.prompt-card__fav[aria-pressed='true'] svg {
+		fill: currentColor;
+	}
+
+	.prompt-tool [data-prompt-empty] .empty-state__body {
+		max-width: 54ch;
+	}
+
+	.prompt-suggestions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-2);
+		margin-top: var(--space-4);
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.prompt-more {
+		display: flex;
+		justify-content: center;
+	}
+
+	.prompt-submit {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-3);
+		padding-top: var(--space-3);
+		border-top: 1px solid var(--border);
+	}
+
+	.prompt-noscript {
+		margin: 0 0 var(--space-2);
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.prompt-noscript__list {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.prompt-noscript__list a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		text-decoration: none;
+	}
+
+	.prompt-noscript__list a:hover {
+		text-decoration: underline;
+	}
+
+	@media (max-width: 639px) {
+		.prompt-selects {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.prompt-card__desc {
+			-webkit-line-clamp: 3;
+		}
+	}
+</style>

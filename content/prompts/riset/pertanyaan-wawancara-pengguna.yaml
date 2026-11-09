@@ -1,0 +1,47 @@
+id: pertanyaan-wawancara-pengguna
+judul: Susun pertanyaan wawancara pengguna tanpa menggiring
+kategori: riset
+tag: [wawancara, data, riset]
+ai: [umum, claude, chatgpt]
+bahasa: id
+level: menengah
+variabel:
+  - nama: produk
+    label: Produk atau topik
+    tipe: pendek
+    contoh: "Aplikasi pencatat pengeluaran untuk mahasiswa"
+  - nama: peserta
+    label: Siapa yang diwawancarai
+    tipe: pendek
+    contoh: "Mahasiswa yang mengatur uang sendiri"
+  - nama: tujuan
+    label: Yang ingin diketahui
+    tipe: panjang
+    contoh: "Kebiasaan mencatat pengeluaran dan hambatannya."
+  - nama: durasi
+    label: Durasi wawancara
+    tipe: pilihan
+    contoh: "20 menit"
+    pilihan: ["15 menit", "20 menit", "30 menit"]
+prompt: |
+  Susun panduan wawancara {{durasi}} untuk {{peserta}} tentang {{produk}}.
+
+  Yang ingin saya ketahui: {{tujuan}}
+
+  Panduan harus berisi:
+  1. Pembuka: izin merekam, tujuan wawancara, dan penegasan bahwa ini bukan uji benar-salah.
+  2. Pertanyaan pemanasan tentang kebiasaan sekarang, bukan tentang produk.
+  3. Enam pertanyaan inti yang terbuka. Setiap pertanyaan mengejar satu hal dari tujuan di atas.
+  4. Untuk setiap pertanyaan inti, dua pertanyaan lanjutan untuk menggali contoh nyata.
+  5. Penutup: siapa lagi yang sebaiknya saya ajak bicara, dan apakah boleh saya hubungi lagi.
+
+  Aturan:
+  - Jangan memakai pertanyaan yang jawabannya hanya ya atau tidak.
+  - Jangan menyebut fitur yang saya rencanakan sebelum peserta bercerita.
+  - Jangan memakai pertanyaan yang menggiring, seperti "bukankah lebih mudah kalau".
+  - Tandai pertanyaan yang sebaiknya dilewati kalau waktu habis.
+catatan: |
+  Dengarkan lebih banyak daripada bertanya. Catat kutipan persis untuk contoh nyata, tetapi jangan menempelkan kutipan ke orang tanpa izin.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

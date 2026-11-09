@@ -8,7 +8,30 @@ export const EXPIRY_OPTIONS = {
 
 export type ExpiryId = keyof typeof EXPIRY_OPTIONS;
 
-export const BLOCKED_EXTENSIONS = ['exe', 'bat', 'cmd', 'scr', 'msi', 'com', 'pif', 'vbs', 'js', 'jar', 'ps1', 'sh', 'apk'];
+export const BLOCKED_EXTENSIONS = [
+	'exe',
+	'msi',
+	'bat',
+	'cmd',
+	'com',
+	'scr',
+	'pif',
+	'ps1',
+	'vbs',
+	'js',
+	'jar',
+	'apk',
+	'dmg',
+	'sh',
+];
+
+// Karakter kontrol dan penanda arah teks (RTL override) dipakai untuk menyamarkan
+// ekstensi, misalnya "laporan\u202Egnp.exe" yang tampil seperti "laporane xe.pdf".
+const UNSAFE_NAME_CHARS = /[\u0000-\u001F\u007F\u202A-\u202E\u2066-\u2069]/;
+
+export function hasUnsafeNameChars(name: string): boolean {
+	return UNSAFE_NAME_CHARS.test(name);
+}
 
 export const PASSWORD_MIN = 4;
 export const PASSWORD_MAX = 64;
@@ -24,13 +47,19 @@ export function isExpiryId(value: unknown): value is ExpiryId {
 }
 
 export function isBlockedName(name: string): boolean {
-	const dot = name.lastIndexOf('.');
-	if (dot === -1) return false;
-	return BLOCKED_EXTENSIONS.includes(name.slice(dot + 1).toLowerCase());
+	// Periksa semua bagian, bukan hanya ekstensi terakhir. "laporan.exe.pdf"
+	// tetap membawa berkas yang bisa dijalankan kalau dibuka sembarangan.
+	return name
+		.split('.')
+		.slice(1)
+		.some((part) => BLOCKED_EXTENSIONS.includes(part.toLowerCase()));
 }
 
 export function validateFile(file: { name: string; size: number }): string | null {
 	if (file.name.trim() === '') return 'Nama berkas kosong.';
+	if (hasUnsafeNameChars(file.name)) {
+		return `Nama berkas ${JSON.stringify(file.name)} tidak valid. Ganti namanya, lalu coba lagi.`;
+	}
 	if (isBlockedName(file.name)) {
 		return `Jenis berkas ${file.name} tidak diizinkan. Kompres dulu sebagai .zip.`;
 	}

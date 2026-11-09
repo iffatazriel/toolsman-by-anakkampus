@@ -89,6 +89,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 <script>
 	import { toast } from '../../lib/toast';
 	import { copyText } from '../../lib/clipboard';
+	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
 	import {
 		postJson,
 		putPartWithProgress,
@@ -280,7 +281,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		const stateLabel = (index: number) => {
 			const file = files[index];
 			if (!file) return '';
-			if (states[index] === 'done') return '✓ Selesai';
+			if (states[index] === 'done') return 'Selesai';
 			if (states[index] === 'failed') return 'Gagal';
 			if (states[index] === 'uploading') {
 				const percent = progress[index] ?? 0;
@@ -624,6 +625,8 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 			cancelled = false;
 			setBusy(true);
+			const zone = dropzoneOf('kirim-input');
+			setDropzoneState(zone, 'processing');
 
 			try {
 				if (needsNewSession) {
@@ -656,7 +659,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				setStatus('');
 				retryable = false;
 				await showResult(active);
-				toast('Link siap dibagikan.');
+				toast('Link siap dibagikan.', { tone: 'success' });
 			} catch (error) {
 				retryable = session !== null;
 				states = states.map((state) => (state === 'uploading' ? 'idle' : state));
@@ -684,6 +687,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			} finally {
 				current = null;
 				setBusy(false);
+				setDropzoneState(zone, files.length > 0 ? 'done' : 'empty');
 			}
 		};
 
@@ -704,7 +708,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 		copyButton.addEventListener('click', async () => {
 			const copied = await copyText(urlField.value);
-			toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.');
+			toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		setupTurnstile();

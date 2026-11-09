@@ -1,17 +1,13 @@
 const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-export function turnstileSiteKey(): string {
-	return import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
-}
-
 export async function verifyTurnstile(
 	secret: string | undefined,
 	token: unknown,
 	remoteIp: string,
 ): Promise<boolean> {
-	// Tanpa secret, verifikasi dimatikan untuk pengembangan lokal. Di produksi,
-	// pemilik situs wajib mengisi TURNSTILE_SECRET_KEY.
-	if (!secret) return true;
+	// Tanpa secret, jangan pernah melewati verifikasi diam-diam. Rute yang
+	// memanggil fungsi ini harus menolak permintaan sebagai salah konfigurasi.
+	if (!secret) return false;
 	if (typeof token !== 'string' || token.trim() === '') return false;
 
 	const body = new URLSearchParams({ secret, response: token });

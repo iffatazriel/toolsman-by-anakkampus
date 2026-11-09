@@ -19,6 +19,7 @@ const slugs = [
 	'cron',
 	'code-to-image',
 	'json-schema',
+	'prompt',
 ];
 
 describe('kamus i18n', () => {
@@ -35,7 +36,7 @@ describe('kamus i18n', () => {
 	});
 
 	it('menerjemahkan semua kategori', () => {
-		for (const category of ['gambar', 'diagram', 'dokumen', 'foto', 'berbagi', 'generator', 'utilitas'] as const) {
+		for (const category of ['gambar', 'diagram', 'dokumen', 'foto', 'berbagi', 'generator', 'utilitas', 'ai'] as const) {
 			expect(categoryText.id[category]).toBeTruthy();
 			expect(categoryText.en[category]).toBeTruthy();
 		}

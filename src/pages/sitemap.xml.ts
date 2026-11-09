@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { tools } from '../lib/tools';
+import { prompts } from '../lib/prompts';
 import { absoluteUrl } from '../lib/site';
 
 export const prerender = true;
@@ -12,6 +13,7 @@ export const GET: APIRoute = () => {
 		'/syarat/',
 		'/lisensi/',
 		...tools.map((tool) => `/tools/${tool.slug}/`),
+		...prompts.map((prompt) => `/tools/prompt/${prompt.id}/`),
 	];
 
 	const urls = paths

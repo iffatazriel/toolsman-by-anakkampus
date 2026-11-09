@@ -165,7 +165,7 @@ import Icon from '../../components/ui/Icon.astro';
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(currentText);
-			toast(copied ? 'JSON disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'JSON disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		sample.addEventListener('click', () => {

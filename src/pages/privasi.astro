@@ -32,9 +32,17 @@ const jsonLd = {
 		<p>
 			Kanvas Gambar, Diagram Mermaid, Alat PDF, Pas Foto, Generator Teks, Utilitas
 			Teks, QR Code, Kompres Gambar, Warna &amp; Kontras, Data Palsu, Hash Teks &amp;
-			Berkas, Toolkit Teks, Hapus Metadata Foto, Cron Builder, Kode ke Gambar, dan
-			Validator JSON Schema memproses isi di browser. Isi berkas tidak dikirim ke
-			server Toolsman.
+			Berkas, Toolkit Teks, Hapus Metadata Foto, Cron Builder, Kode ke Gambar,
+			Validator JSON Schema, dan Bank Prompt memproses isi di browser. Isi berkas
+			tidak dikirim ke server Toolsman.
+		</p>
+		<p>
+			Di Bank Prompt, kata kunci pencarian, filter, dan isian variabel tetap di
+			browser. Halaman hanya mengambil berkas indeks statis
+			<code>/prompts/index.json</code> dari Toolsman sendiri supaya daftar prompt
+			bisa dicari; isianmu tidak ikut terkirim, dan tidak ada permintaan ke layanan
+			AI mana pun. Prompt yang kamu salin baru dikirim ke model AI kalau kamu
+			sendiri menempelkannya di sana.
 		</p>
 		<p>
 			Kalau kamu memakai kamera di Pas Foto, gambar kamera hanya masuk ke halaman
@@ -47,24 +55,43 @@ const jsonLd = {
 			<li>
 				Berkas disimpan di Cloudflare R2 sampai masa berlaku habis (1 jam, 24
 				jam, atau 7 hari) atau kuota unduhannya habis. Setelah itu cron menghapus
-				berkasnya.
+				berkasnya dari R2, biasanya dalam satu jam setelah masa berlaku berakhir.
 			</li>
 			<li>
 				Metadata disimpan di Cloudflare D1: nama berkas, ukuran, tipe, waktu,
-				jumlah unduhan, dan laporan. Isi berkas tidak dibaca.
+				jumlah unduhan, dan laporan. Isi berkas tidak dibaca dan tidak dipindai.
 			</li>
 			<li>
 				Kata sandi link di-hash dengan PBKDF2-SHA256 dan salt acak. Kata sandi
 				asli tidak disimpan dan tidak bisa dipulihkan.
 			</li>
 			<li>
+				Alamat IP dipakai sebentar untuk tiga hal: membatasi jumlah permintaan,
+				membatasi percobaan kata sandi, dan menghitung kuota unggah harian. IP
+				tidak disimpan sebagai riwayat; yang tersimpan hanya angka pemakaian
+				kuota per hari di tabel <code>upload_usage</code> dan dihapus bersama
+				data lain saat link berakhir.
+			</li>
+			<li>
 				Laporan penyalahgunaan menyimpan alasan yang kamu tulis dan waktu laporan.
+				Baris laporan ikut terhapus saat link dihapus.
 			</li>
 			<li>
 				Siapa pun yang punya link bisa membuka halaman unduh, kecuali link diberi
 				kata sandi.
 			</li>
 		</ul>
+		<p>
+			Log server Cloudflare mencatat permintaan HTTP (alamat, waktu, kode balasan)
+			menurut kebijakan retensi Cloudflare, bukan kebijakan Toolsman. Toolsman
+			tidak menyusun log akses sendiri dan tidak memakai data itu untuk membuat
+			profil pengunjung.
+		</p>
+		<p>
+			Berkas yang dilaporkan bisa dinonaktifkan dan dihapus lebih awal dari masa
+			berlakunya. Setelah itu link membalas 410 dan berkasnya sudah tidak ada di
+			R2.
+		</p>
 
 		<h2>Yang disimpan di browser</h2>
 		<p>
@@ -86,7 +113,10 @@ const jsonLd = {
 
 		<h2>Layanan pihak ketiga</h2>
 		<ul>
-			<li>Cloudflare: hosting, R2, D1, dan Turnstile kalau verifikasi aktif.</li>
+			<li>
+				Cloudflare: hosting Worker, penyimpanan berkas R2, basis data D1, dan
+				Turnstile saat verifikasi aktif.
+			</li>
 			<li>
 				staticimgly.com: model penghapus latar diunduh saat Pas Foto pertama kali
 				dipakai.
@@ -102,9 +132,19 @@ const jsonLd = {
 				Saat kamu membuka Kirim File, widget Turnstile dari
 				challenges.cloudflare.com dimuat untuk memeriksa apakah permintaan datang
 				dari peramban sungguhan. Cloudflare memproses data widget itu menurut
-				kebijakan privasinya sendiri.
+				kebijakan privasinya sendiri. Token dari widget hanya dipakai sekali untuk
+				memverifikasi permintaan unggah, lalu tidak disimpan.
 			</p>
 		)}
+
+		<h2>Hak dan pertanyaan</h2>
+		<p>
+			Kamu bisa meminta link milikmu dihapus lebih awal dengan mengirim laporan
+			lewat tombol "Laporkan link ini" di halaman unduh, disertai keterangan bahwa
+			kamu pemilik berkasnya. Link itu akan dinonaktifkan dan berkasnya dihapus
+			dari R2. Karena Toolsman tidak punya akun pengguna, tidak ada profil yang
+			perlu dihapus di luar data link itu.
+		</p>
 
 		<h2>Perubahan</h2>
 		<p>

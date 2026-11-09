@@ -176,12 +176,12 @@
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(result);
-			toast(copied ? 'Hasil disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Hasil disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText('teks.txt', result, 'text/plain;charset=utf-8');
-			toast('Berkas teks diunduh.');
+			toast('Berkas teks diunduh.', { tone: 'success' });
 		});
 
 		updateStats();

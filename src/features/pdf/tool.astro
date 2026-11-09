@@ -155,6 +155,7 @@ const tabs = [
 
 <script>
 	import { formatBytes, parsePageRange, reductionPercent } from '../../lib/page-range';
+	import { setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
 	import { runPdfTask } from './pdf-client';
 	import type { CompressLevel, Margin, Orientation } from './pdf-ops';
@@ -268,7 +269,7 @@ const tabs = [
 					items.splice(index, 0, moved);
 					renderList(name, items, onChange);
 					onChange();
-					toast('Urutan berkas diubah.');
+					toast('Urutan berkas diubah.', { tone: 'success' });
 				});
 			}
 
@@ -305,10 +306,10 @@ const tabs = [
 				meta.textContent = item.error ?? 'Tidak bisa dibaca';
 				meta.classList.add('is-failed');
 			} else if (item.pages !== undefined) {
-				meta.textContent = `✓ Siap · ${item.pages} halaman · ${formatBytes(item.file.size)}`;
+				meta.textContent = `Siap · ${item.pages} halaman · ${formatBytes(item.file.size)}`;
 				meta.classList.add('is-ready');
 			} else {
-				meta.textContent = `✓ Siap · ${formatBytes(item.file.size)}`;
+				meta.textContent = `Siap · ${formatBytes(item.file.size)}`;
 				meta.classList.add('is-ready');
 			}
 
@@ -512,7 +513,7 @@ const tabs = [
 			sub.textContent = options.error;
 			sub.classList.add('is-failed');
 		} else {
-			sub.textContent = `✓ Siap · ${options.pages ?? 0} halaman · ${formatBytes(file.size)}`;
+			sub.textContent = `Siap · ${options.pages ?? 0} halaman · ${formatBytes(file.size)}`;
 			sub.classList.add('is-ready');
 		}
 
@@ -825,7 +826,13 @@ const tabs = [
 		if (busy.has(name)) return;
 		busy.add(name);
 		const button = runButton(name);
-		if (button) button.disabled = true;
+		if (button) {
+			button.disabled = true;
+			button.setAttribute('aria-busy', 'true');
+		}
+		const zone = document.querySelector<HTMLElement>(`[data-panel="${name}"] [data-dropzone]`);
+		const zoneInput = zone?.querySelector<HTMLInputElement>('[data-dropzone-input]');
+		setDropzoneState(zone, 'processing');
 		setError(name, null);
 		setProgress(name, 0, 0, 'Menyiapkan…');
 
@@ -833,15 +840,20 @@ const tabs = [
 		try {
 			const result = await task.promise;
 			download(filename, result.bytes);
-			toast('PDF siap diunduh.');
+			toast('PDF siap diunduh.', { tone: 'success' });
 			return result;
 		} catch (error) {
 			setError(name, error instanceof Error ? error.message : 'Gagal memproses PDF.');
+			toast('Gagal memproses PDF.', { tone: 'error' });
 			return null;
 		} finally {
 			hideProgress(name);
+			setDropzoneState(zone, zoneInput?.files?.length ? 'done' : 'empty');
 			busy.delete(name);
-			if (button) button.disabled = false;
+			if (button) {
+				button.disabled = false;
+				button.removeAttribute('aria-busy');
+			}
 		}
 	};
 
@@ -910,6 +922,7 @@ const tabs = [
 				renderedImages.length > 1
 					? `${renderedImages.length} gambar siap diunduh.`
 					: 'Gambar siap diunduh.',
+				{ tone: 'success' },
 			);
 		} catch (error) {
 			setError(

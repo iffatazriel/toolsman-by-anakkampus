@@ -269,7 +269,7 @@
 				downloadButton.disabled = false;
 				hasImage = true;
 				size.textContent = `${width * scale} × ${height * scale} px`;
-				status.textContent = '✓ PNG siap diunduh';
+				status.textContent = 'PNG siap diunduh';
 			} catch (error) {
 				if (current !== job) return;
 				canvas.hidden = true;
@@ -315,7 +315,7 @@
 			if (!hasImage) return;
 			canvas.toBlob((blob) => {
 				if (!blob) {
-					toast('Gagal membuat PNG.');
+					toast('Gagal membuat PNG.', { tone: 'error' });
 					return;
 				}
 				const url = URL.createObjectURL(blob);
@@ -326,7 +326,7 @@
 				link.click();
 				link.remove();
 				setTimeout(() => URL.revokeObjectURL(url), 1000);
-				toast('Gambar kode diunduh.');
+				toast('Gambar kode diunduh.', { tone: 'success' });
 			}, 'image/png');
 		});
 

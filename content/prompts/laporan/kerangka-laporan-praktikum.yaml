@@ -1,0 +1,44 @@
+id: kerangka-laporan-praktikum
+judul: Kerangka laporan praktikum dari data mentah
+kategori: laporan
+tag: [laporan, praktikum, struktur]
+ai: [umum, chatgpt, claude]
+bahasa: id
+level: pemula
+variabel:
+  - nama: judul
+    label: Judul praktikum
+    tipe: pendek
+    contoh: "Uji kadar vitamin C pada minuman kemasan"
+  - nama: tujuan
+    label: Tujuan praktikum
+    tipe: panjang
+    contoh: "Membandingkan kadar vitamin C dua sampel dengan titrasi."
+  - nama: alat_bahan
+    label: Alat dan bahan
+    tipe: panjang
+    contoh: "Daftar alat dan bahan yang dipakai."
+  - nama: data
+    label: Data pengamatan
+    tipe: panjang
+    contoh: "Tempel tabel hasil pengamatan apa adanya."
+prompt: |
+  Susun kerangka laporan praktikum berjudul "{{judul}}" dengan struktur IMRAD sederhana.
+
+  Tujuan: {{tujuan}}
+  Alat dan bahan: {{alat_bahan}}
+  Data: {{data}}
+
+  Untuk setiap bagian, tulis dua hal: isi yang harus saya tulis sendiri, dan data yang sudah tersedia untuk mendukungnya.
+  - Pendahuluan: latar singkat, tujuan, dan satu kalimat hipotesis jika ada dasarnya.
+  - Metode: langkah yang bisa diulang orang lain, sebut variabel yang diubah dan yang dijaga.
+  - Hasil: sarankan bentuk tabel atau grafik yang paling jelas untuk data ini.
+  - Pembahasan: hubungkan hasil dengan tujuan, sebut penyebab penyimpangan yang mungkin.
+  - Kesimpulan: jawab tujuan secara langsung, tanpa klaim yang tidak didukung data.
+
+  Setelah kerangka, buat daftar "data yang masih kurang". Jangan mengisi angka atau hasil yang tidak ada di data saya, dan jangan mengarang referensi.
+catatan: |
+  Kerangka bukan isi. Setiap angka harus berasal dari data praktikummu. Periksa format laporan dari dosen atau laboratorium karena tiap kampus punya aturan sendiri.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

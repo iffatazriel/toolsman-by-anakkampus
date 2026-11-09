@@ -73,6 +73,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 <script>
 	import { formatBytes } from '../../lib/page-range';
+	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
 	import { stripMetadata } from './strip';
 
@@ -134,6 +135,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			const file = (event.target as HTMLInputElement).files?.[0] ?? null;
 			input.value = '';
 			if (!file) return;
+			const zone = dropzoneOf('exif-input');
 
 			const isJpeg = file.type === 'image/jpeg' || /\.jpe?g$/i.test(file.name);
 			const isPng = file.type === 'image/png' || /\.png$/i.test(file.name);
@@ -154,6 +156,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			stats.hidden = true;
 			workspace.hidden = false;
 			setStatus('Membaca metadata…', true);
+			setDropzoneState(zone, 'processing');
 
 			if (originalUrl) URL.revokeObjectURL(originalUrl);
 			originalUrl = URL.createObjectURL(file);
@@ -190,19 +193,21 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 				if (removed > 0) {
 					downloadButton.disabled = false;
-					setStatus('✓ Metadata dibuang', false);
-					statusText.textContent = '✓ Foto bersih, siap diunduh.';
+					setStatus('Metadata dibuang', false);
+					statusText.textContent = 'Foto bersih, siap diunduh.';
 					statusText.classList.add('is-ready');
 				} else {
 					setStatus('Foto sudah tanpa metadata', false);
-					statusText.textContent = '✓ Tidak ada metadata yang perlu dibuang.';
+					statusText.textContent = 'Tidak ada metadata yang perlu dibuang.';
 					statusText.classList.add('is-ready');
 				}
+				setDropzoneState(zone, 'done');
 			} catch (error) {
 				setStatus('Gagal memproses', false);
 				statusText.textContent = 'Gagal membaca foto.';
 				statusText.classList.add('is-failed');
 				setError(error instanceof Error ? error.message : 'Gagal memproses foto.');
+				setDropzoneState(zone, 'empty');
 			}
 		});
 
@@ -216,7 +221,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			link.click();
 			link.remove();
 			setTimeout(() => URL.revokeObjectURL(url), 1000);
-			toast('Foto tanpa metadata diunduh.');
+			toast('Foto tanpa metadata diunduh.', { tone: 'success' });
 		});
 	}
 </script>

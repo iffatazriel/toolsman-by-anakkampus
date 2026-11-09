@@ -1,0 +1,43 @@
+id: peta-konsep-bab
+judul: Ubah satu bab jadi peta konsep yang bisa dipakai belajar
+kategori: belajar
+tag: [ringkasan, catatan, penjelasan]
+ai: [umum, chatgpt, claude, gemini]
+bahasa: id
+level: pemula
+variabel:
+  - nama: judul_bab
+    label: Judul bab
+    tipe: pendek
+    contoh: "Psikologi Perkembangan: masa kanak-kanak awal"
+  - nama: isi_materi
+    label: Isi materi
+    tipe: panjang
+    contoh: "Tempel catatan atau teks bab di sini. Boleh potongan per subbab."
+  - nama: tujuan
+    label: Tujuan belajar
+    tipe: pilihan
+    contoh: Siap ujian
+    pilihan: [Siap ujian, Paham konsep, Bahan presentasi]
+prompt: |
+  Kamu tutor yang membantu saya memahami materi, bukan meringkas asal pendek.
+
+  Materi: {{judul_bab}}
+  Tujuan saya: {{tujuan}}
+
+  Isi materi:
+  {{isi_materi}}
+
+  Kerjakan berurutan:
+  1. Tulis satu kalimat inti bab ini dalam bahasa sehari-hari.
+  2. Susun 5 sampai 7 node konsep. Untuk setiap node: nama pendek, penjelasan dua kalimat, dan Hubungkan ke node lain dengan panah dan kata kerja, misalnya "mempengaruhi" atau "menjadi syarat".
+  3. Tandai 3 istilah yang wajib saya hafal beserta arti satu baris.
+  4. Buat 2 pertanyaan cek pemahaman yang jawabannya ada di materi, lalu beri kunci singkatnya.
+  5. Di akhir, sebutkan bagian materi yang belum cukup jelas dan apa yang perlu saya cari sendiri.
+
+  Aturan: pakai hanya isi materi di atas. Kalau ada klaim yang tidak didukung materi, tandai "perlu dicek" dan jangan mengarang contoh yang terlihat seperti fakta.
+catatan: |
+  Tempel materi yang memang kamu punya. Peta konsep berguna untuk melihat hubungan antarbab, bukan menggantikan membaca. Cocok dipakai sebelum membuat catatan sendiri.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

@@ -1,0 +1,46 @@
+id: proposal-satu-halaman
+judul: Proposal riset satu halaman yang bisa dibaca dosen
+kategori: riset
+tag: [proposal, riset, struktur]
+ai: [umum, claude, chatgpt]
+bahasa: id
+level: menengah
+variabel:
+  - nama: topik
+    label: Topik
+    tipe: pendek
+    contoh: "Pengaruh notifikasi tugas terhadap penundaan pengerjaan"
+  - nama: masalah
+    label: Masalah dan bukti awal
+    tipe: panjang
+    contoh: "Apa yang kamu amati, dan bukti awal yang kamu punya."
+  - nama: metode
+    label: Metode yang dibayangkan
+    tipe: pendek
+    contoh: "Survei singkat dan wawancara 5 orang"
+  - nama: durasi
+    label: Durasi
+    tipe: pilihan
+    contoh: "6 minggu"
+    pilihan: ["4 minggu", "6 minggu", "8 minggu"]
+prompt: |
+  Susun proposal riset satu halaman tentang {{topik}}, selesai dalam {{durasi}}.
+
+  Masalah dan bukti awal: {{masalah}}
+  Metode yang saya bayangkan: {{metode}}
+
+  Isi proposal dengan urutan:
+  1. Judul kerja dan satu kalimat tujuan.
+  2. Masalah: mengapa ini penting, dan bukti awal yang saya miliki. Pisahkan fakta dari dugaan.
+  3. Pertanyaan penelitian, maksimal tiga.
+  4. Metode: siapa pesertanya, apa datanya, bagaimana dianalisis.
+  5. Rencana waktu per minggu, dengan satu tonggak tiap minggu.
+  6. Risiko utama dan rencana cadangannya.
+  7. Etika: izin, kerahasiaan, dan cara menyimpan data.
+
+  Aturan: jangan mengarang referensi atau angka. Tandai [perlu data] untuk hal yang harus saya cari. Bahasa padat, hindari kalimat yang tidak menambah informasi. Akhiri dengan tiga pertanyaan yang mungkin ditanyakan dosen.
+catatan: |
+  Satu halaman berarti pembaca bisa menilai rencanamu dalam lima menit. Kalau rencana waktunya terasa sesak, potong cakupan, bukan kualitas.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

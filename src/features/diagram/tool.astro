@@ -262,7 +262,7 @@
 
 		copyButton.addEventListener('click', async () => {
 			const copied = await copyText(input.value);
-			toast(copied ? 'Kode Mermaid disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Kode Mermaid disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		const download = (name: string, blob: Blob) => {
@@ -342,6 +342,7 @@
 					error instanceof Error && error.message.includes('terlalu panjang')
 						? 'Link sesi terpotong atau terlalu panjang. Draf lokal tetap dipakai.'
 						: 'Link sesi tidak bisa dibaca. Draf lokal tetap dipakai.',
+					{ tone: 'error' },
 				);
 			}
 		};
@@ -353,7 +354,7 @@
 			history.replaceState(null, '', location.pathname);
 			save();
 			status.textContent = 'Tersimpan otomatis';
-			toast('Draf dibuka. Perubahan disimpan di browser ini.');
+			toast('Draf dibuka. Perubahan disimpan di browser ini.', { tone: 'success' });
 			input.focus();
 		});
 
@@ -370,23 +371,25 @@
 					copied
 						? `Link hanya-baca disalin (${url.length} karakter).`
 						: `Link dibuat (${url.length} karakter). Salin dari kolom.`,
+					{ tone: copied ? 'success' : 'neutral' },
 				);
 			} catch (error) {
 				if (shareResult) shareResult.hidden = true;
 				if (error instanceof SessionTooLargeError) {
 					toast(
 						`Diagram terlalu panjang untuk link (${error.length.toLocaleString('id-ID')} dari ${error.limit.toLocaleString('id-ID')} karakter). Ringkas kode, lalu coba lagi.`,
+						{ tone: 'error' },
 					);
 					return;
 				}
-				toast(error instanceof Error ? error.message : 'Gagal membuat link.');
+				toast(error instanceof Error ? error.message : 'Gagal membuat link.', { tone: 'error' });
 			}
 		});
 
 		shareCopy?.addEventListener('click', async () => {
 			if (!shareUrl) return;
 			const copied = await copyText(shareUrl.value);
-			toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.');
+			toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		const saved = localStorage.getItem(STORAGE_KEY);
@@ -472,7 +475,7 @@
 		if (message.event === 'save') {
 			if (message.xml) {
 				downloadText('diagram.drawio', message.xml, 'application/xml;charset=utf-8');
-				toast('Berkas .drawio diunduh.');
+				toast('Berkas .drawio diunduh.', { tone: 'success' });
 			}
 			if (message.exit) drawioDialog?.close();
 		}

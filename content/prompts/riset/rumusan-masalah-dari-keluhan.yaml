@@ -1,0 +1,40 @@
+id: rumusan-masalah-dari-keluhan
+judul: Ubah keluhan sehari-hari jadi rumusan masalah riset
+kategori: riset
+tag: [rumusan-masalah, riset, proposal]
+ai: [umum, claude, gemini]
+bahasa: id
+level: menengah
+variabel:
+  - nama: keluhan
+    label: Keluhan atau pengamatan awal
+    tipe: panjang
+    contoh: "Banyak mahasiswa menunda mengerjakan tugas sampai malam sebelum tenggat."
+  - nama: konteks
+    label: Konteks yang kamu tahu
+    tipe: panjang
+    contoh: "Kelas pagi, tugas mingguan, dan akses internet kampus."
+  - nama: batas
+    label: Batas yang realistis
+    tipe: pendek
+    contoh: "Satu kelas, empat minggu, data kuesioner"
+prompt: |
+  Bantu saya mengubah pengamatan berikut menjadi rumusan masalah penelitian yang bisa dikerjakan.
+
+  Pengamatan: {{keluhan}}
+  Konteks: {{konteks}}
+  Batas realistis: {{batas}}
+
+  Keluarkan:
+  1. Tiga rumusan masalah, dari yang paling luas ke paling sempit. Untuk setiap versi, sebutkan variabel yang terlibat dan apa yang belum jelas.
+  2. Pilih satu yang paling realistis dan jelaskan alasannya berdasarkan batas di atas.
+  3. Tujuan penelitian satu kalimat dan pertanyaan penelitian dua sampai tiga butir.
+  4. Definisi operasional untuk dua istilah kunci, supaya bisa diukur.
+  5. Dua risiko: pertanyaan yang terlalu luas, dan data yang mungkin tidak bisa kamu akses.
+
+  Aturan: jangan mengarang latar belakang teori, kutipan, atau angka kejadian. Tandai asumsi yang perlu saya buktikan dulu.
+catatan: |
+  Rumusan masalah yang baik bisa dijawab dengan data yang kamu bisa kumpulkan. Diskusikan versi terpilih dengan dosen sebelum lanjut ke metode.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

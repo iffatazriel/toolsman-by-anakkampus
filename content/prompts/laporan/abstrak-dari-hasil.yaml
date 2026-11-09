@@ -1,0 +1,44 @@
+id: abstrak-dari-hasil
+judul: Tulis abstrak dari hasil penelitianmu sendiri
+kategori: laporan
+tag: [abstrak, laporan, ringkasan]
+ai: [umum, claude, gemini]
+bahasa: id
+level: menengah
+variabel:
+  - nama: konteks
+    label: Konteks penelitian
+    tipe: panjang
+    contoh: "Penelitian kecil tentang kebiasaan membaca mahasiswa semester awal."
+  - nama: metode
+    label: Metode yang dipakai
+    tipe: panjang
+    contoh: "Kuesioner 40 responden, analisis deskriptif."
+  - nama: temuan
+    label: Temuan utama
+    tipe: panjang
+    contoh: "Rata-rata waktu membaca 12 menit per hari, sumber utama ponsel."
+  - nama: batas_kata
+    label: Batas kata
+    tipe: pilihan
+    contoh: "200"
+    pilihan: ["150", "200", "250"]
+prompt: |
+  Tulis abstrak sekitar {{batas_kata}} kata dari bahan berikut. Ini abstrak laporan, jadi padat dan tanpa klaim yang tidak ada di bahan.
+
+  Konteks: {{konteks}}
+  Metode: {{metode}}
+  Temuan: {{temuan}}
+
+  Pola yang dipakai: masalah dan tujuan (satu kalimat), metode (satu kalimat), hasil (dua kalimat dengan angka yang memang ada di bahan), kesimpulan (satu kalimat), tanpa subjudul dan tanpa referensi.
+
+  Aturan:
+  - Jangan menambah angka, responden, atau kesimpulan baru.
+  - Hindari kalimat pembuka seperti "Penelitian ini bertujuan untuk mengetahui" kalau bisa dibuat lebih langsung.
+  - Jangan memakai kata "sangat signifikan" kalau bahan tidak menyebut uji statistik.
+  - Setelah abstrak, tulis daftar kata kunci 4 sampai 5 kata, lalu tunjukkan bagian bahan yang belum dipakai.
+catatan: |
+  Abstrak ditulis setelah hasil, bukan sebelum. Periksa ulang setiap angka dengan tabel hasil. Kalau ada angka yang tidak kamu kenali, hapus, jangan percaya begitu saja.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

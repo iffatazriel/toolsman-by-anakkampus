@@ -1,17 +1,67 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Icon from '../components/ui/Icon.astro';
 ---
 
 <Layout
 	title="Halaman tidak ditemukan, Toolsman"
 	description="Alamat yang kamu buka tidak ada di Toolsman."
 >
-	<section class="container prose-page">
+	<section class="container prose-page empty-page">
+		<svg
+			class="empty-page__art"
+			viewBox="0 0 200 120"
+			role="presentation"
+			focusable="false"
+			aria-hidden="true"
+		>
+			<rect x="24.5" y="20.5" width="151" height="79" rx="10" />
+			<path d="M24 44h151" />
+			<path d="M44 34h.01M58 34h.01M72 34h.01" />
+			<path d="M62 84c8-14 14-22 21-22s9 11 15 11 10-9 16-9 9 7 13 12" />
+			<circle cx="140" cy="66" r="16" />
+			<path d="m152 78 12 12" />
+		</svg>
+
 		<h1>Halaman tidak ditemukan</h1>
 		<p>
-			Alamat ini tidak ada, mungkin salah ketik atau alatnya belum dibuat.
-			Katalog di beranda memuat semua alat yang direncanakan.
+			Alamat ini tidak ada, mungkin salah ketik atau alatnya belum dibuat. Katalog
+			di beranda memuat semua alat yang sudah bisa dipakai.
 		</p>
-		<p><a class="btn btn--primary mt-4" href="/#katalog">Buka katalog alat</a></p>
+		<p class="empty-page__actions">
+			<a class="btn btn--primary" href="/#katalog">
+				<Icon name="search" size={16} />
+				Buka katalog alat
+			</a>
+			<a class="btn btn--secondary" href="/">Kembali ke beranda</a>
+		</p>
 	</section>
 </Layout>
+
+<style>
+	.empty-page {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-3);
+		padding-block: var(--space-8);
+	}
+
+	.empty-page__art {
+		width: 200px;
+		height: auto;
+		margin-bottom: var(--space-2);
+		fill: none;
+		stroke: var(--border-strong);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.empty-page__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-top: var(--space-2);
+	}
+</style>

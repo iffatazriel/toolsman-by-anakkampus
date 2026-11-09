@@ -174,12 +174,12 @@ const licenses = [
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(markdown);
-			toast(copied ? 'README disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'README disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText(markdownFilename(markdown), markdown);
-			toast('File README diunduh.');
+			toast('File README diunduh.', { tone: 'success' });
 		});
 
 		update();

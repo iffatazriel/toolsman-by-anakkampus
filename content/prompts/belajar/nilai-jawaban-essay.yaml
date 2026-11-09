@@ -1,0 +1,50 @@
+id: nilai-jawaban-essay
+judul: Koreksi jawaban esaimu dengan rubrik yang jelas
+kategori: belajar
+tag: [umpan-balik, ujian, esai]
+ai: [claude, chatgpt, gemini]
+bahasa: id
+level: menengah
+variabel:
+  - nama: pertanyaan
+    label: Pertanyaan ujian
+    tipe: panjang
+    contoh: "Jelaskan perbedaan proses sinkron dan asinkron beserta contohnya."
+  - nama: jawaban
+    label: Jawabanmu
+    tipe: panjang
+    contoh: "Tempel jawaban yang sudah kamu tulis sendiri."
+  - nama: rubrik
+    label: Rubrik penilaian
+    tipe: panjang
+    contoh: "Ketepatan konsep 8, contoh 6, kejelasan 4, kesimpulan 2"
+  - nama: nilai_maks
+    label: Nilai maksimal
+    tipe: pendek
+    contoh: "20"
+prompt: |
+  Kamu asisten penilai. Nilai jawaban saya dengan rubrik yang saya berikan. Jangan menulis ulang jawaban saya menjadi jawaban baru.
+
+  Pertanyaan:
+  {{pertanyaan}}
+
+  Rubrik:
+  {{rubrik}}
+
+  Nilai maksimal: {{nilai_maks}}
+
+  Jawaban saya:
+  {{jawaban}}
+
+  Keluarkan:
+  1. Tabel penilaian per kriteria: kriteria, bobot, skor, dan alasan satu kalimat.
+  2. Untuk setiap kriteria, kutip potongan jawaban saya yang menjadi bukti. Kalau tidak ada bukti, tulis "tidak ditemukan".
+  3. Dua perbaikan dengan dampak nilai paling besar, ditulis sebagai instruksi yang bisa saya kerjakan.
+  4. Satu pertanyaan lanjutan untuk menguji apakah saya benar-benar paham.
+
+  Aturan: gunakan hanya rubrik dan jawaban di atas. Jangan menambah kriteria baru. Kalau rubrik tidak berjumlah sama dengan nilai maksimal, sebutkan dan pakai proporsi.
+catatan: |
+  Ini untuk latihan, bukan nilai resmi. Bandingkan hasilnya dengan penilaian dosen. Perbaiki jawaban sendiri setelah membaca catatan, jangan menyalin versi AI.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

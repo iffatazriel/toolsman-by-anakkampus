@@ -85,6 +85,7 @@ Mahasiswa dan developer pemula biasanya harus membuka banyak situs berbeda untuk
 - **Cron expression builder** (5 field, zona waktu, 5 jadwal berikutnya)
 - **Code-to-image** (highlight.js, tema, padding, radius, PNG)
 - **JSON Schema validator** (error per path dalam bahasa Indonesia)
+- **Bank Prompt** (pustaka prompt AI dengan variabel, pratinjau, salin/unduh; seluruhnya client-side, di luar P2 awal)
 - **Berbagi sesi Draw/Diagram** via link hanya-baca, data terkompresi di URL
 - **Pilihan bahasa Indonesia/Inggris** untuk shell, katalog, dan metadata alat
 
@@ -205,6 +206,17 @@ Mahasiswa dan developer pemula biasanya harus membuka banyak situs berbeda untuk
 | FR-GEN-06 | **`.gitignore` generator** (pilih bahasa/framework) dan **LICENSE generator** (MIT, Apache-2.0, GPL-3.0, dll.). | P1 |
 | FR-GEN-07 | Utilitas kecil: Base64, URL encode/decode, JWT decoder, UUID, timestamp converter. | P1 |
 | FR-GEN-08 | Pembuat QR code (teks/URL, unduh PNG/SVG). | P1 |
+
+### 7.8 Bank Prompt
+
+| ID | Kebutuhan | Prioritas |
+|---|---|---|
+| FR-PROMPT-01 | Pustaka prompt AI dengan pencarian (judul, tag, cuplikan; aksen dan huruf besar-kecil diabaikan) serta filter kategori, AI, dan level. Filter tersimpan di URL supaya bisa dibagikan. | P2 |
+| FR-PROMPT-02 | Halaman detail per prompt (`/tools/prompt/<id>/`) dengan form variabel (teks pendek, teks panjang, pilihan), pratinjau prompt akhir yang diperbarui saat mengetik, tombol salin, dan unduh `.md`. | P2 |
+| FR-PROMPT-03 | Isi prompt disimpan sebagai satu berkas YAML per prompt di `content/prompts/<kategori>/<id>.yaml`; `npm run prompts:check` memvalidasi skema, placeholder, tag, lisensi, dan konten terlarang, dan ikut jalan di `prebuild` serta CI. | P2 |
+| FR-PROMPT-04 | Indeks prompt dimuat lazy hanya di halaman Bank Prompt. Semua penyusunan prompt terjadi di browser; tidak ada isian yang dikirim ke server. | P2 |
+| FR-PROMPT-05 | Favorit dan "terakhir dipakai" tersimpan di localStorage dengan kunci terpisah dari favorit alat. | P2 |
+| FR-PROMPT-06 | Panduan kontribusi (`CONTRIBUTING-PROMPTS.md`), template pull request, dan workflow GitHub Actions untuk memeriksa prompt baru. | P2 |
 
 ## 8. Kebutuhan Non-Fungsional
 

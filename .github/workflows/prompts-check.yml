@@ -1,0 +1,29 @@
+name: Prompt check
+
+on:
+  pull_request:
+    paths:
+      - 'content/prompts/**'
+      - 'src/lib/prompt-schema.ts'
+      - 'src/lib/prompt-taxonomy.ts'
+      - 'scripts/prompts-check.mjs'
+      - '.github/workflows/prompts-check.yml'
+
+jobs:
+  prompts-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Periksa isi content/prompts
+        run: npm run prompts:check
+
+      - name: Jalankan tes validasi dan penyusunan prompt
+        run: npx vitest run src/lib/prompt-schema.test.ts src/features/prompt/assemble.test.ts

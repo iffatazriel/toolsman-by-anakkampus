@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Toolsman">
 	<rect width="64" height="64" rx="14" fill="#E8890C" />
-	<text x="32" y="45" text-anchor="middle" font-family="system-ui, sans-serif" font-size="38" font-weight="800" fill="#1F1D1A">T</text>
+	<g fill="none" stroke="#1F1D1A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M26 12c-5 0-7 3-7 8v3c0 4-2 6-4 9 2 3 4 5 4 9v3c0 5 2 8 7 8" />
+		<path d="M38 12c5 0 7 3 7 8v3c0 4 2 6 4 9-2 3-4 5-4 9v3c0 5-2 8-7 8" />
+	</g>
 </svg>

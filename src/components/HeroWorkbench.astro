@@ -1,0 +1,249 @@
+---
+/**
+ * Komposisi "meja kerja" untuk hero: empat pratinjau alat yang bertumpuk dan
+ * sedikit miring. Semuanya SVG inline dengan warna dari token CSS, jadi ikut
+ * tema terang dan gelap tanpa permintaan jaringan.
+ *
+ * Aturan yang dipegang:
+ * - aria-hidden: ini hiasan, teks hero yang menyampaikan makna.
+ * - Tidak ada konten pengguna, tidak ada angka statistik.
+ * - Dimensi tetap (aspect-ratio 1) supaya tidak ada pergeseran tata letak.
+ * - Di bawah 1024 px disembunyikan: hero satu kolom, tanpa hiasan besar.
+ */
+---
+
+<div class="hero-workbench" aria-hidden="true">
+	<svg
+		class="hero-card hero-card--canvas"
+		viewBox="0 0 240 168"
+		role="presentation"
+		focusable="false"
+	>
+		<rect class="wb-surface" x="0.5" y="0.5" width="239" height="167" rx="12" />
+		<rect class="wb-line" x="14" y="14" width="64" height="7" rx="3.5" />
+		<path class="wb-ink" d="M28 118c14-34 22-52 34-52s14 26 24 26 16-22 26-22" />
+		<path class="wb-arrow" d="M96 96h34" />
+		<path class="wb-arrow" d="m124 90 7 6-7 6" />
+		<rect class="wb-accent" x="150" y="52" width="62" height="34" rx="8" />
+		<rect class="wb-line" x="160" y="64" width="42" height="6" rx="3" />
+	</svg>
+
+	<svg
+		class="hero-card hero-card--flow"
+		viewBox="0 0 240 168"
+		role="presentation"
+		focusable="false"
+	>
+		<rect class="wb-surface" x="0.5" y="0.5" width="239" height="167" rx="12" />
+		<rect class="wb-box" x="22" y="24" width="72" height="30" rx="7" />
+		<rect class="wb-line" x="36" y="36" width="44" height="6" rx="3" />
+		<path class="wb-arrow" d="M58 54v18" />
+		<path class="wb-arrow" d="m53 66 5 6 5-6" />
+		<path class="wb-box" d="M40 74h36l18 18-18 18H40l18-18Z" />
+		<path class="wb-arrow" d="M94 92h22" />
+		<path class="wb-arrow" d="m110 87 6 5-6 5" />
+		<rect class="wb-box" x="118" y="76" width="88" height="32" rx="7" />
+		<rect class="wb-line" x="130" y="88" width="64" height="6" rx="3" />
+		<rect class="wb-accent-soft" x="118" y="122" width="88" height="22" rx="6" />
+		<rect class="wb-line" x="128" y="130" width="52" height="5" rx="2.5" />
+	</svg>
+
+	<svg
+		class="hero-card hero-card--photo"
+		viewBox="0 0 240 168"
+		role="presentation"
+		focusable="false"
+	>
+		<rect class="wb-surface" x="0.5" y="0.5" width="239" height="167" rx="12" />
+		<rect class="wb-photo-bg" x="18" y="18" width="86" height="112" rx="8" />
+		<circle class="wb-photo-head" cx="61" cy="60" r="19" />
+		<path class="wb-photo-body" d="M33 130c0-17 12.5-30 28-30s28 13 28 30Z" />
+		<rect class="wb-box" x="120" y="18" width="102" height="132" rx="8" />
+		<rect class="wb-line" x="132" y="32" width="54" height="6" rx="3" />
+		<rect class="wb-photo-bg" x="132" y="48" width="32" height="42" rx="4" />
+		<circle class="wb-photo-head" cx="148" cy="63" r="7" />
+		<path class="wb-photo-body" d="M137 90c0-6.5 5-12 11-12s11 5.5 11 12Z" />
+		<rect class="wb-photo-bg" x="172" y="48" width="32" height="42" rx="4" />
+		<circle class="wb-photo-head" cx="188" cy="63" r="7" />
+		<path class="wb-photo-body" d="M177 90c0-6.5 5-12 11-12s11 5.5 11 12Z" />
+		<rect class="wb-line" x="132" y="100" width="72" height="5" rx="2.5" />
+		<rect class="wb-line" x="132" y="112" width="56" height="5" rx="2.5" />
+		<rect class="wb-accent" x="132" y="126" width="40" height="12" rx="6" />
+	</svg>
+
+	<svg class="hero-card hero-card--qr" viewBox="0 0 240 168" role="presentation" focusable="false">
+		<rect class="wb-surface" x="0.5" y="0.5" width="239" height="167" rx="12" />
+		<rect class="wb-box" x="24" y="26" width="72" height="72" rx="8" />
+		<rect class="wb-qr" x="36" y="38" width="20" height="20" rx="3" />
+		<rect class="wb-qr" x="64" y="38" width="20" height="20" rx="3" />
+		<rect class="wb-qr" x="36" y="66" width="20" height="20" rx="3" />
+		<rect class="wb-qr" x="66" y="68" width="12" height="12" rx="2" />
+		<rect class="wb-line" x="24" y="112" width="96" height="7" rx="3.5" />
+		<rect class="wb-line" x="24" y="128" width="64" height="7" rx="3.5" />
+		<rect class="wb-accent-soft" x="140" y="26" width="76" height="132" rx="10" />
+		<path class="wb-arrow" d="M164 56v46" />
+		<path class="wb-arrow" d="m156 94 8 10 8-10" />
+		<rect class="wb-line" x="158" y="122" width="40" height="6" rx="3" />
+		<rect class="wb-line" x="166" y="136" width="24" height="6" rx="3" />
+	</svg>
+</div>
+
+<style>
+	.hero-workbench {
+		position: relative;
+		display: none;
+		width: 100%;
+		max-width: 460px;
+		justify-self: end;
+		/* Rasio tetap: ruang sudah dipesan sebelum SVG dilukis. */
+		aspect-ratio: 1 / 1;
+	}
+
+	@media (min-width: 1024px) {
+		.hero-workbench {
+			display: block;
+			max-width: none;
+			margin-inline: 0;
+		}
+	}
+
+	.hero-card {
+		position: absolute;
+		width: 62%;
+		height: auto;
+		overflow: visible;
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-md);
+		transform-origin: center;
+	}
+
+	/* Token warna untuk isi SVG. Dideklarasikan di sini supaya SVG mewarisi
+	   warna tema dan tetap satu sumber kebenaran bersama global.css. */
+	.hero-workbench {
+		--wb-surface: var(--surface);
+		--wb-line: var(--border-strong);
+		--wb-ink: var(--text-muted);
+		--wb-accent: var(--accent);
+		--wb-accent-soft: var(--accent-soft);
+		--wb-box: color-mix(in srgb, var(--surface-2) 88%, var(--border-strong));
+		--wb-photo-bg: var(--accent-soft);
+		--wb-photo-head: color-mix(in srgb, var(--text-muted) 55%, var(--surface));
+		--wb-photo-body: color-mix(in srgb, var(--text-muted) 70%, var(--surface));
+		--wb-qr: var(--text-muted);
+	}
+
+	.wb-surface {
+		fill: var(--wb-surface);
+		stroke: var(--border);
+		stroke-width: 1;
+	}
+
+	.wb-line {
+		fill: var(--wb-line);
+	}
+
+	.wb-ink {
+		fill: none;
+		stroke: var(--wb-ink);
+		stroke-width: 2.5;
+		stroke-linecap: round;
+	}
+
+	.wb-arrow {
+		fill: none;
+		stroke: var(--wb-ink);
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.wb-accent {
+		fill: var(--wb-accent);
+	}
+
+	.wb-accent-soft {
+		fill: var(--wb-accent-soft);
+	}
+
+	.wb-box {
+		fill: var(--wb-box);
+		stroke: var(--border-strong);
+		stroke-width: 1;
+	}
+
+	.wb-photo-bg {
+		fill: var(--wb-photo-bg);
+	}
+
+	.wb-photo-head {
+		fill: var(--wb-photo-head);
+	}
+
+	.wb-photo-body {
+		fill: var(--wb-photo-body);
+	}
+
+	.wb-qr {
+		fill: var(--wb-qr);
+	}
+
+	.hero-card--canvas {
+		top: 2%;
+		left: 0;
+		transform: rotate(-6deg);
+		z-index: 2;
+	}
+
+	.hero-card--flow {
+		top: 16%;
+		right: 0;
+		transform: rotate(5deg);
+		z-index: 3;
+	}
+
+	.hero-card--photo {
+		bottom: 4%;
+		left: 6%;
+		transform: rotate(4deg);
+		z-index: 4;
+	}
+
+	.hero-card--qr {
+		bottom: 12%;
+		right: 8%;
+		transform: rotate(-4deg);
+		z-index: 1;
+	}
+
+	/* Melayang beberapa piksel: hanya transform dan opacity, dan dimatikan
+	   saat pengguna meminta gerak minimal. */
+	@media (prefers-reduced-motion: no-preference) {
+		.hero-card {
+			animation: wb-float 7s var(--ease) infinite alternate;
+		}
+
+		.hero-card--flow {
+			animation-duration: 8.5s;
+			animation-delay: -1.2s;
+		}
+
+		.hero-card--photo {
+			animation-duration: 9.5s;
+			animation-delay: -2.4s;
+		}
+
+		.hero-card--qr {
+			animation-duration: 7.8s;
+			animation-delay: -0.6s;
+		}
+	}
+
+	@keyframes wb-float {
+		from {
+			translate: 0 0;
+		}
+		to {
+			translate: 0 -7px;
+		}
+	}
+</style>

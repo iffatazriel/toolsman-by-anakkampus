@@ -181,7 +181,7 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 		copyButton.addEventListener('click', async () => {
 			const text = format === 'json' ? mockToJson(rows) : mockToCsv(rows);
 			const copied = await copyText(text);
-			toast(copied ? 'Data disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Data disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		downloadButton.addEventListener('click', () => {
@@ -191,7 +191,7 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 				text,
 				format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8',
 			);
-			toast('Data diunduh.');
+			toast('Data diunduh.', { tone: 'success' });
 		});
 
 		generate();

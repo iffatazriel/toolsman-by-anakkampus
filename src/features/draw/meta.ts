@@ -28,4 +28,14 @@ export const meta: ToolMeta = {
 	],
 	privacyDetail:
 		'Gambar disimpan di penyimpanan browser ini saja. Tidak dikirim ke server.',
+	faq: [
+		{
+			q: 'Apakah gambar tersimpan otomatis?',
+			a: 'Ya. Draf kanvas disimpan di browser ini, jadi masih ada saat halaman dibuka lagi di perangkat yang sama.',
+		},
+		{
+			q: 'Bagaimana link hanya-baca bekerja?',
+			a: 'Isi kanvas diubah jadi tautan panjang di URL, bukan disimpan di server. Siapa pun yang membuka tautan itu melihat salinannya.',
+		},
+	],
 };

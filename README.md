@@ -1,6 +1,6 @@
 # Toolsman
 
-Kotak perkakas gratis untuk mahasiswa informatika dan developer pemula: kanvas gambar, diagram, olah PDF, pas foto, kirim file, generator teks, utilitas, QR code, kompres gambar, cek warna, dan data uji. Gratis, tanpa akun, dan sebagian besar file diproses di browser.
+Kotak perkakas gratis untuk mahasiswa informatika dan developer pemula: kanvas gambar, diagram, olah PDF, pas foto, kirim file, generator teks, utilitas, QR code, kompres gambar, cek warna, data uji, dan bank prompt AI. Gratis, tanpa akun, dan sebagian besar file diproses di browser.
 
 Proyek ini memakai Astro (bukan Next.js seperti di PRD bagian 9). `PRD.md` dan `design.md` tetap jadi acuan isi dan tampilan.
 
@@ -11,6 +11,7 @@ npm install
 npm run dev      # http://localhost:4321
 npm run check    # cek tipe dan diagnostik .astro, dipakai juga sebagai lint
 npm test         # unit test logika (vitest)
+npm run prompts:check  # validasi isi content/prompts/ (juga jalan di prebuild dan CI)
 npm run build    # hasil di dist/client (statis) dan dist/server (Worker)
 ```
 
@@ -34,6 +35,7 @@ Semua alat MVP sudah terpasang dan bisa dipakai:
 - Cron Builder: ekspresi 5 field, 5 jadwal berikutnya per zona waktu, penjelasan Indonesia
 - Kode ke Gambar: highlight.js, tema terang/gelap, padding dan sudut, ekspor PNG
 - Validator JSON Schema: draft 4/7/2019-09/2020-12, error per path dalam bahasa Indonesia
+- Bank Prompt: 30 prompt AI orisinal (belajar, laporan, menulis, kode, riset, karier), pencarian dan filter tersimpan di URL, form variabel dengan pratinjau langsung, salin atau unduh `.md`
 - Berbagi sesi: link hanya-baca untuk Kanvas Gambar dan Diagram, data terkompresi di URL tanpa server. Batas token 7.000 karakter dan URL 8.000 karakter; sesi lebih besar ditolak dengan saran ekspor.
 - Bilingual: toggle Indonesia/Inggris untuk shell, beranda, katalog, palette, dan metadata alat. Copy di dalam workspace alat masih Indonesia.
 - Kirim File: unggah ke Cloudflare R2 lewat presigned URL, berkas di atas 8 MB diunggah per bagian dan bisa dilanjutkan, link berlaku 1 jam, 24 jam, atau 7 hari, bisa dikunci kata sandi dan dibatasi sekali unduh per berkas
@@ -61,7 +63,7 @@ Alur unggah memakai Cloudflare R2 (penyimpanan berkas), D1 (metadata link), dan 
    npx wrangler d1 create toolsman-shares
    ```
 
-2. Isi `database_id` hasil perintah D1 ke `wrangler.jsonc` dan `workers/cleanup/wrangler.jsonc` (sekarang masih `GANTI_DENGAN_ID_D1`).
+2. Kedua berkas wrangler (`wrangler.jsonc` dan `workers/cleanup/wrangler.jsonc`) sudah memuat `database_id` untuk database `toolsman-shares`. Kalau kamu membuat database baru, ganti `database_id` di kedua tempat itu.
 
 3. Terapkan skema:
 
@@ -127,15 +129,15 @@ Kalau Pas Foto diganti dengan pustaka tanpa `eval`, hapus `'unsafe-eval'` dari C
 ### Turnstile di Kirim File
 
 1. Buka Cloudflare Dashboard, menu Turnstile, lalu Add site. Isi hostname `toolsman.anakkampus.workers.dev` atau domain final.
-2. Salin **Site Key** ke `PUBLIC_TURNSTILE_SITE_KEY` di environment build. Nilai ini dibaca saat `npm run build`, jadi build ulang setelah mengubahnya.
+2. Salin **Site Key** ke `PUBLIC_TURNSTILE_SITE_KEY` di berkas `.env` (bukan hanya variabel terminal). Nilai ini dibaca saat `npm run build`, jadi build ulang setelah mengubahnya. Build berhenti dengan pesan jelas kalau nilainya kosong.
 3. Simpan **Secret Key** sebagai secret Worker:
 
    ```bash
    npx wrangler secret put TURNSTILE_SECRET_KEY
    ```
 
-4. Deploy ulang. Kalau hanya salah satu dari site key atau secret yang terisi, unggahan ditolak dengan pesan konfigurasi, bukan diloloskan diam-diam.
-5. Saat pengembangan lokal tanpa kedua nilai itu, widget tidak dimuat dan verifikasi dilewati.
+4. Deploy ulang. Rute unggah membalas 503 kalau secret belum diatur, dan menolak permintaan tanpa token yang valid. Tidak ada jalur yang melewati verifikasi diam-diam.
+5. Untuk pengembangan lokal, isi pasangan kunci uji resmi Cloudflare di `.env` dan `.dev.vars` seperti dijelaskan di `SETUP.md`.
 
 
 ### Keamanan kata sandi link
@@ -181,16 +183,16 @@ npx wrangler secret put R2_BUCKET
 npx wrangler deploy
 ```
 
-`workers/cleanup/wrangler.jsonc` sudah memuat cron dan binding `DB`. Ganti `database_id` di sana dengan ID D1 produksi.
+`workers/cleanup/wrangler.jsonc` sudah memuat cron dan binding `DB` dengan `database_id` yang sama seperti Worker utama.
 
 ## Langkah manual setelah kredensial siap
 
 Jalankan berurutan dari akar proyek.
 
 ```bash
-# 1. Isi ID D1 dan namespace rate limit di wrangler.jsonc dan workers/cleanup/wrangler.jsonc
-#    database_id: hasil `npx wrangler d1 create toolsman-shares`
+# 1. Ganti namespace rate limit di wrangler.jsonc kalau perlu
 #    namespace_id: ganti 1001, 1002, 1003 dengan angka unik milikmu
+#    database_id sudah terisi untuk toolsman-shares; tidak perlu diubah.
 #    PUBLIC_SITE_URL dan PUBLIC_TURNSTILE_SITE_KEY dibaca saat build, bukan runtime.
 
 # 2. Simpan kredensial R2 dan Turnstile sebagai secret Worker utama
@@ -200,7 +202,7 @@ npx wrangler secret put R2_SECRET_ACCESS_KEY
 npx wrangler secret put R2_BUCKET
 npx wrangler secret put TURNSTILE_SECRET_KEY
 
-# 3. Terapkan semua migrasi ke D1 produksi (0001 sampai 0005)
+# 3. Terapkan semua migrasi ke D1 produksi (0001 sampai 0007)
 npx wrangler d1 migrations apply toolsman-shares --remote
 
 # 4. Build dan deploy Worker utama
@@ -310,13 +312,19 @@ src/
   lib/tools.ts              katalog dirakit otomatis dari semua meta.ts
   components/               layout dan komponen dasar
   pages/tools/[slug].astro  template halaman alat
+  pages/tools/prompt/[id].astro  halaman detail prompt, dibuat per berkas YAML
+  pages/prompts/             indeks dan JSON per prompt (prerender)
   pages/s/[id].astro        halaman unduh Kirim File (dirender di Worker)
   pages/api/shares/         endpoint unggah, info, selesai, dan laporan
   styles/global.css         token dan gaya komponen
+content/prompts/<kategori>/<id>.yaml  isi Bank Prompt, satu berkas per prompt
+scripts/prompts-check.mjs   validasi prompt (npm run prompts:check)
 workers/cleanup/            Worker cron pembersih berkas kedaluwarsa
 ```
 
 Menambah alat: buat `src/features/<slug>/meta.ts`, lalu halaman `/tools/<slug>/` muncul sendiri. Beranda tidak perlu diubah. Isi `status: 'siap'` dan sediakan `tool.astro` supaya UI-nya tampil.
+
+Menambah prompt: taruh satu berkas YAML di `content/prompts/<kategori>/<id>.yaml`, lalu jalankan `npm run prompts:check`. Build berhenti kalau ada berkas yang tidak lolos skema, dengan pesan `berkas:baris`. Panduan lengkap ada di `CONTRIBUTING-PROMPTS.md`.
 
 ## Catatan desain
 
@@ -330,7 +338,7 @@ Alasan di balik keputusan yang tidak kelihatan dari kode:
 - **Gerak sebatas hover dan transisi 120 sampai 200 ms.** Tidak ada animasi berulang, dan semuanya berhenti saat `prefers-reduced-motion`.
 - **Tanpa gradient, glass, atau glow.** Tidak ada peran hierarki yang butuh salah satunya.
 - **Logo masih wordmark teks dan favicon huruf T.** Aset logo asli ada di daftar design.md bagian 16, jadi yang dipakai sekarang penanda sementara, bukan logo final.
-- **Tujuh belas kartu alat.** "Landing & Katalog" di PRD adalah halaman ini sendiri, jadi katalog berisi alat saja. Kategori Utilitas ditambahkan setelah Generator mulai penuh; Cron, Kode ke Gambar, dan Validator JSON Schema menyusul di sana.
+- **Delapan belas kartu alat.** "Landing & Katalog" di PRD adalah halaman ini sendiri, jadi katalog berisi alat saja. Kategori Utilitas ditambahkan setelah Generator mulai penuh; Cron, Kode ke Gambar, dan Validator JSON Schema menyusul di sana. Bank Prompt memakai kategori AI tersendiri dan menjadi kartu kedelapan belas.
 
 ## Catatan teknis
 

@@ -38,21 +38,58 @@ function presignUrl(env: R2Env, key: string): string {
 	return url.toString();
 }
 
-export async function presignUpload(env: R2Env, key: string, contentType: string): Promise<string> {
+// R2 tidak mendukung presigned POST (unggahan form multipart), jadi
+// content-length-range tidak tersedia. Sebagai gantinya Content-Length ikut
+// ditandatangani: R2 menolak PUT dengan ukuran lain, dan complete memeriksa
+// ulang hasilnya dengan HeadObject.
+export async function presignUpload(
+	env: R2Env,
+	key: string,
+	contentType: string,
+	size: number,
+): Promise<string> {
 	const signed = await client(env).sign(presignUrl(env, key), {
 		method: 'PUT',
-		aws: { signQuery: true },
-		headers: { 'Content-Type': contentType },
+		aws: { signQuery: true, allHeaders: true },
+		headers: { 'Content-Type': contentType, 'Content-Length': String(size) },
 	});
 	return signed.url;
 }
 
-export async function presignDownload(env: R2Env, key: string): Promise<string> {
-	const signed = await client(env).sign(presignUrl(env, key), {
+// Nama lampiran ikut ditandatangani supaya tautan tidak bisa diubah menjadi
+// inline. response-content-type memaksa octet-stream, jadi .html atau .svg yang
+// diunggah tidak pernah dirender di domain penyimpanan.
+export async function presignDownload(
+	env: R2Env,
+	key: string,
+	filename: string,
+): Promise<string> {
+	const url = new URL(presignUrl(env, key));
+	url.searchParams.set(
+		'response-content-disposition',
+		`attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+	);
+	url.searchParams.set('response-content-type', 'application/octet-stream');
+
+	const signed = await client(env).sign(url.toString(), {
 		method: 'GET',
 		aws: { signQuery: true },
 	});
 	return signed.url;
+}
+
+export async function headObject(env: R2Env, key: string): Promise<number | null> {
+	const response = await client(env).fetch(objectUrl(env, key), { method: 'HEAD' });
+	if (response.status === 404) return null;
+	if (!response.ok) {
+		throw new Error(`Gagal membaca ukuran objek ${key}: ${response.status}`);
+	}
+
+	const length = Number(response.headers.get('Content-Length'));
+	if (!Number.isFinite(length) || length < 0) {
+		throw new Error(`Penyimpanan tidak memberi ukuran objek ${key}.`);
+	}
+	return length;
 }
 
 export async function deleteObject(env: R2Env, key: string): Promise<void> {

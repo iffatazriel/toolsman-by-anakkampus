@@ -38,4 +38,10 @@ export const meta: ToolMeta = {
 	],
 	privacyDetail:
 		'Berkasmu tidak dikirim ke server. Semua proses berjalan di worker browser.',
+	faq: [
+		{
+			q: 'Berapa ukuran PDF yang bisa diproses?',
+			a: 'Sampai 100 MB per berkas. Karena diproses di browser, batasnya memori perangkatmu, bukan batas unggahan server.',
+		},
+	],
 };

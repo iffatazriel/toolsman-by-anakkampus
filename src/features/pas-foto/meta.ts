@@ -34,4 +34,10 @@ export const meta: ToolMeta = {
 	],
 	privacyDetail:
 		'Foto diproses di browser dan tidak diunggah ke server. Yang diambil dari internet hanya model penghapus latar dari CDN imgly saat pertama dipakai.',
+	faq: [
+		{
+			q: 'Kenapa ada unduhan model saat pertama dipakai?',
+			a: 'Penghapus latar memakai model dari CDN imgly. Model itu diunduh sekali, lalu disimpan browser supaya pemakaian berikutnya lebih cepat.',
+		},
+	],
 };

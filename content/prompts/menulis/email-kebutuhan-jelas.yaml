@@ -1,0 +1,48 @@
+id: email-kebutuhan-jelas
+judul: Susun email singkat yang tidak bikin penerima bingung
+kategori: menulis
+tag: [email, struktur, produktivitas]
+ai: [umum, claude, chatgpt]
+bahasa: id
+level: pemula
+variabel:
+  - nama: penerima
+    label: Penerima
+    tipe: pendek
+    contoh: "Dosen pembimbing akademik"
+  - nama: hubungan
+    label: Hubungan
+    tipe: pilihan
+    contoh: Formal
+    pilihan: [Formal, Setengah formal, Rekan kerja]
+  - nama: tujuan
+    label: Permintaan atau tujuan
+    tipe: panjang
+    contoh: "Minta izin pindah jadwal konsultasi dari Rabu ke Jumat minggu ini."
+  - nama: konteks
+    label: Konteks tambahan
+    tipe: panjang
+    contoh: "Ada kelas tambahan pada jam yang sama."
+prompt: |
+  Tulis email untuk {{penerima}} dengan nada {{hubungan}}.
+
+  Tujuan: {{tujuan}}
+  Konteks: {{konteks}}
+
+  Bentuk email:
+  - Subjek: maksimal 8 kata, langsung menyebut tujuan.
+  - Kalimat pertama: tujuan tanpa pembuka panjang seperti "Semoga email ini menemukan Anda dalam keadaan baik".
+  - Isi: satu paragraf pendek berisi konteks yang relevan saja.
+  - Penutup: satu permintaan yang jelas, sebutkan tenggat kalau ada, dan sertakan alternatif yang bisa dipilih penerima.
+  - Salam penutup singkat.
+
+  Aturan:
+  - Maksimal 150 kata.
+  - Jangan menambah alasan, janji, atau lampiran yang tidak ada di konteks.
+  - Kalau tujuan saya membutuhkan informasi yang belum saya berikan, tulis [perlu dilengkapi: ...] daripada menebak.
+  - Setelah email, sebutkan dua hal yang mungkin ditanyakan penerima.
+catatan: |
+  Email yang sopan bukan berarti panjang. Lengkapi tanda [perlu dilengkapi] sebelum mengirim, dan periksa nama penerima.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

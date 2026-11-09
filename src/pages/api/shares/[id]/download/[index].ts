@@ -3,6 +3,7 @@ import type { ShareFileRow, ShareRow } from '../../../../../features/kirim-file/
 import { presignDownload, hasR2Config } from '../../../../../features/kirim-file/r2';
 import { shareEnv } from '../../../../../features/kirim-file/bindings';
 import { isExpired } from '../../../../../features/kirim-file/share-rules';
+import { shareAccess } from '../../../../../features/kirim-file/share-access';
 import { verifyPassword } from '../../../../../features/kirim-file/password';
 import { allowPasswordAttempt, clientIp } from '../../../../../features/kirim-file/rate-limit';
 
@@ -36,7 +37,11 @@ export const POST: APIRoute = async ({ params, request }) => {
 		return new Response('Data link tidak bisa dibaca.', { status: 503 });
 	}
 
-	if (!row || row.status !== 'ready') return new Response('Tidak ditemukan.', { status: 404 });
+	if (!row) return new Response('Tidak ditemukan.', { status: 404 });
+	if (row.takedown_at) {
+		return new Response('Link ini sudah dinonaktifkan.', { status: 410 });
+	}
+	if (row.status !== 'ready') return new Response('Tidak ditemukan.', { status: 404 });
 	if (isExpired(row.expires_at, Date.now())) {
 		return new Response('Link sudah kedaluwarsa.', { status: 410 });
 	}
@@ -61,16 +66,28 @@ export const POST: APIRoute = async ({ params, request }) => {
 	}
 
 	let file: ShareFileRow | undefined;
+	let fileRows: ShareFileRow[] = [];
 	try {
 		const { results } = await env.DB.prepare(
 			'SELECT * FROM share_files WHERE share_id = ? ORDER BY rowid',
 		)
 			.bind(id)
 			.all<ShareFileRow>();
+		fileRows = results;
 		file = results[index];
 	} catch {
 		return new Response('Daftar berkas tidak bisa dibaca.', { status: 503 });
 	}
+
+	const access = shareAccess(row, fileRows, Date.now(), true);
+	if (access === 'taken-down') {
+		return new Response('Link ini sudah dinonaktifkan.', { status: 410 });
+	}
+	if (access === 'expired' || access === 'exhausted') {
+		return new Response('Batas unduhan berkas ini sudah habis.', { status: 410 });
+	}
+	if (access === 'missing') return new Response('Tidak ditemukan.', { status: 404 });
+
 	if (!file) return new Response('Berkas tidak ditemukan.', { status: 404 });
 	if (file.purged) {
 		return new Response('Batas unduhan berkas ini sudah habis.', { status: 410 });
@@ -80,7 +97,7 @@ export const POST: APIRoute = async ({ params, request }) => {
 	// sekali unduh tidak ikut hangus.
 	let upstream: Response;
 	try {
-		upstream = await fetch(await presignDownload(env, file.object_key));
+		upstream = await fetch(await presignDownload(env, file.object_key, file.name));
 	} catch {
 		return new Response('Gagal mengambil berkas dari penyimpanan.', { status: 502 });
 	}
@@ -134,9 +151,12 @@ export const POST: APIRoute = async ({ params, request }) => {
 	return new Response(upstream.body, {
 		status: 200,
 		headers: {
-			'Content-Type': file.mime || 'application/octet-stream',
+			// Selalu octet-stream. Jangan pernah biarkan .html atau .svg
+			// dirender sebagai halaman di domain ini.
+			'Content-Type': 'application/octet-stream',
 			'Content-Length': String(file.size),
 			'Content-Disposition': `attachment; filename*=UTF-8''${encoded}`,
+			'X-Content-Type-Options': 'nosniff',
 			'Cache-Control': 'no-store',
 		},
 	});

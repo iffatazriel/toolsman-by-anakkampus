@@ -1,13 +1,19 @@
 ---
 import CommandPalette from './CommandPalette.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import BrandLogo from './ui/BrandLogo.astro';
 import Icon from './ui/Icon.astro';
 import { tools } from '../lib/tools';
+import { siteConfig } from '../../site.config';
+
+const githubUrl = siteConfig.githubUrl.trim();
 ---
 
 <header class="site-header">
 	<div class="container header-inner">
-		<a class="brand" href="/">Toolsman</a>
+		<a class="brand" href="/" aria-label="Toolsman, ke beranda">
+			<BrandLogo />
+		</a>
 
 		<button
 			type="button"
@@ -24,6 +30,20 @@ import { tools } from '../lib/tools';
 
 		<div class="header-actions">
 			<a class="header-link" href="/tentang/" data-i18n="nav.about">Tentang</a>
+			{
+				githubUrl !== '' && (
+					<a
+						class="icon-button"
+						href={githubUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						aria-label="Kode sumber di GitHub"
+						title="Kode sumber di GitHub"
+					>
+						<Icon name="github" size={20} />
+					</a>
+				)
+			}
 			<button type="button" class="icon-button lang-toggle" data-lang-toggle aria-label="Ganti bahasa">ID</button>
 			<ThemeToggle />
 		</div>
@@ -46,6 +66,14 @@ import { tools } from '../lib/tools';
 	.header-link:hover {
 		color: var(--text);
 		text-decoration: underline;
+	}
+
+	/* Di layar sempit, "Tentang" pindah ke footer supaya ikon GitHub,
+	   bahasa, dan tema tetap muat tanpa header berdesakan. */
+	@media (max-width: 767px) {
+		.header-link {
+			display: none;
+		}
 	}
 
 	.lang-toggle {

@@ -12,9 +12,23 @@ interface Props {
 const { id, label, accept, multiple = false, hint } = Astro.props;
 ---
 
-<div class="dropzone" data-dropzone>
-	<Icon name="upload" size={24} />
-	<p>{label}</p>
+<!--
+	Empat keadaan, diatur lewat atribut data-state:
+	empty (awal) · drag (file melayang di atas) · processing (alat sedang
+	bekerja) · done (file sudah dipilih). Alat yang butuh keadaan
+	processing cukup set data-state="processing" sebelum mulai memproses,
+	lalu "done" saat selesai.
+-->
+<div class="dropzone" data-dropzone data-state="empty">
+	<span class="dropzone__icon" aria-hidden="true">
+		<Icon name="upload" size={24} />
+	</span>
+	<span class="dropzone__icon dropzone__icon--done" aria-hidden="true">
+		<Icon name="check" size={24} />
+	</span>
+	<span class="spinner dropzone__spinner" aria-hidden="true"></span>
+
+	<p class="dropzone__label" data-dropzone-label>{label}</p>
 	<input
 		id={id}
 		type="file"
@@ -23,9 +37,9 @@ const { id, label, accept, multiple = false, hint } = Astro.props;
 		multiple={multiple}
 		data-dropzone-input
 	/>
-	<label class="btn btn--secondary" for={id}>Pilih file</label>
+	<label class="btn btn--secondary dropzone__pick" for={id}>Pilih file</label>
 	{hint && <p class="field-hint">{hint}</p>}
-	<p class="field-hint" data-dropzone-file hidden></p>
+	<p class="field-hint dropzone__file" data-dropzone-file aria-live="polite" hidden></p>
 </div>
 
 <script>
@@ -34,36 +48,46 @@ const { id, label, accept, multiple = false, hint } = Astro.props;
 	zones.forEach((zone) => {
 		const input = zone.querySelector<HTMLInputElement>('[data-dropzone-input]');
 		const fileName = zone.querySelector<HTMLElement>('[data-dropzone-file]');
+		const label = zone.querySelector<HTMLElement>('[data-dropzone-label]');
 
 		if (!input || !fileName) return;
+
+		const baseLabel = label?.textContent ?? '';
 
 		const describe = () => {
 			const files = input.files;
 			if (!files || files.length === 0) {
+				zone.dataset.state = 'empty';
 				fileName.hidden = true;
 				fileName.textContent = '';
+				if (label) label.textContent = baseLabel;
 				return;
 			}
+			zone.dataset.state = 'done';
 			fileName.hidden = false;
-			fileName.textContent = Array.from(files)
-				.map((file) => file.name)
-				.join(', ');
+			fileName.textContent =
+				files.length === 1
+					? files[0]?.name
+					: `${files.length} berkas: ${Array.from(files)
+							.map((file) => file.name)
+							.join(', ')}`;
 		};
 
 		input.addEventListener('change', describe);
 
 		zone.addEventListener('dragover', (event) => {
 			event.preventDefault();
-			zone.dataset.dragover = 'true';
+			zone.dataset.state = 'drag';
 		});
 
 		zone.addEventListener('dragleave', () => {
-			delete zone.dataset.dragover;
+			if (zone.dataset.state === 'drag') {
+				zone.dataset.state = input.files?.length ? 'done' : 'empty';
+			}
 		});
 
 		zone.addEventListener('drop', (event) => {
 			event.preventDefault();
-			delete zone.dataset.dragover;
 			if (!event.dataTransfer) return;
 			input.files = event.dataTransfer.files;
 			input.dispatchEvent(new Event('change'));

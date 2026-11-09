@@ -30,4 +30,14 @@ export const meta: ToolMeta = {
 	],
 	privacyDetail:
 		'Berkas disimpan sementara di penyimpanan objek milik Toolsman, bukan di peramban. Kata sandi disimpan sebagai hash, dan link bisa dilaporkan. Berkas dihapus lebih cepat dari masa berlakunya setelah kedaluwarsa atau setelah kuota unduhannya habis.',
+	faq: [
+		{
+			q: 'Berapa lama link berlaku?',
+			a: 'Pilih 1 jam, 24 jam, atau 7 hari saat mengunggah. Setelah masa itu habis, berkas dan link dihapus otomatis.',
+		},
+		{
+			q: 'Bisakah berkas hanya diunduh sekali?',
+			a: 'Bisa. Nyalakan opsi sekali unduh per berkas saat mengunggah; setelah diambil sekali, berkas itu tidak bisa dibuka lagi.',
+		},
+	],
 };

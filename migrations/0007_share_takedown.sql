@@ -1,0 +1,1 @@
+ALTER TABLE shares ADD COLUMN takedown_at INTEGER;

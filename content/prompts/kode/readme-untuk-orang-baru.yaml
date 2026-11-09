@@ -1,0 +1,45 @@
+id: readme-untuk-orang-baru
+judul: README yang cukup untuk orang baru menjalankan proyek
+kategori: kode
+tag: [dokumentasi, struktur]
+ai: [umum, claude, chatgpt]
+bahasa: id
+level: pemula
+variabel:
+  - nama: nama_proyek
+    label: Nama proyek
+    tipe: pendek
+    contoh: "pencatat-tugas"
+  - nama: masalah
+    label: Masalah yang diselesaikan
+    tipe: panjang
+    contoh: "Mencatat tugas kuliah per mata kuliah dan tenggatnya."
+  - nama: cara_jalan
+    label: Perintah menjalankan
+    tipe: panjang
+    contoh: "npm install\nnpm run dev"
+  - nama: struktur
+    label: Struktur penting
+    tipe: panjang
+    contoh: "src/ untuk kode, content/ untuk data, tests/ untuk tes."
+prompt: |
+  Tulis README untuk {{nama_proyek}}. Pembacanya orang yang baru membuka repo, belum tahu apa pun.
+
+  Masalah yang diselesaikan: {{masalah}}
+  Cara menjalankan: {{cara_jalan}}
+  Struktur penting: {{struktur}}
+
+  README harus berisi, dengan urutan ini:
+  1. Satu paragraf: apa proyek ini dan untuk siapa.
+  2. Prasyarat yang benar-benar perlu, sebutkan versi hanya kalau memang penting.
+  3. Langkah menjalankan, sebagai blok kode yang bisa disalin.
+  4. Tiga perintah yang paling sering dipakai, beserta fungsinya.
+  5. Penjelasan singkat struktur folder, hanya folder yang perlu disentuh.
+  6. Satu bagian "kalau ada masalah", berisi dua gejala umum dan penyebabnya.
+
+  Aturan: jangan mengarang fitur, lisensi, atau kontributor. Jangan memasang lencana yang tidak ada. Kalau ada informasi yang kurang, tulis [perlu dilengkapi: ...]. Bahasa jelas, tanpa gaya pemasaran.
+catatan: |
+  Uji README dengan mengikuti langkahnya dari folder kosong. Kalau ada langkah yang kamu lupa tulis, orang lain juga akan tersandung di situ.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

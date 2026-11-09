@@ -1,0 +1,38 @@
+id: tanggapan-presentasi
+judul: Latihan menjawab pertanyaan setelah presentasi
+kategori: laporan
+tag: [presentasi, diskusi, latihan]
+ai: [umum, chatgpt, gemini]
+bahasa: id
+level: pemula
+variabel:
+  - nama: topik
+    label: Topik presentasi
+    tipe: pendek
+    contoh: "Usulan tarif parkir berbasis zona di kampus"
+  - nama: ringkasan
+    label: Ringkasan isi presentasi
+    tipe: panjang
+    contoh: "Poin utama, data pendukung, dan rekomendasi."
+  - nama: peserta
+    label: Siapa yang hadir
+    tipe: pendek
+    contoh: "Dosen dan dua perwakilan pihak pengelola parkir"
+prompt: |
+  Setelah saya presentasi tentang {{topik}}, saya akan menghadapi tanya jawab dengan {{peserta}}.
+
+  Isi presentasi saya:
+  {{ringkasan}}
+
+  Buat latihan tanya jawab:
+  1. Delapan pertanyaan yang paling mungkin muncul, urut dari yang paling ramah ke paling menekan. Untuk setiap pertanyaan, sebutkan jenisnya: klarifikasi data, keberatan kebijakan, pertanyaan biaya, atau pertanyaan kepraktisan.
+  2. Untuk tiap pertanyaan, tulis kerangka jawaban tiga poin, bukan skrip panjang. Awali dengan jawaban singkat satu kalimat.
+  3. Dua pertanyaan yang tidak bisa saya jawab dengan data di atas. Sarankan cara jujur menjawabnya tanpa berpura-pura punya data.
+  4. Satu kalimat penutup yang bisa dipakai untuk semua pertanyaan sulit.
+
+  Aturan: pakai hanya data di dalam ringkasan. Jangan membuat angka, nama, atau kebijakan baru, karena jawaban itu akan saya ucapkan di depan orang.
+catatan: |
+  Latih jawabannya dengan suara, bukan dibaca. Kalau ada pertanyaan yang tidak bisa dijawab, akui dan tawarkan tindak lanjut. Itu lebih baik daripada mengarang angka.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

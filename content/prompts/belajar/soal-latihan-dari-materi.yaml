@@ -1,0 +1,43 @@
+id: soal-latihan-dari-materi
+judul: Buat soal latihan bertingkat dari materi kuliahmu
+kategori: belajar
+tag: [latihan, kuis, ujian]
+ai: [umum, chatgpt, gemini]
+bahasa: id
+level: menengah
+variabel:
+  - nama: materi
+    label: Materi sumber
+    tipe: panjang
+    contoh: "Tempel ringkasan, slide, atau catatan yang ingin diuji."
+  - nama: jumlah_soal
+    label: Jumlah soal
+    tipe: pilihan
+    contoh: "10"
+    pilihan: ["5", "10", "15"]
+  - nama: tingkat
+    label: Tingkat kesulitan
+    tipe: pilihan
+    contoh: Terapkan
+    pilihan: [Ingat, Terapkan, Analisis]
+prompt: |
+  Kamu penyusun soal yang teliti. Buat {{jumlah_soal}} soal latihan dari materi berikut, dengan tingkat {{tingkat}}.
+
+  Materi:
+  {{materi}}
+
+  Format keluaran:
+  - Bagian A: 60 persen soal pilihan ganda. Setiap soal punya 4 opsi, satu jawaban benar, dan alasan singkat mengapa pengecoh lain salah.
+  - Bagian B: 40 persen soal uraian pendek. Sertakan kunci jawaban berisi 2 sampai 3 poin yang harus muncul.
+  - Setiap soal menunjuk bagian materi yang diuji, cukup dengan nama subbab atau kutipan singkat.
+
+  Aturan:
+  - Semua jawaban harus bisa dibuktikan dari materi di atas.
+  - Jangan membuat soal jebakan yang bergantung pada hafalan angka yang tidak ada di materi.
+  - Kalau materi terlalu tipis untuk sejumlah soal yang diminta, katakan bagian mana yang kurang dan buat soal seadanya, jangan menambahkan fakta baru.
+  - Akhiri dengan tabel singkat: nomor soal, tingkat, dan topik.
+catatan: |
+  Kerjakan dulu tanpa melihat kunci, baru cocokkan. Kalau banyak salah di satu topik, ulang bagian itu sebelum menambah soal baru. Soal buatan AI tetap perlu kamu periksa.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

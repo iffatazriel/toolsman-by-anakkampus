@@ -11,9 +11,14 @@ import {
 } from '../../../features/kirim-file/share-rules';
 import { presignUpload, hasR2Config } from '../../../features/kirim-file/r2';
 import { hashPassword } from '../../../features/kirim-file/password';
+import {
+	d1QuotaStore,
+	quotaMessage,
+	releaseUploadQuota,
+	reserveUploadQuota,
+} from '../../../features/kirim-file/quota';
 import { shareEnv, type ShareEnv } from '../../../features/kirim-file/bindings';
-import { turnstileSiteKey, verifyTurnstile } from '../../../features/kirim-file/turnstile';
-
+import { verifyTurnstile } from '../../../features/kirim-file/turnstile';
 export const prerender = false;
 
 interface Body {
@@ -65,39 +70,43 @@ export const POST: APIRoute = async ({ request }) => {
 		if (problem) return json({ error: problem }, 400);
 	}
 
-	const siteKey = turnstileSiteKey();
 	const turnstileSecret = env.TURNSTILE_SECRET_KEY;
-	if (siteKey && !turnstileSecret) {
+	if (!turnstileSecret) {
 		return json({ error: 'Verifikasi keamanan belum dikonfigurasi di server.' }, 503);
 	}
-	if (!siteKey && turnstileSecret) {
-		return json({ error: 'Kunci situs Turnstile belum diatur saat build.' }, 503);
-	}
-	if (siteKey && turnstileSecret) {
-		const verified = await verifyTurnstile(
-			turnstileSecret,
-			body.turnstileToken,
-			clientIp(request),
+
+	const verified = await verifyTurnstile(turnstileSecret, body.turnstileToken, clientIp(request));
+	if (!verified) {
+		return json(
+			{ error: 'Verifikasi keamanan gagal. Selesaikan ulang, lalu coba lagi.' },
+			400,
 		);
-		if (!verified) {
-			return json(
-				{ error: 'Verifikasi keamanan gagal. Selesaikan ulang, lalu coba lagi.' },
-				400,
-			);
-		}
 	}
 
 	const oneTime = body.oneTime === true;
 	const shareId = randomToken(16);
 	const now = Date.now();
+	const ip = clientIp(request);
+	const totalBytes = body.files.reduce((sum, file) => sum + file.size, 0);
 	const expiry = expiresAt(now, body.expiry);
+
+	const quotaStore = d1QuotaStore(env.DB);
+	const quota = await reserveUploadQuota(quotaStore, { ip, bytes: totalBytes, now });
+	if (!quota.ok) {
+		return json({ error: quotaMessage(quota.scope) }, 429);
+	}
 
 	try {
 		const files = await Promise.all(
 			body.files.map(async (file, index) => {
 				const safe = sanitizeFileName(file.name);
 				const key = `${shareId}/${index}-${safe}`;
-				const uploadUrl = await presignUpload(env, key, file.type || 'application/octet-stream');
+				const uploadUrl = await presignUpload(
+					env,
+					key,
+					file.type || 'application/octet-stream',
+					file.size,
+				);
 				return { key, name: safe, size: file.size, type: file.type, uploadUrl };
 			}),
 		);
@@ -128,6 +137,7 @@ export const POST: APIRoute = async ({ request }) => {
 		});
 	} catch (error) {
 		console.error('Gagal menyiapkan share:', error);
+		await releaseUploadQuota(quotaStore, { ip, bytes: totalBytes, now }).catch(() => undefined);
 		return json({ error: 'Server gagal menyiapkan unggahan. Coba lagi.' }, 500);
 	}
 };

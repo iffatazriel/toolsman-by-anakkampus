@@ -12,6 +12,7 @@ export interface ShareEnv extends R2Env {
 	REPORT_LIMIT?: RateLimitBinding;
 	PASSWORD_LIMIT?: RateLimitBinding;
 	TURNSTILE_SECRET_KEY?: string;
+	ABUSE_WEBHOOK_URL?: string;
 }
 
 export function shareEnv(): ShareEnv | null {

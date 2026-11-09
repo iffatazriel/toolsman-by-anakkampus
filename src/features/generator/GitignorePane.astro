@@ -88,12 +88,12 @@ import { defaultGitignoreGroups, gitignoreGroups } from '../../lib/gitignore';
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(text);
-			toast(copied ? '.gitignore disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? '.gitignore disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText('.gitignore', text, 'text/plain;charset=utf-8');
-			toast('Berkas .gitignore diunduh.');
+			toast('Berkas .gitignore diunduh.', { tone: 'success' });
 		});
 
 		update();

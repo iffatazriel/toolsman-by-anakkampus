@@ -16,15 +16,19 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'footer.license': 'Lisensi',
 		'footer.note':
 			'Gratis, tanpa akun. File diproses di perangkatmu, kecuali Kirim File. {year}',
+		'footer.privacyLine': 'File diproses di perangkatmu, kecuali Kirim File.',
+		'footer.toolsLabel': 'Alat per kategori',
+		'footer.project': 'Proyek',
+		'footer.copyright': '© {year} Toolsman',
+		'footer.made': 'Dibuat untuk anak kampus',
 		'home.searchLabel': 'Cari alat',
 		'home.searchPlaceholder': 'mis. gabung pdf atau flowchart',
-		'home.searchHint': 'Tekan / atau Ctrl+K untuk membuka pencarian dari halaman mana saja.',
+		'home.searchHint': 'Tekan / atau Ctrl K untuk membuka pencarian dari halaman mana saja.',
 		'home.heroTitle': 'Semua perkakas kuliahmu, satu kotak.',
 		'home.heroLede':
-			'Alat gambar, diagram, PDF, pas foto, kirim file, generator teks, utilitas, dan QR. Gratis dan tanpa akun.',
-		'home.readyCount': '{n} alat sudah bisa dipakai.',
-		'home.readyList':
-			'Gambar, diagram, PDF, foto, kirim file, teks, utilitas, QR, dan data uji. Gratis, tanpa akun.',
+			'{n} alat: kanvas gambar, diagram, PDF, pas foto, kirim file, generator teks, sampai penghitung hash. Gratis, tanpa akun.',
+		'home.heroPrivacy': 'File diproses di perangkatmu, kecuali Kirim File.',
+		'home.examplesLabel': 'Coba:',
 		'home.favorites': 'Favoritmu',
 		'home.recent': 'Terakhir dipakai',
 		'home.saved': 'Disimpan di browser ini',
@@ -60,6 +64,8 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'tool.plans': 'Yang direncanakan',
 		'tool.plansHint': 'Diambil dari PRD v1.0, modul {name}.',
 		'tool.related': 'Alat lain di daftar',
+		'tool.faq': 'Pertanyaan umum',
+		'tool.copyLink': 'Salin link',
 		'tool.favorite': 'Favorit',
 		'tool.ready': 'Siap dipakai',
 		'tool.notReadyStatus': 'Belum jadi',
@@ -71,6 +77,7 @@ export const ui: Record<Lang, Record<string, string>> = {
 			'Belum ada alat yang cocok. Coba kata lain seperti "pdf", "foto", atau "json".',
 		'palette.updown': '↑ ↓ untuk pilih',
 		'palette.enter': 'Enter untuk buka',
+		'palette.recent': 'Terakhir dipakai',
 		'theme.toDark': 'Ganti ke tema gelap',
 		'theme.toLight': 'Ganti ke tema terang',
 		'lang.label': 'Ganti bahasa',
@@ -88,15 +95,19 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'footer.terms': 'Terms',
 		'footer.license': 'License',
 		'footer.note': 'Free, no account. Files are processed on your device, except Send File. {year}',
+		'footer.privacyLine': 'Files are processed on your device, except Send File.',
+		'footer.toolsLabel': 'Tools by category',
+		'footer.project': 'Project',
+		'footer.copyright': '© {year} Toolsman',
+		'footer.made': 'Made for campus kids',
 		'home.searchLabel': 'Search tools',
 		'home.searchPlaceholder': 'e.g. merge pdf or flowchart',
-		'home.searchHint': 'Press / or Ctrl+K to open search from any page.',
+		'home.searchHint': 'Press / or Ctrl K to open search from any page.',
 		'home.heroTitle': 'All your study tools, one box.',
 		'home.heroLede':
-			'Draw, diagrams, PDF, ID photos, file sharing, text generators, utilities, and QR. Free and no account.',
-		'home.readyCount': '{n} tools are ready.',
-		'home.readyList':
-			'Images, diagrams, PDF, photos, file sharing, text, utilities, QR, and test data. Free, no account.',
+			'{n} tools: drawing canvas, diagrams, PDF, ID photos, file sharing, text generators, and hash checks. Free, no account.',
+		'home.heroPrivacy': 'Files are processed on your device, except Send File.',
+		'home.examplesLabel': 'Try:',
 		'home.favorites': 'Your favorites',
 		'home.recent': 'Recently used',
 		'home.saved': 'Saved in this browser',
@@ -132,6 +143,8 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'tool.plans': 'Planned features',
 		'tool.plansHint': 'From PRD v1.0, module {name}.',
 		'tool.related': 'More tools',
+		'tool.faq': 'Common questions',
+		'tool.copyLink': 'Copy link',
 		'tool.favorite': 'Favorite',
 		'tool.ready': 'Ready to use',
 		'tool.notReadyStatus': 'Not ready',
@@ -142,6 +155,7 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'palette.empty': 'No matching tools. Try another word such as "pdf", "photo", or "json".',
 		'palette.updown': '↑ ↓ to select',
 		'palette.enter': 'Enter to open',
+		'palette.recent': 'Recently used',
 		'theme.toDark': 'Switch to dark theme',
 		'theme.toLight': 'Switch to light theme',
 		'lang.label': 'Switch language',
@@ -159,6 +173,7 @@ export const categoryText: Record<Lang, Record<ToolCategory, string>> = {
 		berbagi: 'Berbagi',
 		generator: 'Generator',
 		utilitas: 'Utilitas',
+		ai: 'AI',
 	},
 	en: {
 		gambar: 'Images',
@@ -168,6 +183,7 @@ export const categoryText: Record<Lang, Record<ToolCategory, string>> = {
 		berbagi: 'Sharing',
 		generator: 'Generators',
 		utilitas: 'Utilities',
+		ai: 'AI',
 	},
 };
 
@@ -464,6 +480,28 @@ export const toolText: Record<string, Record<Lang, ToolText>> = {
 			tagline:
 				'Validasi JSON terhadap JSON Schema dan baca error per path dalam bahasa Indonesia.',
 			usage: ['Tempel schema dan data.', 'Pilih draft lalu validasi.', 'Perbaiki data sesuai path dan pesannya.'],
+		},
+	},
+	prompt: {
+		en: {
+			name: 'Prompt Library',
+			tagline:
+				'Search ready-made AI prompts, fill in the blanks, and copy the final result. Everything stays in this browser.',
+			usage: [
+				'Search or filter by category, AI, and level. The filters are stored in the URL, so you can share them.',
+				'Open a prompt, fill the variables, and watch the preview update as you type.',
+				'Copy the result or download it as a .md file. Nothing is sent to a server.',
+			],
+		},
+		id: {
+			name: 'Bank Prompt',
+			tagline:
+				'Cari prompt AI siap pakai, isi bagian kosongnya, lalu salin hasil akhirnya. Semua proses di browser ini.',
+			usage: [
+				'Cari atau saring menurut kategori, AI, dan level. Filternya tersimpan di URL, jadi bisa dibagikan.',
+				'Buka satu prompt, isi variabelnya, dan lihat pratinjau berubah saat kamu mengetik.',
+				'Salin hasilnya atau unduh sebagai berkas .md. Tidak ada yang dikirim ke server.',
+			],
 		},
 	},
 };

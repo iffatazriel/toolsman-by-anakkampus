@@ -202,7 +202,7 @@ import { cronTimezones } from './cron';
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(expressionText.textContent ?? '');
-			toast(copied ? 'Ekspresi cron disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Ekspresi cron disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		update();

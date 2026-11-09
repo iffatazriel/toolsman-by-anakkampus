@@ -314,7 +314,9 @@ const tabs = [
 
 	const copy = async (text: string, message = 'Disalin.') => {
 		const copied = await copyText(text);
-		toast(copied ? message : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+		toast(copied ? message : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', {
+		tone: copied ? 'success' : 'error',
+	});
 	};
 
 	const showError = (

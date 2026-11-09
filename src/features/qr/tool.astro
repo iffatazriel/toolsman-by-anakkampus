@@ -209,7 +209,7 @@
 			document.body.append(link);
 			link.click();
 			link.remove();
-			toast('QR PNG diunduh.');
+			toast('QR PNG diunduh.', { tone: 'success' });
 		});
 
 		svgButton.addEventListener('click', () => {
@@ -219,7 +219,7 @@
 				svgText,
 				'image/svg+xml;charset=utf-8',
 			);
-			toast('QR SVG diunduh.');
+			toast('QR SVG diunduh.', { tone: 'success' });
 		});
 
 		paint(false);

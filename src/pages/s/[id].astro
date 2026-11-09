@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Modal from '../../components/ui/Modal.astro';
 import type { ShareFileRow, ShareRow } from '../../features/kirim-file/db';
 import { presignDownload, hasR2Config } from '../../features/kirim-file/r2';
+import { shareAccess } from '../../features/kirim-file/share-access';
 import { viewShare } from '../../features/kirim-file/share-view';
 import { formatBytes, formatRemaining } from '../../features/kirim-file/format';
 import { shareEnv } from '../../features/kirim-file/bindings';
@@ -62,6 +63,22 @@ if (Astro.request.method === 'POST' && locked && row && view.state === 'ok') {
 
 const unlocked = !locked || password !== '';
 
+let fileRows: ShareFileRow[] = [];
+if (env && row?.status === 'ready') {
+	try {
+		const { results } = await env.DB.prepare(
+			'SELECT * FROM share_files WHERE share_id = ? ORDER BY rowid',
+		)
+			.bind(id)
+			.all<ShareFileRow>();
+		fileRows = results;
+	} catch {
+		fileRows = [];
+	}
+}
+
+const access = shareAccess(row, fileRows, Date.now(), unlocked);
+
 interface FileView {
 	name: string;
 	size: number;
@@ -71,47 +88,41 @@ interface FileView {
 }
 
 const files: FileView[] =
-	env && r2Ready && view.state === 'ok' && unlocked
-		? await env.DB.prepare('SELECT * FROM share_files WHERE share_id = ? ORDER BY rowid')
-				.bind(id)
-				.all<ShareFileRow>()
-				.then(({ results }) =>
-					Promise.all(
-						results.map(async (file) => {
-							const downloadForm = locked || maxDownloads !== null;
-							return {
-								name: file.name,
-								size: file.size,
-								downloadForm,
-								remaining:
-									maxDownloads === null
-										? null
-										: file.purged
-											? 0
-											: Math.max(0, maxDownloads - file.downloads),
-								url:
-									downloadForm || !env
-										? null
-										: await presignDownload(env, file.object_key),
-							};
-						}),
-					),
-				)
-				.catch(() => [])
+	access === 'ok' && env && r2Ready
+		? await Promise.all(
+				fileRows.map(async (file) => {
+					const downloadForm = locked || maxDownloads !== null;
+					return {
+						name: file.name,
+						size: file.size,
+						downloadForm,
+						remaining:
+							maxDownloads === null
+								? null
+								: file.purged
+									? 0
+									: Math.max(0, maxDownloads - file.downloads),
+						url: downloadForm ? null : await presignDownload(env, file.object_key, file.name),
+					};
+				}),
+			)
 		: [];
 
-if (view.state === 'expired') Astro.response.status = 410;
-else if (view.state === 'missing') Astro.response.status = 404;
+if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
+	Astro.response.status = 410;
+} else if (access === 'missing') {
+	Astro.response.status = 404;
+}
 ---
 
 <Layout
-	title={view.state === 'ok' ? `Unduh berkas, Toolsman` : 'Link tidak tersedia, Toolsman'}
+	title={access === 'ok' ? `Unduh berkas, Toolsman` : 'Link tidak tersedia, Toolsman'}
 	description="Halaman unduh berkas yang dibagikan lewat Toolsman. Link hilang sendiri sesuai masa berlakunya."
 	noindex
 >
 	<section class="container prose-page share-page" data-share-id={id}>
 		{
-			view.state === 'missing' && (
+			access === 'missing' && (
 				<>
 					<h1>Link tidak ditemukan</h1>
 					<p>
@@ -128,7 +139,7 @@ else if (view.state === 'missing') Astro.response.status = 404;
 		}
 
 		{
-			view.state === 'expired' && (
+			access === 'expired' && (
 				<>
 					<h1>Link sudah kedaluwarsa</h1>
 					<p>
@@ -145,7 +156,45 @@ else if (view.state === 'missing') Astro.response.status = 404;
 		}
 
 		{
-			view.state === 'ok' && !r2Ready && (
+			access === 'exhausted' && (
+				<>
+					<h1>Berkas sudah diunduh</h1>
+					<p>
+						Link ini hanya berlaku sekali unduh, dan kuotanya sudah terpakai. Minta
+						pengirim membuat link baru kalau berkasnya masih dibutuhkan.
+					</p>
+					<p>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
+							Kirim berkas
+						</a>
+					</p>
+				</>
+			)
+		}
+
+		{
+			access === 'taken-down' && (
+				<>
+					<h1>Link ini dinonaktifkan</h1>
+					<p>
+						Link ini sudah dinonaktifkan karena melanggar ketentuan layanan. Berkasnya
+						sudah dihapus dan tidak bisa diunduh lagi.
+					</p>
+					<p>
+						Kalau kamu pemilik berkas dan merasa ini keliru, hubungi pemilik situs lewat
+						halaman <a href="/tentang">Tentang</a>.
+					</p>
+					<p>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
+							Kirim berkas
+						</a>
+					</p>
+				</>
+			)
+		}
+
+		{
+			access === 'ok' && !r2Ready && (
 				<>
 					<h1>Layanan unduh belum siap</h1>
 					<p>
@@ -157,7 +206,7 @@ else if (view.state === 'missing') Astro.response.status = 404;
 		}
 
 		{
-			view.state === 'ok' && r2Ready && !unlocked && (
+			access === 'locked' && r2Ready && (
 				<form method="post" class="share-lock">
 					<h1>Link ini dikunci</h1>
 					<p>Masukkan kata sandi dari pengirim untuk melihat daftar berkas.</p>
@@ -185,7 +234,7 @@ else if (view.state === 'missing') Astro.response.status = 404;
 		}
 
 		{
-			view.state === 'ok' && r2Ready && unlocked && (
+			access === 'ok' && r2Ready && (
 				<>
 					<h1>Berkas siap diunduh</h1>
 					<p data-countdown>{formatRemaining(view.remainingMs)}.</p>

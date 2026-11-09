@@ -1,0 +1,46 @@
+id: surat-lamaran-spesifik
+judul: Surat lamaran yang menyebut hal spesifik, bukan klise
+kategori: karier
+tag: [lamaran, karier, email]
+ai: [umum, claude, gemini]
+bahasa: id
+level: pemula
+variabel:
+  - nama: posisi
+    label: Posisi
+    tipe: pendek
+    contoh: "Asisten laboratorium jaringan"
+  - nama: instansi
+    label: Instansi atau perusahaan
+    tipe: pendek
+    contoh: "Laboratorium Jaringan Kampus"
+  - nama: alasan
+    label: Alasan tertarik
+    tipe: panjang
+    contoh: "Apa yang kamu tahu tentang tempat itu dan mengapa cocok denganmu."
+  - nama: bukti
+    label: Bukti kemampuan
+    tipe: panjang
+    contoh: "Proyek atau pengalaman yang relevan, dengan hasil yang bisa dicek."
+prompt: |
+  Tulis surat lamaran untuk posisi {{posisi}} di {{instansi}}.
+
+  Alasan saya tertarik: {{alasan}}
+  Bukti kemampuan: {{bukti}}
+
+  Bentuk surat:
+  - Pembuka: sebut posisi dan satu alasan spesifik tentang instansi, bukan pujian umum.
+  - Paragraf kedua: bukti paling relevan, satu atau dua contoh, jelaskan peran saya di dalamnya.
+  - Paragraf ketiga: apa yang ingin saya pelajari di posisi ini, kaitkan dengan kebutuhan instansi.
+  - Penutup: kesediaan dihubungi dan ucapan terima kasih singkat.
+
+  Aturan:
+  - Maksimal 300 kata, tanpa kalimat "saya adalah orang yang pekerja keras".
+  - Jangan mengarang pengalaman, nama orang, atau prestasi.
+  - Jangan mengulang isi CV kata per kata.
+  - Kalau alasan yang saya berikan terlalu umum, sebutkan bagian mana yang perlu saya ganti dengan hal spesifik.
+catatan: |
+  Baca ulang lowongannya sebelum memakai surat ini. Ganti bagian yang masih umum dengan hal yang hanya bisa kamu tulis untuk instansi itu.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

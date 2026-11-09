@@ -1,0 +1,38 @@
+id: latihan-wawancara-kerja
+judul: Latihan wawancara kerja dengan pertanyaan lanjutan
+kategori: karier
+tag: [wawancara-kerja, karier, latihan]
+ai: [umum, claude, chatgpt]
+bahasa: id
+level: menengah
+variabel:
+  - nama: posisi
+    label: Posisi
+    tipe: pendek
+    contoh: "Magang data analyst"
+  - nama: pengalaman
+    label: Pengalaman yang bisa diceritakan
+    tipe: panjang
+    contoh: "Proyek, organisasi, atau kerja sebelumnya, beserta hasilnya."
+  - nama: kekhawatiran
+    label: Bagian yang paling kamu takutkan
+    tipe: pendek
+    contoh: "Ditanya soal SQL yang belum pernah aku pakai"
+prompt: |
+  Kamu pewawancara untuk posisi {{posisi}}. Latih saya, satu pertanyaan per balasan.
+
+  Pengalaman saya: {{pengalaman}}
+  Yang paling saya takutkan: {{kekhawatiran}}
+
+  Aturan latihan:
+  - Mulai dengan satu pertanyaan pembuka yang wajar, lalu tunggu jawaban saya.
+  - Setelah jawaban saya, beri umpan balik tiga baris: apa yang jelas, apa yang perlu bukti, dan satu pertanyaan lanjutan.
+  - Gunakan pola situasi, tugas, tindakan, hasil untuk menggali, tetapi jangan memberi contoh jawaban yang bisa saya hafal.
+  - Setelah lima pertanyaan, beri penilaian: kekuatan, kelemahan, dan dua hal yang perlu dilatih lagi.
+
+  Aturan isi: jangan mengarang pengalaman untuk saya. Kalau jawaban saya tipis, tanyakan detailnya. Jangan menilai kepribadian saya, nilai jawabannya saja.
+catatan: |
+  Latihan terasa canggung, itu normal. Rekam suaramu sekali untuk memeriksa tempo bicara. Siapkan cerita nyata, bukan hafalan jawaban.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

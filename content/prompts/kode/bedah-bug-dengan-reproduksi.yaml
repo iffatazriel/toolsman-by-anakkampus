@@ -1,0 +1,48 @@
+id: bedah-bug-dengan-reproduksi
+judul: Bedah bug dari pesan error tanpa menebak-nebak
+kategori: kode
+tag: [debugging, javascript, python]
+ai: [umum, chatgpt, claude]
+bahasa: id
+level: menengah
+variabel:
+  - nama: bahasa
+    label: Bahasa atau framework
+    tipe: pendek
+    contoh: "Node.js 22, Express"
+  - nama: error
+    label: Pesan error lengkap
+    tipe: panjang
+    contoh: "Tempel stack trace apa adanya, jangan diringkas."
+  - nama: kode
+    label: Potongan kode terkait
+    tipe: panjang
+    contoh: "Tempel fungsi tempat error terjadi."
+  - nama: sudah_dicoba
+    label: Yang sudah dicoba
+    tipe: panjang
+    contoh: "Sudah cek versi paket, sudah hapus cache."
+prompt: |
+  Bantu saya mencari penyebab bug ini. Jangan langsung memberi perbaikan.
+
+  Lingkungan: {{bahasa}}
+  Error:
+  {{error}}
+
+  Kode:
+  {{kode}}
+
+  Sudah saya coba: {{sudah_dicoba}}
+
+  Jawab dengan urutan ini:
+  1. Baca error-nya: baris mana yang sebenarnya gagal, dan apa arti pesan itu dalam bahasa sederhana.
+  2. Daftar 3 hipotesis penyebab, urut dari yang paling mungkin. Untuk setiap hipotesis: alasan, dan cara membuktikannya dengan satu langkah kecil (log, breakpoint, atau tes minimal).
+  3. Perbaikan yang paling kecil untuk hipotesis teratas, dengan alasan mengapa itu cukup.
+  4. Kalau hipotesis itu salah, langkah berikutnya.
+
+  Aturan: kalau ada bagian kode yang kurang untuk menyimpulkan, katakan bagian mana. Jangan mengubah logika lain yang tidak terkait bug. Jangan menambah dependensi baru.
+catatan: |
+  Cari penyebab dulu, perbaiki belakangan. Satu hipotesis satu pengujian lebih cepat daripada mengubah banyak baris sekaligus. Komit dulu sebelum mencoba perbaikan.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

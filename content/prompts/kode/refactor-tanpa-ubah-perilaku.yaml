@@ -1,0 +1,47 @@
+id: refactor-tanpa-ubah-perilaku
+judul: Rombak fungsi panjang tanpa mengubah perilakunya
+kategori: kode
+tag: [refactor, code-review, javascript]
+ai: [claude, chatgpt, copilot]
+bahasa: id
+level: mahir
+variabel:
+  - nama: bahasa
+    label: Bahasa
+    tipe: pendek
+    contoh: TypeScript
+  - nama: kode
+    label: Kode sumber
+    tipe: panjang
+    contoh: "Tempel satu fungsi atau satu modul kecil."
+  - nama: masalah
+    label: Apa yang mengganggu
+    tipe: panjang
+    contoh: "Fungsi 120 baris, banyak if bersarang, sulit dites."
+  - nama: batasan
+    label: Batasan
+    tipe: pendek
+    contoh: "Tidak boleh menambah dependensi, API publik tetap sama"
+prompt: |
+  Rombak kode berikut tanpa mengubah perilaku yang terlihat dari luar.
+
+  Bahasa: {{bahasa}}
+  Batasan: {{batasan}}
+  Yang mengganggu: {{masalah}}
+
+  Kode:
+  {{kode}}
+
+  Proses:
+  1. Sebelum mengubah apa pun, tulis daftar perilaku yang harus tetap sama: masukan, keluaran, efek samping, dan kasus tepi. Ini kontraknya.
+  2. Sebutkan dua sampai tiga bau kode yang benar-benar ada di kode ini, bukan daftar umum.
+  3. Beri versi hasil rombakan, utuh dan bisa dijalankan, dengan nama fungsi yang jelas.
+  4. Tulis tes kecil yang membuktikan kontrak tadi masih terpenuhi, termasuk satu kasus tepi.
+  5. Sebutkan risiko: bagian mana yang paling mungkin berubah perilakunya tanpa sadar.
+
+  Aturan: jangan menambah fitur, jangan mengubah pesan error yang sudah dipakai pemanggil, jangan memasang pustaka baru. Kalau rombakan besar tidak sepadan, katakan dan usulkan versi kecil.
+catatan: |
+  Simpan versi asli di samping versi baru sampai tesmu hijau. Rombakan tanpa tes itu tebak-tebakan. Jalankan tes sebelum dan sesudah, jangan hanya sesudah.
+penulis: Tim Toolsman
+lisensi: CC-BY-4.0
+dibuat: "2026-11-09"

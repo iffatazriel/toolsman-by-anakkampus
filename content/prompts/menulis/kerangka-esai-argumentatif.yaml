@@ -1,0 +1,44 @@
+id: kerangka-esai-argumentatif
+judul: Kerangka esai argumentatif yang punya lawan bicara
+kategori: menulis
+tag: [esai, argumentasi, struktur]
+ai: [umum, claude, gemini]
+bahasa: id
+level: menengah
+variabel:
+  - nama: topik
+    label: Topik esai
+    tipe: pendek
+    contoh: "Kewajiban magang bagi mahasiswa semester lima"
+  - nama: posisi
+    label: Posisimu
+    tipe: pilihan
+    contoh: Mendukung
+    pilihan: [Mendukung, Menolak, Netral]
+  - nama: batas_kata
+    label: Batas kata
+    tipe: pilihan
+    contoh: "1000"
+    pilihan: ["600", "1000", "1500"]
+  - nama: konteks
+    label: Konteks khusus
+    tipe: panjang
+    contoh: "Kebijakan kampusmu, kondisi mahasiswa yang bekerja, atau pengalamanmu sendiri."
+prompt: |
+  Bantu saya menyusun kerangka esai argumentatif {{batas_kata}} kata tentang {{topik}}. Posisi saya: {{posisi}}.
+
+  Konteks: {{konteks}}
+
+  Susun:
+  1. Tesis satu kalimat yang jelas posisinya, bukan pertanyaan dan bukan pengumuman topik.
+  2. Tiga argumen pendukung. Untuk setiap argumen: klaim, alasan, bukti yang saya harus cari sendiri, dan contoh yang mungkin.
+  3. Satu argumen lawan yang paling kuat beserta jawabannya. Ini wajib, bukan pilihan.
+  4. Kerangka paragraf: nomor, ide pokok, dan bukti yang dipakai.
+  5. Penutup yang tidak mengulang persis kalimat tesis.
+
+  Aturan: jangan menulis esainya, hanya kerangka. Jangan mengarang statistik, nama peneliti, atau berita. Setiap tempat bukti ditandai [cari data].
+catatan: |
+  Bagian argumen lawan yang membuat esai terasa dewasa. Isi [cari data] dengan sumber yang benar-benar kamu baca. Kerangka ini untuk belajar menyusun, bukan menyalin mentah.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

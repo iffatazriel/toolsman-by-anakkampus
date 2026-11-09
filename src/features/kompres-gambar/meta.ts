@@ -26,4 +26,10 @@ export const meta: ToolMeta = {
 	],
 	privacyDetail:
 		'Gambar dibaca dan dikompres di tab ini. Tidak ada berkas yang dikirim ke server.',
+	faq: [
+		{
+			q: 'Apakah kualitas gambar turun?',
+			a: 'Kamu yang menentukan dimensi dan format keluaran. JPEG dan WebP biasanya jauh lebih kecil dengan penurunan kualitas yang tipis.',
+		},
+	],
 };

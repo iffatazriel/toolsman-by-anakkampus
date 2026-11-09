@@ -1,0 +1,43 @@
+id: analisis-tema-wawancara
+judul: Temukan tema dari catatan wawancara, bukan dari tebakan
+kategori: riset
+tag: [analisis, wawancara, data]
+ai: [claude, umum, chatgpt]
+bahasa: id
+level: mahir
+variabel:
+  - nama: transkrip
+    label: Catatan atau transkrip
+    tipe: panjang
+    contoh: "Tempel potongan transkrip. Sertakan penanda peserta, misalnya P1 dan P2."
+  - nama: pertanyaan
+    label: Pertanyaan penelitian
+    tipe: pendek
+    contoh: "Apa yang membuat mahasiswa berhenti memakai aplikasi pencatat tugas?"
+  - nama: jumlah_tema
+    label: Jumlah tema
+    tipe: pilihan
+    contoh: "3"
+    pilihan: ["3", "4", "5"]
+prompt: |
+  Bantu saya menganalisis catatan wawancara. Jangan mengarang kutipan.
+
+  Pertanyaan penelitian: {{pertanyaan}}
+  Jumlah tema yang saya targetkan: {{jumlah_tema}}
+
+  Transkrip:
+  {{transkrip}}
+
+  Proses:
+  1. Daftar kode awal: potongan makna yang muncul, dengan penanda peserta dan potongan kalimat yang mendukung. Kode boleh lebih dari jumlah tema.
+  2. Kelompokkan kode menjadi {{jumlah_tema}} tema. Untuk setiap tema: nama, penjelasan dua kalimat, kode yang masuk, dan peserta yang mendukung.
+  3. Tandai tema yang hanya berasal dari satu peserta, karena itu belum bisa digeneralisasi.
+  4. Sebutkan data yang bertentangan dengan tema utama.
+  5. Tulis tiga pertanyaan lanjutan untuk wawancara berikutnya.
+
+  Aturan: semuanya harus bisa dilacak ke transkrip. Kalau potongan yang saya berikan terlalu pendek, sebutkan dan jangan menyimpulkan.
+catatan: |
+  Kode dan tema adalah alat bantu membaca data, bukan hasil akhir. Simpan transkrip asli dan catatan keputusanmu. Diskusikan tema dengan rekan untuk mengurangi bias.
+penulis: Tim Toolsman
+lisensi: CC-BY-4.0
+dibuat: "2026-11-09"

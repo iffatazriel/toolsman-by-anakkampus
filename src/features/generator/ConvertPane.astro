@@ -137,13 +137,13 @@ const modes = [
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(result);
-			toast(copied ? 'Hasil disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Hasil disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			const extension = extensions[mode] ?? 'txt';
 			downloadText(`hasil.${extension}`, result, 'text/plain;charset=utf-8');
-			toast('Berkas diunduh.');
+			toast('Berkas diunduh.', { tone: 'success' });
 		});
 
 		run();

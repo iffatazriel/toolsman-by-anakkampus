@@ -1,0 +1,44 @@
+id: utas-media-sosial
+judul: Ubah satu catatan jadi utas media sosial yang runtut
+kategori: menulis
+tag: [media-sosial, struktur, penyuntingan]
+ai: [umum, chatgpt, gemini]
+bahasa: id
+level: pemula
+variabel:
+  - nama: catatan
+    label: Catatan asli
+    tipe: panjang
+    contoh: "Tempel catatan, hasil belajar, atau pengalaman yang ingin dibagikan."
+  - nama: platform
+    label: Platform
+    tipe: pilihan
+    contoh: X
+    pilihan: [X, Instagram, LinkedIn, Threads]
+  - nama: pembaca
+    label: Untuk siapa
+    tipe: pendek
+    contoh: "Teman satu jurusan yang baru mulai belajar Git"
+prompt: |
+  Ubah catatan saya menjadi utas untuk {{platform}}, ditujukan untuk {{pembaca}}.
+
+  Catatan:
+  {{catatan}}
+
+  Struktur utas:
+  - Postingan pertama: satu kalimat yang menyebut masalah pembaca dan apa yang akan didapat. Tanpa memperkenalkan diri panjang.
+  - Postingan tengah: satu ide per postingan. Jelaskan dengan contoh konkret dari catatan saya, bukan tambahan baru.
+  - Postingan terakhir: rangkuman tiga poin dan satu pertanyaan untuk pembaca.
+
+  Aturan:
+  - Jangan menambah fakta, angka, atau pengalaman yang tidak ada di catatan.
+  - Jangan memakai klaim hasil seperti "langsung paham" atau "pasti berhasil".
+  - Tandai setiap postingan dengan nomornya dan perkiraan panjangnya.
+  - Kalau catatan tidak cukup untuk 6 postingan, katakan dan buat lebih sedikit. Jangan mengisi dengan basa-basi.
+
+  Di akhir, beri dua catatan singkat: bagian yang bisa dipotong kalau ingin lebih pendek, dan bagian yang perlu gambar.
+catatan: |
+  Utas yang berguna berisi satu hal yang bisa dipakai pembaca. Jangan ubah pengalaman orang lain menjadi pengalamanmu. Periksa lagi sebelum menekan unggah.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

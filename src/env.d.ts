@@ -20,6 +20,7 @@ interface Window {
 	toolsmanDraw?: ToolsmanDrawApi;
 	turnstile?: TurnstileApi;
 	EXCALIDRAW_ASSET_PATH?: string;
+	applyThemeColor?: (theme: 'light' | 'dark') => void;
 }
 
 interface ImportMetaEnv {

@@ -32,18 +32,35 @@ const jsonLd = {
 
 		<h2>Yang tidak boleh</h2>
 		<ul>
-			<li>Mengunggah berkas ilegal, malware, atau materi yang melanggar hak cipta.</li>
+			<li>
+				Mengunggah berkas ilegal, malware, atau materi yang melanggar hak cipta,
+				merek, atau hak privasi orang lain.
+			</li>
+			<li>
+				Mengirim konten yang menyesatkan, penipuan, ancaman, atau materi seksual
+				yang melibatkan anak.
+			</li>
 			<li>Mengirim spam atau tautan yang menyesatkan.</li>
 			<li>
 				Mencoba membebani layanan, melewati batas, atau menyalahgunakan celah
 				keamanan.
 			</li>
 		</ul>
+		<p>
+			Server menolak beberapa jenis berkas yang bisa dijalankan langsung, termasuk
+			berkas dengan ekstensi ganda yang menyembunyikannya. Daftar itu ada di
+			<code>src/features/kirim-file/share-rules.ts</code> dan bisa berubah tanpa
+			pemberitahuan.
+		</p>
 
 		<h2>Batas layanan</h2>
 		<ul>
 			<li>Kirim File menerima maksimal 10 berkas dan 100 MB per berkas.</li>
 			<li>Masa berlaku link 1 jam, 24 jam, atau 7 hari.</li>
+			<li>
+				Ada kuota unggah harian per alamat IP dan untuk seluruh layanan. Kalau
+				kuota habis, unggahan ditolak sampai hari berikutnya (UTC).
+			</li>
 			<li>
 				Tidak ada jaminan ketersediaan. Jangan simpan satu-satunya salinan berkas
 				penting di Kirim File.
@@ -53,7 +70,13 @@ const jsonLd = {
 		<h2>Laporan dan penghapusan</h2>
 		<p>
 			Link bisa dilaporkan lewat tombol "Laporkan link ini" di halaman unduh.
-			Laporan ditinjau, dan link yang melanggar bisa dihapus tanpa pemberitahuan.
+			Laporan ditinjau, dan link yang melanggar bisa dinonaktifkan tanpa
+			pemberitahuan. Link yang dinonaktifkan membalas 410, dan berkasnya dihapus
+			dari penyimpanan, bukan sekadar disembunyikan.
+		</p>
+		<p>
+			Kalau kamu pemilik berkas dan ingin link milikmu dihapus lebih awal, kirim
+			laporan lewat tombol yang sama dengan keterangan bahwa kamu pemiliknya.
 		</p>
 
 		<h2>Tanggung jawab</h2>

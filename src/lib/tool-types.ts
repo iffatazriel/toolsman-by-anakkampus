@@ -7,16 +7,19 @@ export type ToolCategory =
 	| 'foto'
 	| 'berbagi'
 	| 'generator'
-	| 'utilitas';
+	| 'utilitas'
+	| 'ai';
 
 export type ToolStatus = 'rencana' | 'siap';
 export type PrivacyMode = 'lokal' | 'server';
+export type ToolBadge = 'baru' | 'beta';
 
 export interface ToolMeta {
 	slug: string;
 	name: string;
 	category: ToolCategory;
 	tagline: string;
+	badge?: ToolBadge;
 	keywords: string[];
 	privacy: PrivacyMode;
 	status: ToolStatus;
@@ -24,6 +27,7 @@ export interface ToolMeta {
 	plans?: string[];
 	usage?: string[];
 	privacyDetail?: string;
+	faq?: { q: string; a: string }[];
 }
 
 export const categories: { id: ToolCategory; label: string }[] = [
@@ -34,12 +38,21 @@ export const categories: { id: ToolCategory; label: string }[] = [
 	{ id: 'berbagi', label: 'Berbagi' },
 	{ id: 'generator', label: 'Generator' },
 	{ id: 'utilitas', label: 'Utilitas' },
+	{ id: 'ai', label: 'AI' },
 ];
 
 export const privacyLabel: Record<PrivacyMode, string> = {
 	lokal: 'Di perangkatmu',
 	server: 'Pakai server',
 };
+
+export const badgeLabel: Record<ToolBadge, string> = {
+	baru: 'Baru',
+	beta: 'Beta',
+};
+
+/** Alat yang tampil lebih besar di grid bento beranda. */
+export const featuredSlugs = ['draw', 'pas-foto', 'pdf', 'kirim-file'] as const;
 
 export const privacyNote: Record<PrivacyMode, string> = {
 	lokal: 'File diproses di browser, tidak diunggah ke server.',

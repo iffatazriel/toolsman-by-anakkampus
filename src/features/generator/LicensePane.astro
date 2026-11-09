@@ -196,12 +196,12 @@ const currentYear = new Date().getFullYear();
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(text);
-			toast(copied ? 'Lisensi disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Lisensi disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText('LICENSE', text, 'text/plain;charset=utf-8');
-			toast('Berkas LICENSE diunduh.');
+			toast('Berkas LICENSE diunduh.', { tone: 'success' });
 		});
 
 		void update();

@@ -41,7 +41,10 @@ import Icon from './ui/Icon.astro';
 
 	const storageKey = 'toolsman-theme';
 	const root = document.documentElement;
-	const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+	// Header dan footer sama-sama punya tombol tema; semua harus ikut sinkron.
+	const buttons = Array.from(
+		document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]'),
+	);
 	const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
 
 	const activeTheme = (): 'light' | 'dark' => {
@@ -53,23 +56,24 @@ import Icon from './ui/Icon.astro';
 
 	const syncLabel = () => {
 		const lang = readLang();
-		button?.setAttribute(
-			'aria-label',
-			t(lang, activeTheme() === 'dark' ? 'theme.toLight' : 'theme.toDark'),
-		);
+		const label = t(lang, activeTheme() === 'dark' ? 'theme.toLight' : 'theme.toDark');
+		buttons.forEach((button) => button.setAttribute('aria-label', label));
 	};
 
 	syncLabel();
 
-	button?.addEventListener('click', () => {
-		const next = activeTheme() === 'dark' ? 'light' : 'dark';
-		root.dataset.theme = next;
-		try {
-			localStorage.setItem(storageKey, next);
-		} catch {
-			/* penyimpanan bisa diblokir, tema tetap berlaku untuk sesi ini */
-		}
-		syncLabel();
+	buttons.forEach((button) => {
+		button.addEventListener('click', () => {
+			const next = activeTheme() === 'dark' ? 'light' : 'dark';
+			root.dataset.theme = next;
+			try {
+				localStorage.setItem(storageKey, next);
+			} catch {
+				/* penyimpanan bisa diblokir, tema tetap berlaku untuk sesi ini */
+			}
+			window.applyThemeColor?.(next);
+			syncLabel();
+		});
 	});
 
 	systemDark.addEventListener('change', () => {

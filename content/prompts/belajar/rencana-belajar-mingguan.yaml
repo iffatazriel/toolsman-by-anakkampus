@@ -1,0 +1,45 @@
+id: rencana-belajar-mingguan
+judul: Susun jadwal belajar tujuh hari sebelum ujian
+kategori: belajar
+tag: [jadwal-belajar, rencana, ujian]
+ai: [umum, chatgpt, copilot]
+bahasa: id
+level: pemula
+variabel:
+  - nama: mata_kuliah
+    label: Mata kuliah
+    tipe: pendek
+    contoh: "Algoritma dan Struktur Data"
+  - nama: materi_ujian
+    label: Daftar materi ujian
+    tipe: panjang
+    contoh: "1. Kompleksitas waktu\n2. Sorting\n3. Linked list\n4. Rekursi"
+  - nama: waktu_harian
+    label: Waktu belajar per hari
+    tipe: pilihan
+    contoh: 1 jam
+    pilihan: [30 menit, 1 jam, 2 jam]
+  - nama: hari_ujian
+    label: Ujian hari apa
+    tipe: pendek
+    contoh: "Senin depan"
+prompt: |
+  Bantu saya menyusun rencana belajar tujuh hari untuk {{mata_kuliah}}. Ujian: {{hari_ujian}}.
+  Saya punya {{waktu_harian}} per hari.
+
+  Materi yang diujikan:
+  {{materi_ujian}}
+
+  Buat jadwal dengan aturan berikut:
+  - Bagi tiap sesi menjadi blok 25 menit belajar dan 5 menit istirahat.
+  - Hari 1 sampai 4 untuk materi baru, hari 5 untuk latihan campuran, hari 6 untuk mengulang yang masih salah, hari 7 ringan saja.
+  - Setiap hari punya satu tujuan yang bisa dicentang, bukan sekadar "belajar bab 2".
+  - Selipkan pengulangan singkat materi hari sebelumnya di awal sesi.
+  - Sisakan satu slot kosong bernama "cadangan" untuk hari yang meleset.
+
+  Keluarkan tabel: hari, fokus, kegiatan per blok, dan bukti selesai. Setelah tabel, tulis aturan darurat: kalau saya melewatkan satu hari, apa yang dipotong lebih dulu dan apa yang tidak boleh dipotong.
+catatan: |
+  Jadwal yang tidak pernah meleset itu mencurigakan. Pakai slot cadangan sebelum menambah jam belajar. Kalau lelah, potong durasi, jangan potong tidur.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

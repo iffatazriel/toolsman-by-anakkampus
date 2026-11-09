@@ -1,23 +1,252 @@
 ---
+import { siteConfig } from '../../site.config';
+import { tools } from '../lib/tools';
+import { categories } from '../lib/tool-types';
+import Icon from './ui/Icon.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
 const year = new Date().getFullYear();
+const githubUrl = siteConfig.githubUrl.trim();
+
+// Grup kategori diambil dari katalog, jadi tautan footer tidak pernah
+// menyimpang dari alat yang benar-benar ada.
+const groups = categories
+	.map((category) => ({
+		...category,
+		items: tools.filter((tool) => tool.category === category.id),
+	}))
+	.filter((group) => group.items.length > 0);
 ---
 
 <footer class="site-footer">
-	<div class="container footer-inner">
-		<p class="text-sm text-ink-muted" data-i18n="footer.tagline">
-			Toolsman, kotak perkakas untuk kuliah dan koding.
-		</p>
+	<div class="container footer-grid">
+		<div class="footer-brand">
+			<a class="footer-brand__name" href="/">Toolsman</a>
+			<p class="footer-brand__tagline" data-i18n="footer.tagline">
+				Toolsman, kotak perkakas untuk kuliah dan koding.
+			</p>
+			<p class="footer-brand__privacy" data-i18n="footer.privacyLine">
+				File diproses di perangkatmu, kecuali Kirim File.
+			</p>
+		</div>
 
-		<ul class="footer-links">
-			<li><a href="/#katalog" data-i18n="footer.catalog">Katalog alat</a></li>
-			<li><a href="/tentang/" data-i18n="footer.about">Tentang</a></li>
-			<li><a href="/privasi/" data-i18n="footer.privacy">Privasi</a></li>
-			<li><a href="/syarat/" data-i18n="footer.terms">Syarat</a></li>
-			<li><a href="/lisensi/" data-i18n="footer.license">Lisensi</a></li>
-		</ul>
+		<nav class="footer-nav" aria-label="Alat per kategori" data-i18n-aria="footer.toolsLabel">
+			{
+				groups.map((group) => (
+					<div class="footer-group">
+						<p class="footer-group__title" data-category-label={group.id}>{group.label}</p>
+						<ul>
+							{group.items.map((tool) => (
+								<li>
+									<a href={`/tools/${tool.slug}/`} data-footer-slug={tool.slug}>
+										{tool.name}
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				))
+			}
+		</nav>
 
-		<p class="footer-note" data-i18n="footer.note" data-year={year}>
-			Gratis, tanpa akun. File diproses di perangkatmu, kecuali Kirim File. {year}
-		</p>
+		<div class="footer-project">
+			<p class="footer-group__title" data-i18n="footer.project">Proyek</p>
+			<ul>
+				{
+					githubUrl !== '' && (
+						<li>
+							<a href={githubUrl} target="_blank" rel="noopener noreferrer">
+								<Icon name="github" size={16} />
+								<span>GitHub</span>
+							</a>
+						</li>
+					)
+				}
+				<li><a href="/tentang/" data-i18n="footer.about">Tentang</a></li>
+				<li><a href="/privasi/" data-i18n="footer.privacy">Privasi</a></li>
+				<li><a href="/syarat/" data-i18n="footer.terms">Syarat</a></li>
+				<li><a href="/lisensi/" data-i18n="footer.license">Lisensi</a></li>
+			</ul>
+		</div>
 	</div>
+
+	<div class="container footer-bar">
+		<p class="footer-bar__meta">
+			<span data-i18n="footer.copyright" data-year={year}>© {year} Toolsman</span>
+			<span aria-hidden="true">·</span>
+			<span data-i18n="footer.made">Dibuat untuk anak kampus</span>
+		</p>
+
+		<div class="footer-bar__actions">
+			<button type="button" class="icon-button lang-toggle" data-lang-toggle aria-label="Ganti bahasa">ID</button>
+			<ThemeToggle />
+		</div>
+	</div>
+
+	<p class="footer-wordmark" aria-hidden="true">Toolsman</p>
 </footer>
+
+<style>
+	.site-footer {
+		position: relative;
+		overflow: hidden;
+		padding-top: var(--space-7);
+		border-top: 1px solid var(--border);
+		background: var(--surface-2);
+		/* Footer selalu di bawah lipatan. Browser melewati render sampai
+		   hampir terlihat; ukuran cadangan mengikuti tinggi terakhir yang
+		   pernah dirender, jadi tidak ada lompatan saat digulir. */
+		content-visibility: auto;
+		contain-intrinsic-size: auto 520px;
+	}
+
+	.footer-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-6);
+	}
+
+	.footer-brand__name {
+		font-family: var(--font-display);
+		font-size: 1.25rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		color: var(--text);
+		text-decoration: none;
+	}
+
+	.footer-brand__tagline {
+		max-width: 32ch;
+		margin-top: var(--space-2);
+		font-size: 0.875rem;
+		color: var(--text-muted);
+	}
+
+	.footer-brand__privacy {
+		max-width: 34ch;
+		margin-top: var(--space-2);
+		font-size: 0.8125rem;
+		color: var(--text-muted);
+	}
+
+	/* Tautan alat: dua kolom di ponsel supaya footer tidak memanjang,
+	   lebih banyak kolom begitu ruangnya cukup. */
+	.footer-nav {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-4) var(--space-5);
+	}
+
+	.footer-group__title {
+		margin: 0 0 var(--space-1);
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.footer-nav ul,
+	.footer-project ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.footer-nav a,
+	.footer-project a {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		min-height: 32px;
+		font-size: 0.875rem;
+		color: var(--text-muted);
+		text-decoration: none;
+	}
+
+	.footer-nav a:hover,
+	.footer-project a:hover {
+		color: var(--text);
+		text-decoration: underline;
+	}
+
+	.footer-project ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 var(--space-4);
+	}
+
+	.footer-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+		margin-top: var(--space-6);
+		padding-block: var(--space-3);
+		border-top: 1px solid var(--border);
+	}
+
+	.footer-bar__meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		font-size: 0.8125rem;
+		color: var(--text-muted);
+	}
+
+	.footer-bar__actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
+	}
+
+	.lang-toggle {
+		width: auto;
+		min-width: 44px;
+		padding: 0 var(--space-2);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+	}
+
+	/* Kata kunci raksasa yang terpotong di tepi bawah: hiasan, bukan teks. */
+	.footer-wordmark {
+		margin: var(--space-2) 0 0;
+		padding-inline: var(--space-4);
+		font-family: var(--font-display);
+		font-size: clamp(4rem, 17vw, 13rem);
+		font-weight: 800;
+		line-height: 0.78;
+		letter-spacing: -0.04em;
+		color: color-mix(in srgb, var(--text) 7%, transparent);
+		text-align: center;
+		user-select: none;
+		transform: translateY(0.16em);
+	}
+
+	@media (min-width: 768px) {
+		.footer-nav {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.footer-grid {
+			grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 0.8fr);
+			gap: var(--space-7);
+		}
+
+		.footer-nav {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+		.footer-project ul {
+			display: block;
+		}
+
+		.footer-project a {
+			min-height: 36px;
+		}
+	}
+</style>

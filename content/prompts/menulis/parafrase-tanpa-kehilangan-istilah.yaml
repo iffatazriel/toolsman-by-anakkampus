@@ -1,0 +1,45 @@
+id: parafrase-tanpa-kehilangan-istilah
+judul: Parafrase paragraf tanpa merusak istilah teknis
+kategori: menulis
+tag: [parafrase, penyuntingan, struktur]
+ai: [umum, claude, chatgpt]
+bahasa: id
+level: pemula
+variabel:
+  - nama: paragraf
+    label: Paragraf asli
+    tipe: panjang
+    contoh: "Tempel paragraf tulisanmu sendiri yang pengulangannya masih banyak."
+  - nama: istilah
+    label: Istilah yang tidak boleh diubah
+    tipe: pendek
+    contoh: "sinkron, asinkron, event loop"
+  - nama: nada
+    label: Nada yang diinginkan
+    tipe: pilihan
+    contoh: Netral
+    pilihan: [Netral, Formal, Santai]
+prompt: |
+  Parafrasekan paragraf berikut dengan nada {{nada}}. Ini tulisan saya sendiri, jadi maknanya harus tetap.
+
+  Istilah yang wajib dipertahankan persis: {{istilah}}
+
+  Paragraf:
+  {{paragraf}}
+
+  Aturan:
+  - Jangan mengubah istilah wajib, nama, atau angka.
+  - Jangan menambah klaim, contoh, atau data yang tidak ada.
+  - Pecah kalimat yang lebih dari 30 kata.
+  - Hapus pengulangan kata dalam satu paragraf, tetapi jangan mengganti istilah teknis dengan sinonim sehari-hari.
+  - Pertahankan makna kalimat terakhir, karena biasanya berisi simpulan.
+
+  Keluarkan:
+  1. Versi parafrase, satu paragraf.
+  2. Tabel tiga kolom: kalimat asli (potongan pendek), kalimat baru, alasan perubahan.
+  3. Daftar istilah yang hampir berubah bentuk, supaya saya bisa memeriksa.
+catatan: |
+  Parafrase untuk memperjelas tulisan sendiri, bukan untuk menyamarkan tulisan orang lain. Tulis sumber aslinya kalau ide itu bukan idemu. Periksa tabel perubahan sebelum memakai hasilnya.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

@@ -3,9 +3,10 @@ interface Props {
 	label: string;
 	value: string;
 	pressed?: boolean;
+	count?: number;
 }
 
-const { label, value, pressed = false } = Astro.props;
+const { label, value, pressed = false, count } = Astro.props;
 ---
 
 <button
@@ -14,5 +15,6 @@ const { label, value, pressed = false } = Astro.props;
 	data-filter={value}
 	aria-pressed={pressed ? 'true' : 'false'}
 >
-	{label}
+	<span data-filter-label>{label}</span>
+	{count !== undefined && <span class="chip__count">{count}</span>}
 </button>

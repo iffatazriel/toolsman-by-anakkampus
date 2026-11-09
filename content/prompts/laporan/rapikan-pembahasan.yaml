@@ -1,0 +1,42 @@
+id: rapikan-pembahasan
+judul: Rapikan pembahasan laporan yang berantakan
+kategori: laporan
+tag: [penyuntingan, laporan, diskusi]
+ai: [claude, chatgpt]
+bahasa: id
+level: menengah
+variabel:
+  - nama: pembahasan
+    label: Draf pembahasan
+    tipe: panjang
+    contoh: "Tempel draf pembahasan yang alurnya masih bolak-balik."
+  - nama: hasil
+    label: Hasil utama
+    tipe: panjang
+    contoh: "Daftar temuan dan angkanya, untuk rujukan saat merapikan."
+  - nama: gaya
+    label: Gaya penulisan
+    tipe: pilihan
+    contoh: Formal
+    pilihan: [Formal, Semi-formal]
+prompt: |
+  Kamu penyunting. Rapikan draf pembahasan berikut, gaya {{gaya}}, tanpa menambah temuan baru.
+
+  Hasil utama: {{hasil}}
+
+  Draf:
+  {{pembahasan}}
+
+  Yang harus dikerjakan:
+  - Susun ulang alur: temuan, tafsir, perbandingan dengan harapan awal, keterbatasan, lalu implikasi.
+  - Gabungkan paragraf yang mengulang ide yang sama.
+  - Tandai setiap klaim yang tidak punya dasar di "hasil utama" dengan penanda [butuh dasar].
+  - Pertahankan istilah teknis yang sudah benar dan angka aslinya.
+  - Jangan menambah kalimat pembuka atau penutup yang tidak ada isinya.
+
+  Keluarkan dua hal: versi rapi, dan daftar perubahan berupa poin singkat: apa yang dipindah, digabung, atau ditandai. Tanpa daftar ini, saya tidak bisa memeriksa hasil suntinganmu.
+catatan: |
+  Penyuntingan tidak boleh menambah temuan. Bandingkan versi rapi dengan drafmu paragraf per paragraf, dan pastikan tidak ada angka yang berubah. Tanda [butuh dasar] wajib dibereskan sendiri.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

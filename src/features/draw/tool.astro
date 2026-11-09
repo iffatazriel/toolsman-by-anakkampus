@@ -1,7 +1,17 @@
 <script is:inline src="/excalidraw-fonts.js"></script>
 
 <div class="draw-shell">
-	<div class="draw-root-host" data-draw-root></div>
+	<div class="draw-root-host" data-draw-root>
+		<!-- Kerangka kanvas: ukurannya sama dengan kanvas asli, jadi tidak ada
+		     lompatan tata letak saat Excalidraw selesai dimuat. -->
+		<div class="canvas-skeleton" aria-hidden="true">
+			<span class="canvas-skeleton__bar"></span>
+			<span class="canvas-skeleton__bar canvas-skeleton__bar--short"></span>
+			<span class="canvas-skeleton__node"></span>
+			<span class="canvas-skeleton__node canvas-skeleton__node--alt"></span>
+		</div>
+		<p class="sr-only">Menyiapkan kanvas gambar…</p>
+	</div>
 	<div class="draw-export" role="group" aria-label="Ekspor gambar">
 		<button type="button" class="btn btn--secondary" data-copy>Salin gambar</button>
 		<button type="button" class="btn btn--secondary" data-export="png">Unduh PNG</button>
@@ -32,7 +42,7 @@
 	shareButton?.addEventListener('click', async () => {
 		const api = window.toolsmanDraw;
 		if (!api) {
-			toast('Kanvas belum siap. Tunggu sebentar.');
+			toast('Kanvas belum siap. Tunggu sebentar.', { tone: 'error' });
 			return;
 		}
 
@@ -48,23 +58,25 @@
 				copied
 					? `Link hanya-baca disalin (${url.length} karakter).`
 					: `Link dibuat (${url.length} karakter). Salin dari kolom.`,
+				{ tone: copied ? 'success' : 'neutral' },
 			);
 		} catch (error) {
 			if (shareResult) shareResult.hidden = true;
 			if (error instanceof SessionTooLargeError) {
 				toast(
 					`Kanvas terlalu besar untuk link (${error.length.toLocaleString('id-ID')} dari ${error.limit.toLocaleString('id-ID')} karakter). Hapus beberapa elemen atau gambar, lalu coba lagi.`,
+					{ tone: 'error' },
 				);
 				return;
 			}
-			toast(error instanceof Error ? error.message : 'Gagal membuat link.');
+			toast(error instanceof Error ? error.message : 'Gagal membuat link.', { tone: 'error' });
 		}
 	});
 
 	shareCopy?.addEventListener('click', async () => {
 		if (!shareUrl) return;
 		const copied = await copyText(shareUrl.value);
-		toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.');
+		toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 	});
 
 	const download = (name: string, blob: Blob) => {
@@ -86,25 +98,25 @@
 	document.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async () => {
 		const api = window.toolsmanDraw;
 		if (!api) {
-			toast('Kanvas belum siap. Tunggu sebentar.');
+			toast('Kanvas belum siap. Tunggu sebentar.', { tone: 'error' });
 			return;
 		}
 
 		if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
-			toast('Peramban ini belum mendukung salin gambar. Pakai Unduh PNG.');
+			toast('Peramban ini belum mendukung salin gambar. Pakai Unduh PNG.', { tone: 'error' });
 			return;
 		}
 
 		try {
 			const blob = await api.getBlob('png');
 			if (!blob) {
-				toast('Gagal membuat gambar.');
+				toast('Gagal membuat gambar.', { tone: 'error' });
 				return;
 			}
 			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-			toast('Gambar disalin ke clipboard.');
+			toast('Gambar disalin ke clipboard.', { tone: 'success' });
 		} catch {
-			toast('Gagal menyalin gambar. Coba Unduh PNG.');
+			toast('Gagal menyalin gambar. Coba Unduh PNG.', { tone: 'error' });
 		}
 	});
 
@@ -113,17 +125,17 @@
 			const format = button.dataset.export as 'png' | 'svg' | 'excalidraw';
 			const api = window.toolsmanDraw;
 			if (!api) {
-				toast('Kanvas belum siap. Tunggu sebentar.');
+				toast('Kanvas belum siap. Tunggu sebentar.', { tone: 'error' });
 				return;
 			}
 			const extension = format === 'excalidraw' ? 'excalidraw' : format;
 			const blob = await api.getBlob(format === 'excalidraw' ? 'json' : format);
 			if (!blob) {
-				toast('Gagal membuat berkas ekspor.');
+				toast('Gagal membuat berkas ekspor.', { tone: 'error' });
 				return;
 			}
 			download(`${safeName(api.name())}.${extension}`, blob);
-			toast('Berkas diunduh.');
+			toast('Berkas diunduh.', { tone: 'success' });
 		});
 	});
 </script>
@@ -138,6 +150,51 @@
 
 	.draw-root-host {
 		display: contents;
+	}
+
+	.canvas-skeleton {
+		position: relative;
+		min-height: 560px;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--surface);
+		overflow: hidden;
+	}
+
+	.canvas-skeleton__bar,
+	.canvas-skeleton__node {
+		position: absolute;
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+	}
+
+	.canvas-skeleton__bar {
+		top: 32px;
+		left: 32px;
+		width: 180px;
+		height: 12px;
+	}
+
+	.canvas-skeleton__bar--short {
+		top: 56px;
+		width: 120px;
+	}
+
+	.canvas-skeleton__node {
+		width: 160px;
+		height: 90px;
+	}
+
+	.canvas-skeleton__node {
+		top: 140px;
+		left: 32px;
+	}
+
+	.canvas-skeleton__node--alt {
+		top: 220px;
+		left: 220px;
+		width: 120px;
+		height: 70px;
 	}
 
 	.draw-root {

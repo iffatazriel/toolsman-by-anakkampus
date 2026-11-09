@@ -1,0 +1,45 @@
+id: cerita-proyek-portofolio
+judul: Ubah proyek kuliah jadi cerita portofolio yang jelas
+kategori: karier
+tag: [portofolio, karier, dokumentasi]
+ai: [umum, chatgpt, claude]
+bahasa: id
+level: pemula
+variabel:
+  - nama: proyek
+    label: Nama proyek
+    tipe: pendek
+    contoh: "Aplikasi absensi kelas berbasis QR"
+  - nama: masalah
+    label: Masalah awal
+    tipe: panjang
+    contoh: "Absensi manual makan waktu dan mudah salah catat."
+  - nama: peran
+    label: Peranmu
+    tipe: pendek
+    contoh: "Backend dan integrasi QR"
+  - nama: hasil
+    label: Hasil
+    tipe: panjang
+    contoh: "Apa yang berubah, berapa lama pengerjaan, siapa yang memakai."
+prompt: |
+  Tulis dua versi cerita portofolio untuk proyek "{{proyek}}".
+
+  Masalah awal: {{masalah}}
+  Peran saya: {{peran}}
+  Hasil: {{hasil}}
+
+  Versi 1, pendek (60 kata) untuk daftar proyek.
+  Versi 2, panjang (250 kata) untuk halaman detail, dengan bagian: masalah, batasan, keputusan teknis, peran saya, hasil, dan satu hal yang akan saya ubah.
+
+  Aturan:
+  - Pisahkan dengan jelas apa yang saya kerjakan dan apa yang dikerjakan tim.
+  - Sebut teknologi hanya kalau menjelaskan keputusan, bukan sebagai daftar.
+  - Setiap angka harus dari "hasil" di atas. Kalau belum ada angka, tulis kualitatif dan jangan mengarang.
+  - Jangan memakai kata "canggih", "revolusioner", atau "one of a kind".
+  - Sertakan tiga saran tangkapan layar atau diagram yang paling membantu pembaca.
+catatan: |
+  Portofolio yang baik menunjukkan cara berpikir, bukan hanya hasil akhir. Pilih satu keputusan sulit dan jelaskan mengapa kamu memilihnya.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

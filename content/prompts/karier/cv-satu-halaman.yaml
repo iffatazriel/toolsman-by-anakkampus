@@ -1,0 +1,46 @@
+id: cv-satu-halaman
+judul: Susun CV satu halaman yang jujur dan terbaca mesin
+kategori: karier
+tag: [cv, karier, lamaran]
+ai: [umum, chatgpt, claude]
+bahasa: id
+level: menengah
+variabel:
+  - nama: posisi
+    label: Posisi yang dilamar
+    tipe: pendek
+    contoh: "Magang frontend developer"
+  - nama: pengalaman
+    label: Pengalaman dan proyek
+    tipe: panjang
+    contoh: "Untuk setiap pengalaman: peran, waktu, apa yang dikerjakan, hasil yang terukur."
+  - nama: keahlian
+    label: Keahlian
+    tipe: panjang
+    contoh: "JavaScript, React, Git, Figma. Sebutkan tingkatnya kalau perlu."
+  - nama: pendidikan
+    label: Pendidikan
+    tipe: pendek
+    contoh: "S1 Informatika, semester 5, IPK 3.6"
+prompt: |
+  Susun CV satu halaman untuk posisi {{posisi}}.
+
+  Pengalaman:
+  {{pengalaman}}
+
+  Keahlian: {{keahlian}}
+  Pendidikan: {{pendidikan}}
+
+  Aturan penyusunan:
+  - Urutan: ringkasan dua baris, pendidikan, pengalaman atau proyek, keahlian.
+  - Setiap poin pengalaman diawali kata kerja dan diikuti hasil. Kalau hasil terukur belum ada, tulis hasil yang bisa dibuktikan, bukan angka karangan.
+  - Maksimal empat poin per pengalaman. Buang yang tidak relevan dengan posisi.
+  - Gunakan istilah yang lazim di lowongan, tetapi jangan memasukkan keahlian yang tidak saya sebut.
+  - Tanpa foto, tanpa tanggal lahir, tanpa tabel berlapis yang membingungkan pembaca mesin.
+
+  Keluarkan CV dalam teks berformat, lalu daftar: keahlian yang perlu saya buktikan dengan proyek, dan tiga baris yang paling lemah beserta alasannya.
+catatan: |
+  CV bukan tempat mengarang. Setiap angka akan ditanyakan di wawancara. Simpan versi .docx atau PDF yang bisa dibaca mesin, dan kirim sesuai format yang diminta lowongan.
+penulis: Tim Toolsman
+lisensi: CC0-1.0
+dibuat: "2026-11-09"

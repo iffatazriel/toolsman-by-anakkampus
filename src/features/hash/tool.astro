@@ -239,7 +239,7 @@ const algorithms = hashAlgorithms;
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(result);
-			toast(copied ? 'Hash disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.');
+			toast(copied ? 'Hash disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
 		});
 	}
 </script>

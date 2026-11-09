@@ -1,30 +1,46 @@
 ---
 import type { ToolMeta } from '../lib/tool-types';
-import { categoryLabel, privacyLabel, statusLabel } from '../lib/tool-types';
+import { badgeLabel, categoryLabel, privacyLabel } from '../lib/tool-types';
 import Icon from './ui/Icon.astro';
 
 interface Props {
 	tool: ToolMeta;
+	featured?: boolean;
 }
 
-const { tool } = Astro.props;
+const { tool, featured = false } = Astro.props;
+// Lencana hanya untuk pengecualian: alat server dan alat bertanda khusus.
+const showServerBadge = tool.privacy === 'server';
+const showBadge = tool.badge;
 ---
 
-<div class="tool-card" data-category={tool.category} data-tool-card={tool.slug}>
+<div
+	class:list={['tool-card', featured && 'tool-card--featured']}
+	data-category={tool.category}
+	data-tool-card={tool.slug}
+>
 	<a class="tool-card__link" href={`/tools/${tool.slug}/`} data-category={tool.category}>
 		<span class="tool-card__top">
-			<span class="tool-tile"><Icon name={tool.icon} size={22} /></span>
+			<span class="tool-tile"><Icon name={tool.icon} size={featured ? 24 : 20} /></span>
 			<span class="category-label" data-category-label={tool.category}>{categoryLabel(tool.category)}</span>
 		</span>
 		<span class="tool-card__name">{tool.name}</span>
 		<span class="tool-card__desc">{tool.tagline}</span>
-		<span class="tool-card__foot">
-			<span class="privacy-label">
-				<Icon name={tool.privacy === 'lokal' ? 'laptop' : 'server'} size={16} />
-				<span data-privacy-label={tool.privacy}>{privacyLabel[tool.privacy]}</span>
-			</span>
-			<span class="status-label" data-status-label={tool.status}>{statusLabel[tool.status]}</span>
-		</span>
+		{
+			(showServerBadge || showBadge) && (
+				<span class="tool-card__foot">
+					{showServerBadge && (
+						<span class="badge badge--server">
+							<Icon name="server" size={16} />
+							<span data-privacy-label={tool.privacy}>{privacyLabel[tool.privacy]}</span>
+						</span>
+					)}
+					{showBadge && (
+						<span class="badge badge--new" data-badge={showBadge}>{badgeLabel[showBadge]}</span>
+					)}
+				</span>
+			)
+		}
 	</a>
 	<button
 		type="button"
@@ -34,7 +50,7 @@ const { tool } = Astro.props;
 		aria-pressed="false"
 		aria-label={`Simpan ${tool.name} ke favorit`}
 	>
-		<Icon name="star" size={18} />
+		<Icon name="star" size={16} />
 	</button>
 </div>
 
