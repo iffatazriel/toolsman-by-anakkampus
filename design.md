@@ -131,6 +131,9 @@ Desain mengandalkan **garis tipis**, bayangan hanya untuk elemen yang melayang.
 | `--dur-slow` | 320 ms | Modal, transisi halaman |
 
 - Kartu alat naik 2 px dan garisnya menguat saat hover.
+- Ikon kategori menguat dari 12% ke 22% campuran warnanya saat kartu hover atau fokus.
+- Ring fokus kartu digambar di tepi kartu (2 px, offset 2 px), bukan di dalam padding.
+- Hero: empat kartu SVG melayang 7 px dan bergeser paling jauh 9 px mengikuti kursor, dengan kedalaman berbeda per kartu (`--depth`). Hanya untuk penunjuk bermouse dan hanya di ≥1024 px.
 - Hormati `prefers-reduced-motion`: matikan transisi non-esensial.
 - Jangan menganimasikan area kerja (kanvas, editor).
 

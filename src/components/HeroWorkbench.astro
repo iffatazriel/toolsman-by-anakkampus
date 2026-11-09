@@ -115,6 +115,9 @@
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-md);
 		transform-origin: center;
+		/* Rotasi dan geseran parallax dipisah ke variabel supaya skrip di
+		   bawah bisa menggeser kartu tanpa menimpa rotasinya. */
+		transform: rotate(var(--rot, 0deg)) translate3d(var(--px, 0px), var(--py, 0px), 0);
 	}
 
 	/* Token warna untuk isi SVG. Dideklarasikan di sini supaya SVG mewarisi
@@ -187,36 +190,43 @@
 		fill: var(--wb-qr);
 	}
 
+	/* --depth: makin besar, makin jauh kartu mengikuti kursor. Kartu depan
+	   (foto) bergerak paling banyak, latar QR paling sedikit. */
 	.hero-card--canvas {
+		--rot: -6deg;
+		--depth: 1;
 		top: 2%;
 		left: 0;
-		transform: rotate(-6deg);
 		z-index: 2;
 	}
 
 	.hero-card--flow {
+		--rot: 5deg;
+		--depth: 1.5;
 		top: 16%;
 		right: 0;
-		transform: rotate(5deg);
 		z-index: 3;
 	}
 
 	.hero-card--photo {
+		--rot: 4deg;
+		--depth: 2.1;
 		bottom: 4%;
 		left: 6%;
-		transform: rotate(4deg);
 		z-index: 4;
 	}
 
 	.hero-card--qr {
+		--rot: -4deg;
+		--depth: 0.6;
 		bottom: 12%;
 		right: 8%;
-		transform: rotate(-4deg);
 		z-index: 1;
 	}
 
-	/* Melayang beberapa piksel: hanya transform dan opacity, dan dimatikan
-	   saat pengguna meminta gerak minimal. */
+	/* Melayang beberapa piksel: hanya `translate`, jadi tidak bentrok dengan
+	   rotasi dan parallax di `transform`. Dimatikan saat pengguna meminta
+	   gerak minimal. */
 	@media (prefers-reduced-motion: no-preference) {
 		.hero-card {
 			animation: wb-float 7s var(--ease) infinite alternate;
@@ -247,3 +257,57 @@
 		}
 	}
 </style>
+
+<script>
+	// Parallax halus: paling jauh 9 px, hanya untuk penunjuk bermouse, dan mati
+	// kalau pengguna meminta gerak minimal. Kedalaman tiap kartu diambil dari
+	// --depth di CSS, jadi tidak ada daftar kedua yang bisa lupa diperbarui.
+	const workbench = document.querySelector<HTMLElement>('.hero-workbench');
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+	const wide = window.matchMedia('(min-width: 1024px)');
+
+	if (workbench && window.matchMedia('(pointer: fine)').matches) {
+		const cards = [...workbench.querySelectorAll<SVGElement>('.hero-card')].map((card) => ({
+			element: card,
+			depth: Number(getComputedStyle(card).getPropertyValue('--depth')) || 1,
+		}));
+		const section = (workbench.closest('.hero') ?? workbench) as HTMLElement;
+		let frame = 0;
+		let targetX = 0;
+		let targetY = 0;
+		let currentX = 0;
+		let currentY = 0;
+
+		const paint = () => {
+			frame = 0;
+			currentX += (targetX - currentX) * 0.12;
+			currentY += (targetY - currentY) * 0.12;
+			for (const { element, depth } of cards) {
+				element.style.setProperty('--px', `${(currentX * 9 * depth).toFixed(2)}px`);
+				element.style.setProperty('--py', `${(currentY * 9 * depth).toFixed(2)}px`);
+			}
+			if (Math.abs(targetX - currentX) > 0.002 || Math.abs(targetY - currentY) > 0.002) {
+				frame = requestAnimationFrame(paint);
+			}
+		};
+
+		const queue = () => {
+			if (frame === 0 && wide.matches && !reduced.matches) frame = requestAnimationFrame(paint);
+		};
+
+		const clamp = (value: number) => Math.max(-1, Math.min(1, value));
+
+		section.addEventListener('pointermove', (event: PointerEvent) => {
+			const rect = workbench.getBoundingClientRect();
+			targetX = clamp((event.clientX - (rect.left + rect.width / 2)) / 240);
+			targetY = clamp((event.clientY - (rect.top + rect.height / 2)) / 240);
+			queue();
+		});
+
+		section.addEventListener('pointerleave', () => {
+			targetX = 0;
+			targetY = 0;
+			queue();
+		});
+	}
+</script>

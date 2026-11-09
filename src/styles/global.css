@@ -588,9 +588,35 @@
 			box-shadow var(--dur-fast) var(--ease);
 	}
 
-	.tool-card:hover {
+	/* Naik 2 px saat disentuh kursor atau fokus keyboard, seperti yang
+	   dijanjikan DESIGN.md 3.6. Bayangan saja tidak cukup terasa di kartu
+	   berlatar terang. */
+	.tool-card:hover,
+	.tool-card:focus-within {
 		border-color: var(--border-strong);
 		box-shadow: var(--shadow-md);
+		transform: translateY(-2px);
+	}
+
+	/* Warna kategori menguat sedikit saat kartu aktif: penanda halus, bukan
+	   latar penuh. */
+	.tool-card:hover .tool-tile,
+	.tool-card:focus-within .tool-tile {
+		background: color-mix(in srgb, var(--cat) 22%, transparent);
+	}
+
+	/* Ring fokus digambar di tepi kartu, bukan di dalam padding 24 px-nya,
+	   supaya tidak terlihat seperti kotak kedua. Kalau :has() tidak ada,
+	   ring bawaan pada tautan tetap dipakai. */
+	@supports selector(:has(*)) {
+		.tool-card:has(.tool-card__link:focus-visible) {
+			outline: 2px solid var(--accent);
+			outline-offset: 2px;
+		}
+
+		.tool-card:has(.tool-card__link:focus-visible) .tool-card__link {
+			outline: none;
+		}
 	}
 
 	.tool-card__top {
@@ -609,6 +635,7 @@
 		border-radius: var(--radius-md);
 		background: color-mix(in srgb, var(--cat) 12%, transparent);
 		color: var(--cat);
+		transition: background var(--dur-fast) var(--ease);
 	}
 
 	.category-label {
