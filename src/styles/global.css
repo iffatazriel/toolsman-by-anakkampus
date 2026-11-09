@@ -14,9 +14,12 @@
 	--radius-lg: 14px;
 	--radius-xl: 20px;
 
-	--shadow-sm: 0 1px 2px rgba(31, 29, 26, 0.06);
-	--shadow-md: 0 4px 14px rgba(31, 29, 26, 0.08);
-	--shadow-lg: 0 12px 32px rgba(31, 29, 26, 0.14);
+	/* Bayangan ikut tema: di latar gelap bayangan Warm-black nyaris tak
+	   terlihat, jadi mode gelap memakai hitam murni dengan alpha lebih tinggi.
+	   Selisih surface dan border tetap yang utama, sesuai DESIGN.md 3.5. */
+	--shadow-sm: 0 1px 2px light-dark(rgba(31, 29, 26, 0.06), rgba(0, 0, 0, 0.4));
+	--shadow-md: 0 4px 14px light-dark(rgba(31, 29, 26, 0.08), rgba(0, 0, 0, 0.45));
+	--shadow-lg: 0 12px 32px light-dark(rgba(31, 29, 26, 0.14), rgba(0, 0, 0, 0.55));
 }
 
 @theme inline {
@@ -588,13 +591,16 @@
 			box-shadow var(--dur-fast) var(--ease);
 	}
 
-	/* Naik 2 px saat disentuh kursor atau fokus keyboard, seperti yang
-	   dijanjikan DESIGN.md 3.6. Bayangan saja tidak cukup terasa di kartu
-	   berlatar terang. */
+	/* Angkat kartu saat kursor atau fokus keyboard sudah diatur aturan global
+	   di atas (dan :active menurunkannya ke -1 px). Di sini hanya tambahan
+	   warna tepi, bayangan, dan pengangkatan saat fokus keyboard. */
 	.tool-card:hover,
 	.tool-card:focus-within {
 		border-color: var(--border-strong);
 		box-shadow: var(--shadow-md);
+	}
+
+	.tool-card:focus-within:not(:active) {
 		transform: translateY(-2px);
 	}
 
