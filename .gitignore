@@ -31,3 +31,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# ekspor sesi agen, jangan ikut repo
+antislop-ui-skill-for-interface-work.json
