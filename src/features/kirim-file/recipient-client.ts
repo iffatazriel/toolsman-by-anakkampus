@@ -31,30 +31,13 @@ form?.addEventListener('submit', async (event) => {
 	}
 });
 
-document.querySelectorAll<HTMLFormElement>('[data-download-form]').forEach((downloadForm) => {
-	downloadForm.addEventListener('submit', async (event) => {
-		event.preventDefault();
-		const button = downloadForm.querySelector<HTMLButtonElement>('button')!;
-		const note = document.querySelector<HTMLElement>('[data-download-status]');
-		button.disabled = true;
-		localizedText(note, () => tr(dict, 'downloading'));
-		try {
-			const response = await fetch(downloadForm.action, { method: 'POST', body: new FormData(downloadForm) });
-			if (!response.ok) throw new WorkspaceError(dict, apiErrorKey(response.status, 'download'), { status: response.status });
-			const url = URL.createObjectURL(await response.blob());
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = downloadForm.dataset.fileName ?? 'download';
-			link.click();
-			window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-			localizedText(note, () => tr(dict, 'downloadStarted'));
-		} catch (error) {
-			localizedText(note, () => workspaceErrorMessage(error, tr(dict, 'downloadFailed')));
-		} finally {
-			button.disabled = false;
-		}
+const updateDownloadLanguage = () => {
+	document.querySelectorAll<HTMLInputElement>('[data-download-form] input[name="lang"]').forEach((input) => {
+		input.value = currentLang();
 	});
-});
+};
+updateDownloadLanguage();
+document.addEventListener('lang:change', updateDownloadLanguage);
 
 document.querySelectorAll<HTMLElement>('[data-download-remaining]').forEach((node) => {
 	const count = Number(node.dataset.downloadRemaining);

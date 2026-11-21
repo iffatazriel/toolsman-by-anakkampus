@@ -7,10 +7,41 @@ import { shareAccess } from '../../../../../features/kirim-file/share-access';
 import { verifyPassword } from '../../../../../features/kirim-file/password';
 import { allowPasswordAttempt, clientIp } from '../../../../../features/kirim-file/rate-limit';
 import { logEvent, type LogContext } from '../../../../../lib/server-log';
+import { defineWorkspaceDictionary } from '../../../../../lib/i18n';
 
 export const prerender = false;
 
 const ID_PATTERN = /^[0-9a-f]{32}$/;
+
+const messages = defineWorkspaceDictionary({
+	service: 'Layanan belum dikonfigurasi.',
+	storage: 'Penyimpanan berkas belum diatur di server.',
+	notFound: 'Tidak ditemukan.',
+	read: 'Data link tidak bisa dibaca.',
+	disabled: 'Link ini sudah dinonaktifkan.',
+	expired: 'Link sudah kedaluwarsa.',
+	passwordRate: 'Terlalu banyak percobaan kata sandi. Coba lagi sebentar.',
+	password: 'Kata sandi salah.',
+	files: 'Daftar berkas tidak bisa dibaca.',
+	limit: 'Batas unduhan berkas ini sudah habis.',
+	file: 'Berkas tidak ditemukan.',
+	upstream: 'Gagal mengambil berkas dari penyimpanan.',
+	claim: 'Gagal mencatat unduhan.',
+}, {
+	service: 'The service is not configured yet.',
+	storage: 'File storage is not configured on the server.',
+	notFound: 'Not found.',
+	read: 'The share could not be read.',
+	disabled: 'This link has been disabled.',
+	expired: 'This link has expired.',
+	passwordRate: 'Too many password attempts. Try again shortly.',
+	password: 'Incorrect password.',
+	files: 'The file list could not be read.',
+	limit: 'This file has reached its download limit.',
+	file: 'File not found.',
+	upstream: 'Could not retrieve the file from storage.',
+	claim: 'Could not record the download.',
+});
 
 function dispose(upstream: Response, context: LogContext): void {
 	upstream.body?.cancel().catch((error) => {
@@ -19,16 +50,27 @@ function dispose(upstream: Response, context: LogContext): void {
 }
 
 export const POST: APIRoute = async ({ params, request }) => {
+	let form: FormData | null = null;
+	try {
+		if (request.body) form = await request.formData();
+	} catch (error) {
+		logEvent('warn', 'shares.download_invalid_form', { request, shareId: params.id }, error);
+	}
+	const lang = form?.get('lang') === 'en' ? 'en' : 'id';
+	const fail = (key: keyof typeof messages.id, status: number) => new Response(messages[lang][key], {
+		status,
+		headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Content-Language': lang, 'Cache-Control': 'no-store' },
+	});
 	const env = shareEnv();
-	if (!env) return new Response('Layanan belum dikonfigurasi.', { status: 503 });
+	if (!env) return fail('service', 503);
 	if (!hasR2Config(env)) {
-		return new Response('Penyimpanan berkas belum diatur di server.', { status: 503 });
+		return fail('storage', 503);
 	}
 
 	const id = params.id ?? '';
 	const index = Number(params.index);
 	if (!ID_PATTERN.test(id) || !Number.isInteger(index) || index < 0) {
-		return new Response('Tidak ditemukan.', { status: 404 });
+		return fail('notFound', 404);
 	}
 
 	let row: ShareRow | null = null;
@@ -36,35 +78,26 @@ export const POST: APIRoute = async ({ params, request }) => {
 		row = await env.DB.prepare('SELECT * FROM shares WHERE id = ?').bind(id).first<ShareRow>();
 	} catch (error) {
 		logEvent('warn', 'shares.download_read_failed', { request, shareId: id }, error);
-		return new Response('Data link tidak bisa dibaca.', { status: 503 });
+		return fail('read', 503);
 	}
 
-	if (!row) return new Response('Tidak ditemukan.', { status: 404 });
+	if (!row) return fail('notFound', 404);
 	if (row.takedown_at) {
-		return new Response('Link ini sudah dinonaktifkan.', { status: 410 });
+		return fail('disabled', 410);
 	}
-	if (row.status !== 'ready') return new Response('Tidak ditemukan.', { status: 404 });
+	if (row.status !== 'ready') return fail('notFound', 404);
 	if (isExpired(row.expires_at, Date.now())) {
-		return new Response('Link sudah kedaluwarsa.', { status: 410 });
+		return fail('expired', 410);
 	}
 
 	if (row.password_hash) {
 		if (!(await allowPasswordAttempt(env.PASSWORD_LIMIT, clientIp(request), id))) {
-			return new Response('Terlalu banyak percobaan kata sandi. Coba lagi sebentar.', {
-				status: 429,
-			});
+			return fail('passwordRate', 429);
 		}
 
-		let password = '';
-		try {
-			const form = await request.formData();
-			password = String(form.get('password') ?? '');
-		} catch (error) {
-			logEvent('warn', 'shares.download_invalid_form', { request, shareId: id }, error);
-			password = '';
-		}
+		const password = String(form?.get('password') ?? '');
 		if (!(await verifyPassword(password, row.password_hash))) {
-			return new Response('Kata sandi salah.', { status: 401 });
+			return fail('password', 401);
 		}
 	}
 
@@ -80,21 +113,21 @@ export const POST: APIRoute = async ({ params, request }) => {
 		file = results[index];
 	} catch (error) {
 		logEvent('warn', 'shares.download_files_failed', { request, shareId: id }, error);
-		return new Response('Daftar berkas tidak bisa dibaca.', { status: 503 });
+		return fail('files', 503);
 	}
 
 	const access = shareAccess(row, fileRows, Date.now(), true);
 	if (access === 'taken-down') {
-		return new Response('Link ini sudah dinonaktifkan.', { status: 410 });
+		return fail('disabled', 410);
 	}
 	if (access === 'expired' || access === 'exhausted') {
-		return new Response('Batas unduhan berkas ini sudah habis.', { status: 410 });
+		return fail('limit', 410);
 	}
-	if (access === 'missing') return new Response('Tidak ditemukan.', { status: 404 });
+	if (access === 'missing') return fail('notFound', 404);
 
-	if (!file) return new Response('Berkas tidak ditemukan.', { status: 404 });
+	if (!file) return fail('file', 404);
 	if (file.purged) {
-		return new Response('Batas unduhan berkas ini sudah habis.', { status: 410 });
+		return fail('limit', 410);
 	}
 
 	// Ambil dulu dari R2, baru catat unduhan. Kalau penyimpanan gagal, kuota
@@ -104,12 +137,12 @@ export const POST: APIRoute = async ({ params, request }) => {
 		upstream = await fetch(await presignDownload(env, file.object_key, file.name));
 	} catch (error) {
 		logEvent('warn', 'shares.download_upstream_failed', { request, shareId: id }, error);
-		return new Response('Gagal mengambil berkas dari penyimpanan.', { status: 502 });
+		return fail('upstream', 502);
 	}
 	if (!upstream.ok || !upstream.body) {
 		logEvent('warn', 'shares.download_upstream_rejected', { request, shareId: id });
 		dispose(upstream, { request, shareId: id });
-		return new Response('Gagal mengambil berkas dari penyimpanan.', { status: 502 });
+		return fail('upstream', 502);
 	}
 
 	const now = Date.now();
@@ -126,7 +159,7 @@ export const POST: APIRoute = async ({ params, request }) => {
 
 			if (!claim) {
 				dispose(upstream, { request, shareId: id });
-				return new Response('Batas unduhan berkas ini sudah habis.', { status: 410 });
+				return fail('limit', 410);
 			}
 		} else {
 			await env.DB.prepare('UPDATE share_files SET downloads = downloads + 1 WHERE share_id = ? AND object_key = ?')
@@ -154,7 +187,7 @@ export const POST: APIRoute = async ({ params, request }) => {
 	} catch (error) {
 		logEvent('warn', 'shares.download_claim_failed', { request, shareId: id }, error);
 		dispose(upstream, { request, shareId: id });
-		return new Response('Gagal mencatat unduhan.', { status: 503 });
+		return fail('claim', 503);
 	}
 
 	const encoded = encodeURIComponent(file.name);

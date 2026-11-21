@@ -212,8 +212,8 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 											<form
 												method="post"
 												data-download-form
-												data-file-name={file.name}
 												action={file.action}>
+												<input type="hidden" name="lang" value="id" />
 												{password !== '' && (
 													<input type="hidden" name="password" value={password} />
 												)}
@@ -225,7 +225,6 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 						</ul>
 					)}
 
-					<p class="field-hint" data-download-status role="status"></p>
 					{maxDownloads !== null && (maxDownloads === 1 ? (
 						<p class="field-hint" data-i18n={`workspace.kirim-file.${files.length === 1 ? 'onceSingle' : 'oneTimeHint'}`}>{files.length === 1 ? dict.id.onceSingle : dict.id.oneTimeHint}</p>
 					) : (
