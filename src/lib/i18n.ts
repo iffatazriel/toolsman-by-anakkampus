@@ -194,6 +194,10 @@ export interface ToolText {
 }
 
 export const toolText: Record<string, Record<Lang, ToolText>> = {
+	sitasi: {
+		id: { name: 'Generator Sitasi', tagline: 'Susun daftar pustaka APA 7 atau IEEE dari buku, jurnal, dan halaman web. Simpan di browser dan ekspor BibTeX.', usage: ['Pilih gaya, jenis sumber, dan isi data penulis.', 'Tambahkan sumber dan periksa sitasi serta contoh kutipan dalam teks.', 'Salin daftar, unduh teks, atau ekspor BibTeX.'] },
+		en: { name: 'Citation Generator', tagline: 'Build APA 7 or IEEE references for books, journal articles, and web pages. Save locally and export BibTeX.', usage: ['Choose a style and source type, then enter author details.', 'Add sources and review references and in-text examples.', 'Copy the list, download text, or export BibTeX.'] },
+	},
 	'format-kode': {
 		id: {
 			name: 'Format Kode',

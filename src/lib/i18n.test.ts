@@ -16,6 +16,7 @@ const slugs = [
 	'hash',
 	'teks',
 	'format-kode',
+	'sitasi',
 	'hapus-exif',
 	'cron',
 	'code-to-image',
