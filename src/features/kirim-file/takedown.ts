@@ -1,3 +1,5 @@
+import { logEvent } from '../../lib/server-log';
+
 export interface TakedownStore {
 	listKeys: (shareId: string) => Promise<string[]>;
 	markTakenDown: (shareId: string, at: number) => Promise<void>;
@@ -31,7 +33,7 @@ export async function takedownShare(
 			await store.removeObject(key);
 			deleted += 1;
 		} catch (error) {
-			console.error(`Gagal menghapus objek ${key}:`, error);
+			logEvent('error', 'shares.takedown_delete_failed', { shareId }, error);
 			failed.push(key);
 		}
 	}

@@ -4,12 +4,13 @@ import { isExpired } from '../../../../features/kirim-file/share-rules';
 import { deleteObject, hasR2Config, headObject } from '../../../../features/kirim-file/r2';
 import { verifyUploadedFiles } from '../../../../features/kirim-file/complete-share';
 import { shareEnv } from '../../../../features/kirim-file/bindings';
+import { logEvent } from '../../../../lib/server-log';
 
 export const prerender = false;
 
 const ID_PATTERN = /^[0-9a-f]{32}$/;
 
-export const POST: APIRoute = async ({ params }) => {
+export const POST: APIRoute = async ({ params, request }) => {
 	const env = shareEnv();
 	if (!env) return new Response('Layanan belum dikonfigurasi.', { status: 503 });
 	if (!hasR2Config(env)) {
@@ -22,7 +23,8 @@ export const POST: APIRoute = async ({ params }) => {
 	let row: ShareRow | null = null;
 	try {
 		row = await env.DB.prepare('SELECT * FROM shares WHERE id = ?').bind(id).first<ShareRow>();
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.complete_read_failed', { request, shareId: id }, error);
 		return new Response('Data link tidak bisa dibaca.', { status: 503 });
 	}
 
@@ -41,7 +43,8 @@ export const POST: APIRoute = async ({ params }) => {
 			.bind(id)
 			.all<ShareFileRow>();
 		files = results;
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.complete_files_failed', { request, shareId: id }, error);
 		return new Response('Daftar berkas tidak bisa dibaca.', { status: 503 });
 	}
 	if (files.length === 0) {
@@ -51,15 +54,15 @@ export const POST: APIRoute = async ({ params }) => {
 	const check = await verifyUploadedFiles(files, {
 		head: (key) => headObject(env, key),
 		remove: (key) => deleteObject(env, key),
-	});
+	}, { request, route: '/api/shares/:id/complete', shareId: id });
 
 	if (!check.ok) {
 		try {
 			await env.DB.prepare("UPDATE shares SET status = 'deleted' WHERE id = ?").bind(id).run();
 			await env.DB.prepare('DELETE FROM share_files WHERE share_id = ?').bind(id).run();
 			await env.DB.prepare('DELETE FROM upload_parts WHERE share_id = ?').bind(id).run();
-		} catch {
-			/* cron akan membersihkan sisa baris kalau ini gagal */
+		} catch (error) {
+			logEvent('warn', 'shares.complete_rollback_failed', { request, shareId: id }, error);
 		}
 
 		return Response.json(
@@ -73,7 +76,8 @@ export const POST: APIRoute = async ({ params }) => {
 
 	try {
 		await env.DB.prepare('UPDATE shares SET status = ? WHERE id = ?').bind('ready', id).run();
-	} catch {
+	} catch (error) {
+		logEvent('error', 'shares.complete_failed', { request, shareId: id }, error);
 		return new Response('Gagal menyelesaikan unggahan.', { status: 500 });
 	}
 

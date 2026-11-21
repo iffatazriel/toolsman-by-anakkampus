@@ -1,6 +1,11 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "toolsman",
+	"observability": {
+		"enabled": true,
+		"redact_query_string": true,
+		"logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": false }
+	},
 	"compatibility_date": "2026-01-01",
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "@astrojs/cloudflare/entrypoints/server",
@@ -33,4 +38,3 @@
 		}
 	]
 }
-
