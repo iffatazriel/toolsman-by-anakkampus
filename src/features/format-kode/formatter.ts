@@ -1,3 +1,13 @@
+import dict from './i18n';
+import { fill } from '../../lib/i18n';
+
+export class FormatError extends Error {
+	constructor(public code: 'errorTooLong' | 'errorMinify' | 'errorInvalid', public detail = '') {
+		super(fill(dict.id[code], { detail: detail || dict.id.errorUnknown }));
+		this.name = 'FormatError';
+	}
+}
+
 export type Language = 'sql' | 'json' | 'javascript' | 'typescript' | 'html' | 'css';
 export interface FormatOptions {
 	language: Language;
@@ -16,8 +26,8 @@ export function canMinify(language: Language): boolean {
 
 export async function formatCode(source: string, options: FormatOptions, minify = false): Promise<string> {
 	if (source.trim() === '') return '';
-	if (source.length > 500_000) throw new Error('Kode lebih dari 500.000 karakter. Pecah dulu menjadi bagian yang lebih kecil.');
-	if (minify && !canMinify(options.language)) throw new Error('Minify tersedia untuk JSON dan CSS. Pilih Format untuk bahasa ini.');
+	if (source.length > 500_000) throw new FormatError('errorTooLong');
+	if (minify && !canMinify(options.language)) throw new FormatError('errorMinify');
 	try {
 		const tabWidth = options.indent === '4' ? 4 : 2;
 		if (options.language === 'json') {
@@ -53,7 +63,6 @@ export async function formatCode(source: string, options: FormatOptions, minify 
 		}
 		return formatted;
 	} catch (error) {
-		const detail = error instanceof Error ? error.message : 'Kesalahan tidak dikenal.';
-		throw new Error(`Kode belum bisa diolah. Periksa sintaks dan pilihan bahasa atau dialek kamu. ${detail}`);
+		throw new FormatError('errorInvalid', error instanceof Error ? error.message : '');
 	}
 }

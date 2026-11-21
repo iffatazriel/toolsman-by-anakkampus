@@ -3,6 +3,30 @@ import type { ToolCategory } from './tool-types';
 export type Lang = 'id' | 'en';
 export const LANG_KEY = 'toolsman-lang';
 
+export type WorkspaceDictionary = Record<Lang, Record<string, string>>;
+const workspaces: Record<string, WorkspaceDictionary> = {};
+let activeLang: Lang | undefined;
+
+export function defineWorkspaceDictionary<const I extends Record<string, string>>(id: I, en: { [K in keyof I]: string }) {
+	return { id, en };
+}
+
+export function registerWorkspaceDictionary(slug: string, dictionary: WorkspaceDictionary): void {
+	workspaces[slug] = dictionary;
+}
+
+export function currentLang(): Lang {
+	return activeLang ?? readLang();
+}
+
+export function setCurrentLang(lang: Lang): void {
+	activeLang = lang;
+}
+
+export function tr<D extends WorkspaceDictionary>(dictionary: D, key: keyof D['id'] & string, values: Record<string, string | number> = {}): string {
+	return fill(dictionary[currentLang()][key] ?? dictionary.id[key] ?? key, values);
+}
+
 export const ui: Record<Lang, Record<string, string>> = {
 	id: {
 		'nav.skip': 'Langsung ke konten',
@@ -81,6 +105,7 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'theme.toDark': 'Ganti ke tema gelap',
 		'theme.toLight': 'Ganti ke tema terang',
 		'lang.label': 'Ganti bahasa',
+		'toast.close': 'Tutup notifikasi',
 		'favorite.save': 'Simpan {name} ke favorit',
 		'favorite.remove': 'Hapus {name} dari favorit',
 	},
@@ -159,6 +184,7 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'theme.toDark': 'Switch to dark theme',
 		'theme.toLight': 'Switch to light theme',
 		'lang.label': 'Switch language',
+		'toast.close': 'Dismiss notification',
 		'favorite.save': 'Save {name} to favorites',
 		'favorite.remove': 'Remove {name} from favorites',
 	},
@@ -559,6 +585,11 @@ export function writeLang(lang: Lang, storage: Storage | null = typeof localStor
 }
 
 export function t(lang: Lang, key: string): string {
+	const match = /^workspace\.([^.]+)\.(.+)$/.exec(key);
+	if (match) {
+		const dictionary = workspaces[match[1]!];
+		return dictionary?.[lang][match[2]!] ?? dictionary?.id[match[2]!] ?? key;
+	}
 	return ui[lang][key] ?? ui.id[key] ?? key;
 }
 

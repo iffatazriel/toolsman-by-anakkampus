@@ -3,11 +3,31 @@ import {
 	fill,
 	localizedTool,
 	normalizeLang,
+	currentLang,
+	setCurrentLang,
+	registerWorkspaceDictionary,
 	readLang,
 	t,
 	writeLang,
 	type Lang,
+	type WorkspaceDictionary,
 } from './i18n';
+
+const workspaceLoaders = import.meta.glob<{ default: WorkspaceDictionary }>('../features/*/i18n.ts');
+
+async function loadWorkspaceDictionaries(): Promise<void> {
+	const slugs = new Set<string>();
+	document.querySelectorAll<HTMLElement>('[data-i18n], [data-i18n-placeholder], [data-i18n-aria], [data-i18n-title]').forEach((element) => {
+		for (const value of [element.dataset.i18n, element.dataset.i18nPlaceholder, element.dataset.i18nAria, element.dataset.i18nTitle]) {
+			const slug = value?.match(/^workspace\.([^.]+)\./)?.[1];
+			if (slug) slugs.add(slug);
+		}
+	});
+	await Promise.all([...slugs].map(async (slug) => {
+		const load = workspaceLoaders[`../features/${slug}/i18n.ts`];
+		if (load) registerWorkspaceDictionary(slug, (await load()).default);
+	}));
+}
 
 function categoryName(lang: Lang, id: string): string {
 	return (categoryText[lang] as Record<string, string>)[id] ?? id;
@@ -26,10 +46,12 @@ function translateElement(element: HTMLElement, lang: Lang, total: number): void
 		total,
 	};
 
-	element.textContent = fill(t(lang, key), values);
+	const translated = t(lang, key);
+	if (translated !== key) element.textContent = fill(translated, values);
 }
 
 export function applyLanguage(lang: Lang): void {
+	setCurrentLang(lang);
 	document.documentElement.lang = lang;
 	const total = document.querySelectorAll('[data-tool-grid] [data-tool]').length;
 
@@ -120,17 +142,17 @@ export function applyLanguage(lang: Lang): void {
 
 	document.querySelectorAll<HTMLElement>('[data-i18n-placeholder]').forEach((element) => {
 		const key = element.dataset.i18nPlaceholder;
-		if (key) (element as HTMLInputElement).placeholder = t(lang, key);
+		if (key && t(lang, key) !== key) (element as HTMLInputElement).placeholder = t(lang, key);
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-i18n-aria]').forEach((element) => {
 		const key = element.dataset.i18nAria;
-		if (key) element.setAttribute('aria-label', t(lang, key));
+		if (key && t(lang, key) !== key) element.setAttribute('aria-label', t(lang, key));
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((element) => {
 		const key = element.dataset.i18nTitle;
-		if (key) element.setAttribute('title', t(lang, key));
+		if (key && t(lang, key) !== key) element.setAttribute('title', t(lang, key));
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-lang-toggle]').forEach((element) => {
@@ -145,6 +167,7 @@ export function applyLanguage(lang: Lang): void {
 export function initLanguage(): void {
 	const initial = readLang();
 	applyLanguage(initial);
+	void loadWorkspaceDictionaries().then(() => applyLanguage(currentLang()));
 
 	document.querySelectorAll<HTMLElement>('[data-lang-toggle]').forEach((button) => {
 		button.addEventListener('click', () => {

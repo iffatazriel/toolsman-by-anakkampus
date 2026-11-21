@@ -1,7 +1,10 @@
+import { currentLang, t } from './i18n';
+
 type ToastTone = 'neutral' | 'success' | 'error';
+type ToastText = string | (() => string);
 
 type ToastOptions = {
-	action?: { label: string; onClick: () => void };
+	action?: { label: ToastText; onClick: () => void };
 	duration?: number;
 	tone?: ToastTone;
 };
@@ -12,7 +15,7 @@ const iconPaths: Record<ToastTone, string> = {
 	error: '<path d="M18 6 6 18M6 6l12 12"/>',
 };
 
-export function toast(message: string, options: ToastOptions = {}): void {
+export function toast(message: ToastText, options: ToastOptions = {}): void {
 	const region = document.querySelector<HTMLElement>('[data-toast-region]');
 	if (!region) return;
 
@@ -29,17 +32,18 @@ export function toast(message: string, options: ToastOptions = {}): void {
 
 	const text = document.createElement('span');
 	text.className = 'toast__text';
-	text.textContent = message;
 	node.append(text);
+	const resolve = (value: ToastText) => typeof value === 'function' ? value() : value;
+	const remove = () => { document.removeEventListener('lang:change', render); node.remove(); };
+	let action: HTMLButtonElement | null = null;
 
 	if (options.action) {
-		const action = document.createElement('button');
+		action = document.createElement('button');
 		action.type = 'button';
 		action.className = 'toast__action';
-		action.textContent = options.action.label;
 		action.addEventListener('click', () => {
 			options.action?.onClick();
-			node.remove();
+			remove();
 		});
 		node.append(action);
 	}
@@ -47,13 +51,19 @@ export function toast(message: string, options: ToastOptions = {}): void {
 	const close = document.createElement('button');
 	close.type = 'button';
 	close.className = 'icon-button';
-	close.setAttribute('aria-label', 'Tutup notifikasi');
 	close.innerHTML =
 		'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-	close.addEventListener('click', () => node.remove());
+	close.addEventListener('click', remove);
 	node.append(close);
+	function render() {
+		text.textContent = resolve(message);
+		if (action && options.action) action.textContent = resolve(options.action.label);
+		close.setAttribute('aria-label', t(currentLang(), 'toast.close'));
+	}
+	render();
+	document.addEventListener('lang:change', render);
 
 	region.append(node);
 
-	window.setTimeout(() => node.remove(), options.duration ?? 4000);
+	window.setTimeout(remove, options.duration ?? 4000);
 }
