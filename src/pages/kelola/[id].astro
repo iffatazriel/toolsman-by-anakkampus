@@ -1,4 +1,5 @@
 ---
+import dict from '../../features/kirim-file/i18n';
 import Layout from '../../layouts/Layout.astro';
 import Modal from '../../components/ui/Modal.astro';
 
@@ -8,34 +9,34 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 const id = Astro.params.id ?? '';
 ---
 
-<Layout title="Kelola kiriman" description="Lihat status unduhan dan hapus kiriman kamu lebih awal dengan link kelola rahasia." noindex>
+<Layout title={dict.id.manageTitle} description={dict.id.manageDescription} noindex>
 	<main class="container manage-page" id="main" data-manage-id={id}>
-		<h1>Kelola kiriman</h1>
-		<p>Link halaman ini rahasia. Siapa pun yang memilikinya bisa melihat status dan menghapus kiriman. Jangan bagikan ke penerima.</p>
-		<p><a href="/tools/kirim-file/">Kembali ke Kirim File</a></p>
+		<h1 data-i18n="workspace.kirim-file.manageTitle">{dict.id.manageTitle}</h1>
+		<p data-i18n="workspace.kirim-file.managePrivacy">{dict.id.managePrivacy}</p>
+		<p><a href="/tools/kirim-file/" data-i18n="workspace.kirim-file.back">{dict.id.back}</a></p>
 		<p id="manage-error" class="field-error" role="alert" hidden></p>
-		<p id="manage-message" class="field-hint" role="status">Membaca link kelola…</p>
+		<p id="manage-message" class="field-hint" role="status">{dict.id.manageLoading}</p>
 		<section class="pane" id="manage-details" hidden aria-labelledby="manage-heading">
-			<h2 id="manage-heading" class="pane__title">Status kiriman</h2>
-			<dl class="details"><dt>Status</dt><dd id="manage-state"></dd><dt>Dibuat</dt><dd id="manage-created"></dd><dt>Berlaku sampai</dt><dd id="manage-expires"></dd><dt>Sisa waktu</dt><dd id="manage-countdown"></dd><dt>Perlindungan</dt><dd id="manage-flags"></dd><dt>Total unduhan</dt><dd id="manage-downloads"></dd></dl>
-			<p id="manage-pending" class="field-hint" hidden>Akses kiriman sudah ditutup. Sebagian objek belum berhasil dihapus; pembersihan otomatis akan mencoba lagi.</p>
-			<h3>Berkas kamu</h3><ul id="manage-files"></ul>
-			<p class="field-hint">Unduhan tercatat saat pengambilan dimulai, bukan bukti berkas selesai diterima. Berkas yang sudah diunduh atau sedang dikirim tidak bisa ditarik kembali.</p>
-			<button type="button" id="manage-notify" class="btn btn--secondary">Aktifkan notifikasi</button>
-			<p id="manage-notify-note" class="field-hint">Status diperiksa setiap sekitar 20 detik saat tab terlihat. Notifikasi hanya bekerja selama halaman terbuka; ini bukan notifikasi push.</p>
-			<button type="button" id="manage-delete" class="btn btn--danger">Hapus sekarang</button>
+			<h2 id="manage-heading" class="pane__title" data-i18n="workspace.kirim-file.manageHeading">{dict.id.manageHeading}</h2>
+			<dl class="details"><dt data-i18n="workspace.kirim-file.status">{dict.id.status}</dt><dd id="manage-state"></dd><dt data-i18n="workspace.kirim-file.created">{dict.id.created}</dt><dd id="manage-created"></dd><dt data-i18n="workspace.kirim-file.expires">{dict.id.expires}</dt><dd id="manage-expires"></dd><dt data-i18n="workspace.kirim-file.remaining">{dict.id.remaining}</dt><dd id="manage-countdown"></dd><dt data-i18n="workspace.kirim-file.protection">{dict.id.protection}</dt><dd id="manage-flags"></dd><dt data-i18n="workspace.kirim-file.downloads">{dict.id.downloads}</dt><dd id="manage-downloads"></dd></dl>
+			<p id="manage-pending" class="field-hint" hidden data-i18n="workspace.kirim-file.pending">{dict.id.pending}</p>
+			<h3 data-i18n="workspace.kirim-file.yourFiles">{dict.id.yourFiles}</h3><ul id="manage-files"></ul>
+			<p class="field-hint" data-i18n="workspace.kirim-file.countNote">{dict.id.countNote}</p>
+			<button type="button" id="manage-notify" class="btn btn--secondary" data-i18n="workspace.kirim-file.notify">{dict.id.notify}</button>
+			<p id="manage-notify-note" class="field-hint" data-i18n="workspace.kirim-file.notifyHint">{dict.id.notifyHint}</p>
+			<button type="button" id="manage-delete" class="btn btn--danger" data-i18n="workspace.kirim-file.delete">{dict.id.delete}</button>
 		</section>
 		<section class="pane" id="manage-share" hidden aria-labelledby="manage-share-title">
-			<h2 id="manage-share-title" class="pane__title">Link untuk penerima</h2>
-			<a id="manage-share-link" rel="noreferrer">Buka link kiriman</a>
-			<label class="field-label" for="manage-share-url">Link kiriman (bukan link kelola)</label>
-			<div class="link-row"><input class="field-input" id="manage-share-url" readonly /><button type="button" class="btn btn--secondary" id="manage-share-copy">Salin link kiriman</button></div>
-			<img id="manage-qr" alt="QR link kiriman untuk penerima" width="180" height="180" hidden />
+			<h2 id="manage-share-title" class="pane__title" data-i18n="workspace.kirim-file.recipientLink">{dict.id.recipientLink}</h2>
+			<a id="manage-share-link" rel="noreferrer" data-i18n="workspace.kirim-file.openShare">{dict.id.openShare}</a>
+			<label class="field-label" for="manage-share-url" data-i18n="workspace.kirim-file.shareLabel">{dict.id.shareLabel}</label>
+			<div class="link-row"><input class="field-input" id="manage-share-url" readonly /><button type="button" class="btn btn--secondary" id="manage-share-copy" data-i18n="workspace.kirim-file.copyShare">{dict.id.copyShare}</button></div>
+			<img id="manage-qr" alt={dict.id.shareQrAlt} data-i18n-alt="workspace.kirim-file.shareQrAlt" width="180" height="180" hidden />
 		</section>
 		<Modal id="manage-confirm" labelledby="manage-confirm-title">
-			<h2 id="manage-confirm-title">Hapus kiriman sekarang?</h2>
-			<p>Link penerima langsung dinonaktifkan. Berkas akan dihapus dari penyimpanan; tindakan ini tidak bisa dibatalkan.</p>
-			<div class="actions"><button type="button" class="btn btn--secondary" id="manage-cancel" autofocus>Batal</button><button type="button" class="btn btn--danger" id="manage-confirm-delete">Ya, hapus kiriman</button></div>
+			<h2 id="manage-confirm-title" data-i18n="workspace.kirim-file.deleteTitle">{dict.id.deleteTitle}</h2>
+			<p data-i18n="workspace.kirim-file.deleteHint">{dict.id.deleteHint}</p>
+			<div class="actions"><button type="button" class="btn btn--secondary" id="manage-cancel" autofocus data-i18n="workspace.kirim-file.dismiss">{dict.id.dismiss}</button><button type="button" class="btn btn--danger" id="manage-confirm-delete" data-i18n="workspace.kirim-file.deleteConfirm">{dict.id.deleteConfirm}</button></div>
 		</Modal>
 	</main>
 </Layout>

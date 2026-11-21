@@ -45,7 +45,10 @@ node scripts/workspace-i18n-audit.mjs --check teks format-kode
 ```
 
 This audit is a word-based heuristic over workspace/components and supporting
-logic (excluding metadata, dictionaries and tests), not a translation extractor.
+logic reachable from feature markup, framework components and `*-client` entry
+points (excluding metadata, dictionaries, tests and server-only modules), not a
+translation extractor. Server API messages may stay Indonesian when clients map
+their stable HTTP statuses to localized feedback, as in Kirim File.
 Counts are lower bounds: short labels and uncommon Indonesian words can be
 missed, and samples can be false positives. Review dynamic helpers as well as
 markup when migrating another feature. The prompt content directory is excluded.
