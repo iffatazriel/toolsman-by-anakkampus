@@ -16,6 +16,7 @@ interface FakeFile {
 	mime: string;
 	downloads: number;
 	purged: number;
+	upload_id?: string | null;
 }
 
 function makeEnv(shares: FakeShare[], files: FakeFile[], reports: { share_id: string }[] = []) {
@@ -28,7 +29,7 @@ function makeEnv(shares: FakeShare[], files: FakeFile[], reports: { share_id: st
 					return statement;
 				},
 				async all() {
-					if (sql.includes('FROM share_files f')) {
+					if (sql.includes('SELECT f.share_id AS share_id')) {
 						const [now, limit] = bound as [number, number];
 						const results = files
 							.filter((file) => {
@@ -47,13 +48,13 @@ function makeEnv(shares: FakeShare[], files: FakeFile[], reports: { share_id: st
 						return { results };
 					}
 
-					if (sql.includes('SELECT id FROM shares')) {
-						const [now, limit] = bound as [number, number];
+					if (sql.includes('SELECT id, expires_at FROM shares')) {
+						const [now, , limit] = bound as [number, number, number];
 						return {
 							results: shares
-								.filter((share) => share.status !== 'deleted' && share.expires_at <= now)
+								.filter((share) => (share.status !== 'deleted' && share.expires_at <= now) || (share.status === 'deleted' && files.some((file) => file.share_id === share.id && (!file.purged || file.upload_id || share.expires_at <= now))))
 								.slice(0, limit)
-								.map((share) => ({ id: share.id })),
+								.map((share) => ({ id: share.id, expires_at: share.expires_at })),
 						};
 					}
 
@@ -94,6 +95,10 @@ function makeEnv(shares: FakeShare[], files: FakeFile[], reports: { share_id: st
 
 					if (sql.startsWith('UPDATE share_files SET purged = 1')) {
 						const [shareId, objectKey] = bound as [string, string];
+						if (sql.includes('upload_id = NULL')) {
+							for (const file of files.filter((item) => item.share_id === shareId)) { file.purged = 1; file.upload_id = null; }
+							return {};
+						}
 						const file = files.find(
 							(item) => item.share_id === shareId && item.object_key === objectKey,
 						);
@@ -243,6 +248,24 @@ describe('purgeExhaustedFiles', () => {
 });
 
 describe('removeExpiredShares', () => {
+	it('membersihkan kiriman yang dihapus pengirim sebelum expiry, lalu tracking pada expiry', async () => {
+		const shares = [share({ status: 'deleted', expires_at: 10000 })];
+		const files = [file({ upload_id: 'multipart' })];
+		const env = makeEnv(shares, files);
+		expect(await removeExpiredShares(env, 5000)).toBe(1);
+		expect(fetchMock).toHaveBeenCalledTimes(2); expect(files).toHaveLength(1); expect(files[0]).toMatchObject({ purged: 1, upload_id: null });
+		expect(await removeExpiredShares(env, 5000)).toBe(0);
+		expect(await removeExpiredShares(env, 10000)).toBe(1); expect(files).toHaveLength(0);
+	});
+
+	it('kegagalan R2 kiriman deleted tetap diantrekan untuk cron berikutnya', async () => {
+		const files = [file({ object_key: 'a/gagal.pdf', upload_id: 'multipart' })];
+		const env = makeEnv([share({ status: 'deleted' })], files);
+		failFor('gagal');
+		expect(await removeExpiredShares(env, 5000)).toBe(0); expect(files[0]).toMatchObject({ purged: 0, upload_id: 'multipart' });
+		fetchMock.mockImplementation(async () => new Response(null, { status: 204 }));
+		expect(await removeExpiredShares(env, 5000)).toBe(1); expect(files[0]!.purged).toBe(1);
+	});
 	it('menghapus objek, baris berkas, laporan, dan menandai link terhapus', async () => {
 		const shares = [
 			share({ id: 'a', expires_at: 1_000 }),

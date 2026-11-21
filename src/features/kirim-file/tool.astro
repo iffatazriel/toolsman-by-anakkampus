@@ -75,7 +75,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	<section class="share-result" data-result hidden aria-labelledby="result-title">
 		<h2 id="result-title" class="pane__title">Link siap dibagikan</h2>
 		<div class="share-link-row">
-			<input class="field-input" id="share-url" readonly />
+			<input class="field-input" id="share-url" aria-label="Link untuk penerima" readonly />
 			<button type="button" class="btn btn--secondary" id="share-copy">Salin link</button>
 		</div>
 		<div class="share-meta">
@@ -83,6 +83,18 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			<p class="field-hint" data-countdown></p>
 		</div>
 		<p class="field-hint" data-result-note hidden></p>
+		<label class="field-label" for="share-manage-url">Link kelola (simpan, jangan dibagikan)</label>
+		<div class="share-link-row">
+			<input class="field-input" id="share-manage-url" readonly />
+			<button type="button" class="btn btn--secondary" id="share-manage-copy">Salin link kelola</button>
+		</div>
+		<p class="field-hint" id="share-manage-note"></p>
+	</section>
+	<section class="pane" aria-labelledby="saved-shares-title">
+		<h2 id="saved-shares-title" class="pane__title">Kiriman kamu</h2>
+		<p class="field-hint">Tersimpan di browser ini sampai kedaluwarsa (maksimal 50 kiriman). Link kelola bisa menghapus berkas: jangan dibagikan. Menghapus dari daftar tidak menghapus berkas di server.</p>
+		<ul id="saved-shares"></ul>
+		<p class="field-hint" id="saved-shares-empty">Belum ada kiriman tersimpan.</p>
 	</section>
 </div>
 
@@ -106,6 +118,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	} from './multipart';
 	import { validateFile, validatePassword } from './share-rules';
 	import { qrDataUrl } from './qr';
+	import { loadSavedShares, managePath, removeSavedShare, saveShare, senderStorage } from './saved-shares';
 
 	type Expiry = '1h' | '24h' | '7d';
 	type FileState = 'idle' | 'uploading' | 'done' | 'failed';
@@ -117,6 +130,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 	interface ShareSession {
 		id: string;
+		manageToken: string;
 		expiresAt: number;
 		uploads: UploadTarget[];
 		protected: boolean;
@@ -150,6 +164,30 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	const turnstileBox = document.querySelector<HTMLElement>('[data-turnstile]');
 	const turnstileStatus = document.querySelector<HTMLElement>('[data-turnstile-status]');
 	const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+	const renderSavedShares = () => {
+		const savedList = document.getElementById('saved-shares')!;
+		const saved = loadSavedShares(senderStorage());
+		savedList.replaceChildren();
+		for (const share of saved) {
+			const item = document.createElement('li');
+			const link = document.createElement('a');
+			link.href = managePath(share.id, share.token); link.textContent = share.fileNames.join(', ');
+			link.rel = 'noreferrer';
+			const note = document.createElement('p'); note.className = 'field-hint'; note.textContent = `Berlaku ${formatRemaining(share.expiresAt - Date.now())}.`;
+			const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn--secondary'; remove.textContent = 'Hapus dari daftar';
+			remove.setAttribute('aria-label', `Hapus ${share.fileNames.join(', ')} dari daftar`);
+			remove.addEventListener('click', () => { if (!removeSavedShare(senderStorage(), share.id)) toast('Daftar belum bisa diperbarui. Periksa izin penyimpanan browser kamu.', { tone: 'error' }); renderSavedShares(); });
+			item.append(link, note, remove); savedList.append(item);
+		}
+		document.getElementById('saved-shares-empty')!.hidden = saved.length > 0;
+	};
+	renderSavedShares();
+	window.setInterval(renderSavedShares, 60_000);
+	window.addEventListener('storage', renderSavedShares);
+	document.getElementById('share-manage-copy')!.addEventListener('click', async () => {
+		const value = document.querySelector<HTMLInputElement>('#share-manage-url')!.value;
+		if (value) toast(await copyText(value) ? 'Link kelola disalin. Simpan untuk kamu sendiri.' : 'Gagal menyalin. Pilih link kelola lalu salin manual.');
+	});
 
 	if (input && list && startButton && status && result && urlField && copyButton && qrImage && countdown) {
 		const makeQr = (text: string) => qrDataUrl(text);
@@ -416,8 +454,13 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		const showResult = async (active: ShareSession) => {
 			const url = `${location.origin}/s/${active.id}`;
 			urlField.value = url;
-			qrImage.src = await makeQr(url);
+			document.querySelector<HTMLInputElement>('#share-manage-url')!.value = `${location.origin}${managePath(active.id, active.manageToken)}`;
+			const saved = saveShare(senderStorage(), { id: active.id, token: active.manageToken, expiresAt: active.expiresAt, fileNames: active.uploads.map((file) => file.name) });
+			document.getElementById('share-manage-note')!.textContent = saved ? 'Link kelola disimpan di Kiriman kamu pada browser ini. Simpan juga salinannya; token yang hilang tidak bisa dipulihkan.' : 'Browser tidak bisa menyimpan link kelola. Salin dan simpan sekarang; token yang hilang tidak bisa dipulihkan.';
+			renderSavedShares();
 			result.hidden = false;
+			try { qrImage.src = await makeQr(url); qrImage.hidden = false; }
+			catch { qrImage.hidden = true; }
 
 			const notes: string[] = [];
 			if (active.protected) notes.push('Penerima perlu kata sandi untuk membuka link ini.');
@@ -462,18 +505,20 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			});
 			const data = (await response.json()) as {
 				id?: string;
+				manageToken?: string;
 				expiresAt?: number;
 				uploads?: UploadTarget[];
 				protected?: boolean;
 				oneTime?: boolean;
 				error?: string;
 			};
-			if (!response.ok || !data.id || !data.uploads || data.expiresAt === undefined) {
+			if (!response.ok || !data.id || !data.manageToken || !data.uploads || data.expiresAt === undefined) {
 				throw new UploadError(data.error ?? 'Gagal membuat link.');
 			}
 
 			return {
 				id: data.id,
+				manageToken: data.manageToken,
 				expiresAt: data.expiresAt,
 				uploads: data.uploads,
 				protected: Boolean(data.protected),
@@ -650,17 +695,13 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				await uploadAll();
 				const active = session;
 				if (!active) throw new UploadError('Sesi unggah tidak siap.');
-				const completed = await fetch(`/api/shares/${active.id}/complete`, { method: 'POST' });
-				if (!completed.ok) {
-					throw new UploadError(
-						'Berkas sudah terkirim, tapi link belum selesai dibuat. Tekan Ulangi unggahan.',
-					);
-				}
+				await postJson(`/api/shares/${active.id}/complete`, {});
 				setStatus('');
 				retryable = false;
 				await showResult(active);
 				toast('Link siap dibagikan.', { tone: 'success' });
 			} catch (error) {
+				if (error instanceof UploadError && error.status === 410) resetSession();
 				retryable = session !== null;
 				states = states.map((state) => (state === 'uploading' ? 'idle' : state));
 				renderList();

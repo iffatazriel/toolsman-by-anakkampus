@@ -19,6 +19,7 @@ import {
 } from '../../../features/kirim-file/quota';
 import { shareEnv, type ShareEnv } from '../../../features/kirim-file/bindings';
 import { verifyTurnstile } from '../../../features/kirim-file/turnstile';
+import { createManageToken, hashManageToken } from '../../../features/kirim-file/manage-token';
 import { logEvent } from '../../../lib/server-log';
 export const prerender = false;
 
@@ -55,6 +56,12 @@ export const POST: APIRoute = async ({ request }) => {
 		logEvent('warn', 'shares.invalid_json', { request }, error);
 		return json({ error: 'Permintaan tidak valid.' }, 400);
 	}
+	if (!body || typeof body !== 'object' || Array.isArray(body) ||
+		(body.password !== undefined && typeof body.password !== 'string') ||
+		(body.oneTime !== undefined && typeof body.oneTime !== 'boolean') ||
+		(body.turnstileToken !== undefined && typeof body.turnstileToken !== 'string')) {
+		return json({ error: 'Permintaan tidak valid. Periksa tipe isian kamu.' }, 400);
+	}
 
 	if (!isExpiryId(body.expiry)) return json({ error: 'Masa berlaku tidak dikenal.' }, 400);
 	if (!Array.isArray(body.files) || body.files.length === 0 || body.files.length > 10) {
@@ -62,6 +69,9 @@ export const POST: APIRoute = async ({ request }) => {
 	}
 
 	for (const file of body.files) {
+		if (!file || typeof file !== 'object' || typeof file.name !== 'string' || file.name.length > 1000 || typeof file.type !== 'string' || file.type.length > 255 || !Number.isSafeInteger(file.size)) {
+			return json({ error: 'Metadata berkas tidak valid. Pilih ulang berkas kamu.' }, 400);
+		}
 		const problem = validateFile(file);
 		if (problem) return json({ error: problem }, 400);
 	}
@@ -114,11 +124,13 @@ export const POST: APIRoute = async ({ request }) => {
 		);
 
 		const passwordHash = password === '' ? null : await hashPassword(password);
+		const manageToken = createManageToken();
+		const manageTokenHash = await hashManageToken(manageToken);
 
 		await env.DB.prepare(
-			'INSERT INTO shares (id, expires_at, created_at, status, password_hash, max_downloads) VALUES (?, ?, ?, ?, ?, ?)',
+			'INSERT INTO shares (id, expires_at, created_at, status, password_hash, max_downloads, manage_token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)',
 		)
-			.bind(shareId, expiry, now, 'uploading', passwordHash, oneTime ? 1 : null)
+			.bind(shareId, expiry, now, 'uploading', passwordHash, oneTime ? 1 : null, manageTokenHash)
 			.run();
 
 		for (const [index, file] of files.entries()) {
@@ -131,6 +143,7 @@ export const POST: APIRoute = async ({ request }) => {
 
 		return json({
 			id: shareId,
+			manageToken,
 			expiresAt: expiry,
 			maxBytes: MAX_FILE_BYTES,
 			protected: passwordHash !== null,

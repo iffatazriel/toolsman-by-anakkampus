@@ -43,7 +43,7 @@ export function validatePassword(value: string): string | null {
 }
 
 export function isExpiryId(value: unknown): value is ExpiryId {
-	return typeof value === 'string' && value in EXPIRY_OPTIONS;
+	return typeof value === 'string' && Object.hasOwn(EXPIRY_OPTIONS, value);
 }
 
 export function isBlockedName(name: string): boolean {

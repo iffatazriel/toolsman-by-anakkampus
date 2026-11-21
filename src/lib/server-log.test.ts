@@ -12,6 +12,13 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('structured server logs', () => {
+	it('normalizes management requests without logging credentials', () => {
+		const request = new Request(`https://toolsman.test/api/shares/${ID}/manage#t=secret`, { method: 'DELETE', headers: { Authorization: 'Bearer secret', 'cf-ray': ray } });
+		logEvent('error', 'shares.manage_delete_failed', { request }, new Error('secret'));
+		const line = vi.mocked(console.error).mock.calls[0]![0];
+		expect(JSON.parse(line)).toMatchObject({ route: '/api/shares/:id/manage', method: 'DELETE', shareId: ID, requestId: ray, error: { message: '[REDACTED]' } });
+		expect(line).not.toContain('secret');
+	});
 	it('emits one JSON string per event with bounded request context', () => {
 		const request = new Request(`https://toolsman.test/api/shares/${ID}/download/3?index=3`, { method: 'POST', headers: { 'cf-ray': ray } });
 		logEvent('info', 'shares.download', { request });

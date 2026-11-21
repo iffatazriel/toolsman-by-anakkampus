@@ -72,6 +72,11 @@ function installEnv(share: ShareRow, files: ShareFileRow[]) {
 						return { results: [] };
 					},
 					async run() {
+						if (sql.startsWith('UPDATE shares')) share.downloads += 1;
+						if (sql.startsWith('UPDATE share_files SET downloads')) {
+							const file = files.find((item) => item.object_key === bound[1]);
+							if (file) file.downloads += 1;
+						}
 						return {};
 					},
 				};
@@ -124,6 +129,10 @@ afterEach(() => {
 });
 
 describe('rute unduh tidak membocorkan URL', () => {
+	it('mencatat unduhan tiap berkas untuk kiriman tanpa batas unduhan', async () => {
+		const file = makeFile(); const share = makeShare(); installEnv(share, [file]);
+		expect((await callRoute(postRequest())).status).toBe(200); expect(file.downloads).toBe(1); expect(share.downloads).toBe(1);
+	});
 	it('menolak share berkata sandi tanpa kata sandi yang benar', async () => {
 		installEnv(makeShare({ password_hash: await hashPassword('rahasia') }), [makeFile()]);
 

@@ -8,13 +8,13 @@ export interface LogContext {
 
 const MAX_STACK = 1024;
 const ERROR_NAMES = new Set(['Error', 'TypeError', 'RangeError', 'SyntaxError', 'ReferenceError', 'URIError', 'AbortError', 'TimeoutError', 'AggregateError']);
-const FILE_NAMES = new Set(['index.ts', 'cleanup.ts', 'r2.ts', 'complete.ts', 'start.ts', 'part.ts', 'abort.ts', 'report.ts', 'health.ts', 'middleware.ts', 'complete-share.ts', 'quota.ts', 'turnstile.ts', 'abuse-webhook.ts', 'password.ts']);
+const FILE_NAMES = new Set(['index.ts', 'cleanup.ts', 'r2.ts', 'complete.ts', 'manage.ts', 'start.ts', 'part.ts', 'abort.ts', 'report.ts', 'health.ts', 'middleware.ts', 'complete-share.ts', 'quota.ts', 'turnstile.ts', 'abuse-webhook.ts', 'password.ts']);
 
 function routeName(value: string): string {
 	if (value === 'cleanup' || value === 'internal') return value;
 	const path = value.split(/[?#]/, 1)[0]!.replace(/\/$/, '');
 	if (path === '/api/health' || path === '/api/shares') return path;
-	if (/^\/api\/shares\/[^/]+\/(?:complete|report)$/.test(path)) return path.replace(/\/shares\/[^/]+\//, '/shares/:id/');
+	if (/^\/api\/shares\/[^/]+\/(?:complete|report|manage)$/.test(path)) return path.replace(/\/shares\/[^/]+\//, '/shares/:id/');
 	if (/^\/api\/shares\/[^/]+\/multipart\/(?:start|part|complete|abort)$/.test(path)) return path.replace(/\/shares\/[^/]+\//, '/shares/:id/');
 	if (/^\/api\/shares\/[^/]+\/download\/[^/]+$/.test(path)) return '/api/shares/:id/download/:index';
 	return path.startsWith('/api/') || path === '/api' ? '/api/*' : 'internal';

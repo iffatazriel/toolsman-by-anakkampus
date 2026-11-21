@@ -59,8 +59,6 @@ export const POST: APIRoute = async ({ params, request }) => {
 	if (!check.ok) {
 		try {
 			await env.DB.prepare("UPDATE shares SET status = 'deleted' WHERE id = ?").bind(id).run();
-			await env.DB.prepare('DELETE FROM share_files WHERE share_id = ?').bind(id).run();
-			await env.DB.prepare('DELETE FROM upload_parts WHERE share_id = ?').bind(id).run();
 		} catch (error) {
 			logEvent('warn', 'shares.complete_rollback_failed', { request, shareId: id }, error);
 		}
@@ -68,14 +66,17 @@ export const POST: APIRoute = async ({ params, request }) => {
 		return Response.json(
 			{
 				error:
-					'Unggahan tidak lengkap atau ukurannya tidak cocok. Berkas sudah dihapus, silakan unggah ulang.',
+					'Unggahan tidak lengkap atau ukurannya tidak cocok. Link dinonaktifkan dan sisa berkas akan dibersihkan otomatis. Silakan unggah ulang.',
 			},
 			{ status: 409 },
 		);
 	}
 
 	try {
-		await env.DB.prepare('UPDATE shares SET status = ? WHERE id = ?').bind('ready', id).run();
+		const updated = await env.DB.prepare("UPDATE shares SET status = ? WHERE id = ? AND status != 'deleted' AND takedown_at IS NULL RETURNING id").bind('ready', id).first<{ id: string }>();
+		if (!updated) {
+			return Response.json({ error: 'Kiriman sudah dihapus atau dinonaktifkan. Buat kiriman baru untuk mengunggah ulang.' }, { status: 410 });
+		}
 	} catch (error) {
 		logEvent('error', 'shares.complete_failed', { request, shareId: id }, error);
 		return new Response('Gagal menyelesaikan unggahan.', { status: 500 });

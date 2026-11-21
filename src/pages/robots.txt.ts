@@ -8,6 +8,7 @@ export const GET: APIRoute = () => {
 		'User-agent: *',
 		'Allow: /',
 		'Disallow: /s/',
+		'Disallow: /kelola/',
 		'Disallow: /api/',
 		'',
 		`Sitemap: ${absoluteUrl('/sitemap.xml')}`,
