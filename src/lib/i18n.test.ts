@@ -15,6 +15,7 @@ const slugs = [
 	'mock-data',
 	'hash',
 	'teks',
+	'format-kode',
 	'hapus-exif',
 	'cron',
 	'code-to-image',

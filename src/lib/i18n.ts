@@ -194,6 +194,18 @@ export interface ToolText {
 }
 
 export const toolText: Record<string, Record<Lang, ToolText>> = {
+	'format-kode': {
+		id: {
+			name: 'Format Kode',
+			tagline: 'Rapikan SQL, JSON, JavaScript, TypeScript, HTML, dan CSS. Perkecil JSON atau CSS tanpa mengirim kode ke server.',
+			usage: ['Tempel kode kamu, lalu pilih bahasa dan dialek SQL jika diperlukan.', 'Pilih indentasi dan gaya kata kunci SQL, lalu tekan Format atau Minify untuk JSON dan CSS.', 'Salin atau unduh hasilnya sesuai ekstensi bahasa yang kamu pilih.'],
+		},
+		en: {
+			name: 'Code Formatter',
+			tagline: 'Format SQL, JSON, JavaScript, TypeScript, HTML, and CSS. Minify JSON or CSS without sending code to a server.',
+			usage: ['Paste your code, then choose a language and SQL dialect if needed.', 'Choose indentation and SQL keyword case, then select Format or Minify for JSON and CSS.', 'Copy or download the result with the matching file extension.'],
+		},
+	},
 	draw: {
 		en: {
 			name: 'Drawing Canvas',
