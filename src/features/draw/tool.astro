@@ -1,3 +1,6 @@
+---
+import dict from './i18n';
+---
 <script is:inline src="/excalidraw-fonts.js"></script>
 
 <div class="draw-shell">
@@ -10,23 +13,25 @@
 			<span class="canvas-skeleton__node"></span>
 			<span class="canvas-skeleton__node canvas-skeleton__node--alt"></span>
 		</div>
-		<p class="sr-only">Menyiapkan kanvas gambar…</p>
+		<p class="sr-only" data-i18n="workspace.draw.preparing">{dict.id.preparing}</p>
 	</div>
-	<div class="draw-export" role="group" aria-label="Ekspor gambar">
-		<button type="button" class="btn btn--secondary" data-copy>Salin gambar</button>
-		<button type="button" class="btn btn--secondary" data-export="png">Unduh PNG</button>
-		<button type="button" class="btn btn--secondary" data-export="svg">Unduh SVG</button>
-		<button type="button" class="btn btn--secondary" data-export="excalidraw">Unduh .excalidraw</button>
-		<button type="button" class="btn btn--secondary" data-share>Bagikan</button>
+	<div class="draw-export" role="group" aria-label={dict.id.export} data-i18n-aria="workspace.draw.export">
+		<button type="button" class="btn btn--secondary" data-copy data-i18n="workspace.draw.copyImage">{dict.id.copyImage}</button>
+		<button type="button" class="btn btn--secondary" data-export="png" data-i18n="workspace.draw.downloadPng">{dict.id.downloadPng}</button>
+		<button type="button" class="btn btn--secondary" data-export="svg" data-i18n="workspace.draw.downloadSvg">{dict.id.downloadSvg}</button>
+		<button type="button" class="btn btn--secondary" data-export="excalidraw" data-i18n="workspace.draw.downloadScene">{dict.id.downloadScene}</button>
+		<button type="button" class="btn btn--secondary" data-share data-i18n="workspace.draw.share">{dict.id.share}</button>
 	</div>
 	<div class="draw-share-result" data-share-result hidden>
-		<label class="sr-only" for="draw-share-url">Link hanya-baca</label>
+		<label class="sr-only" for="draw-share-url" data-i18n="workspace.draw.readOnlyLink">{dict.id.readOnlyLink}</label>
 		<input class="field-input" id="draw-share-url" readonly />
-		<button type="button" class="btn btn--secondary" id="draw-share-copy">Salin link</button>
+		<button type="button" class="btn btn--secondary" id="draw-share-copy" data-i18n="workspace.draw.copyLink">{dict.id.copyLink}</button>
 	</div>
 </div>
 
 <script>
+ import {tr} from "../../lib/i18n";
+ import dict from "./i18n";
 	import { copyText } from '../../lib/clipboard';
 	import { buildSessionUrl, encodeSession, SessionTooLargeError } from '../../lib/share-session';
 	import { toast } from '../../lib/toast';
@@ -42,7 +47,7 @@
 	shareButton?.addEventListener('click', async () => {
 		const api = window.toolsmanDraw;
 		if (!api) {
-			toast('Kanvas belum siap. Tunggu sebentar.', { tone: 'error' });
+			toast(()=> tr(dict,'notReady'), { tone: 'error' });
 			return;
 		}
 
@@ -54,29 +59,27 @@
 				shareResult.hidden = false;
 			}
 			const copied = await copyText(url);
-			toast(
-				copied
-					? `Link hanya-baca disalin (${url.length} karakter).`
-					: `Link dibuat (${url.length} karakter). Salin dari kolom.`,
+			toast(()=> copied
+					? tr(dict,'copiedCount',{count:url.length})
+					: tr(dict,'createdCount',{count:url.length}),
 				{ tone: copied ? 'success' : 'neutral' },
 			);
 		} catch (error) {
 			if (shareResult) shareResult.hidden = true;
 			if (error instanceof SessionTooLargeError) {
-				toast(
-					`Kanvas terlalu besar untuk link (${error.length.toLocaleString('id-ID')} dari ${error.limit.toLocaleString('id-ID')} karakter). Hapus beberapa elemen atau gambar, lalu coba lagi.`,
+				toast(()=> tr(dict,'tooLarge',{length:error.length,limit:error.limit}),
 					{ tone: 'error' },
 				);
 				return;
 			}
-			toast(error instanceof Error ? error.message : 'Gagal membuat link.', { tone: 'error' });
+			toast(()=> tr(dict,'linkFailed'), { tone: 'error' });
 		}
 	});
 
 	shareCopy?.addEventListener('click', async () => {
 		if (!shareUrl) return;
 		const copied = await copyText(shareUrl.value);
-		toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+		toast(()=> copied ? tr(dict,'copiedLink') : tr(dict,'copyFailed'), { tone: copied ? 'success' : 'error' });
 	});
 
 	const download = (name: string, blob: Blob) => {
@@ -91,32 +94,33 @@
 	};
 
 	const safeName = (value: string) => {
+		const defaultFileName = 'gambar';
 		const cleaned = value.trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').toLowerCase();
-		return cleaned === '' ? 'gambar' : cleaned;
+		return cleaned === '' ? defaultFileName : cleaned;
 	};
 
 	document.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async () => {
 		const api = window.toolsmanDraw;
 		if (!api) {
-			toast('Kanvas belum siap. Tunggu sebentar.', { tone: 'error' });
+			toast(()=> tr(dict,'notReady'), { tone: 'error' });
 			return;
 		}
 
 		if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
-			toast('Peramban ini belum mendukung salin gambar. Pakai Unduh PNG.', { tone: 'error' });
+			toast(()=> tr(dict,'unsupported'), { tone: 'error' });
 			return;
 		}
 
 		try {
 			const blob = await api.getBlob('png');
 			if (!blob) {
-				toast('Gagal membuat gambar.', { tone: 'error' });
+				toast(()=> tr(dict,'imageFailed'), { tone: 'error' });
 				return;
 			}
 			await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-			toast('Gambar disalin ke clipboard.', { tone: 'success' });
+			toast(()=> tr(dict,'imageCopied'), { tone: 'success' });
 		} catch {
-			toast('Gagal menyalin gambar. Coba Unduh PNG.', { tone: 'error' });
+			toast(()=> tr(dict,'imageCopyFailed'), { tone: 'error' });
 		}
 	});
 
@@ -125,17 +129,17 @@
 			const format = button.dataset.export as 'png' | 'svg' | 'excalidraw';
 			const api = window.toolsmanDraw;
 			if (!api) {
-				toast('Kanvas belum siap. Tunggu sebentar.', { tone: 'error' });
+				toast(()=> tr(dict,'notReady'), { tone: 'error' });
 				return;
 			}
 			const extension = format === 'excalidraw' ? 'excalidraw' : format;
 			const blob = await api.getBlob(format === 'excalidraw' ? 'json' : format);
 			if (!blob) {
-				toast('Gagal membuat berkas ekspor.', { tone: 'error' });
+				toast(()=> tr(dict,'exportFailed'), { tone: 'error' });
 				return;
 			}
 			download(`${safeName(api.name())}.${extension}`, blob);
-			toast('Berkas diunduh.', { tone: 'success' });
+			toast(()=> tr(dict,'downloaded'), { tone: 'success' });
 		});
 	});
 </script>
