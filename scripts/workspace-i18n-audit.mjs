@@ -27,6 +27,7 @@ for (const item of readdirSync(root, { withFileTypes: true }).sort((a, b) => a.n
 			const value = match[2] ?? match[3] ?? '';
 			if (tokens.has(value) && !/>\s*$/.test(prefix)) continue;
 			if (/^(?:#|\[)/.test(value) || /^[^\s]+\.(?:pdf|png|jpe?g|webp|svg|drawio|excalidraw)$/.test(value)) continue;
+			if (/^(?:flowchart|sequenceDiagram|erDiagram|classDiagram|gantt|stateDiagram-v2)\b/.test(value)) continue;
 			if (/\bplaceholder\s*=\s*(?:{\s*)?$/.test(prefix) && (/^curl\s/.test(value) || /^[\w.-]+=[\s\S]*[&?](?:amp;)?\s*[\w.-]+=/.test(value) || /^[\w-]+:[\w.-]+$/.test(value))) continue;
 			if (marker.test(value) && !/^(?:workspace\.|[.\/]|https?:)/.test(value)) candidates.push(value.trim());
 		}

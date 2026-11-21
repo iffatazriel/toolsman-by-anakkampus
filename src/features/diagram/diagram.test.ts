@@ -28,6 +28,12 @@ describe('templates', () => {
 });
 
 describe('extractLineFromMermaidError', () => {
+	it('localizes empty and unknown-type diagnostics without changing source lines', () => {
+		expect(extractLineFromMermaidError(null, '', 'en')).toEqual({ line: 1, message: 'Unrecognized Mermaid syntax.' });
+		const error = new Error('No diagram type detected matching given configuration for text: halo');
+		expect(extractLineFromMermaidError(error, 'halo', 'en')).toMatchObject({ line: 1, message: expect.stringContaining('Unrecognized diagram type') });
+		expect(extractLineFromMermaidError(new Error('Parse error on line 2:\nExpecting ARROW'), 'a\nb', 'en')).toEqual({ line: 2, message: 'Expecting ARROW' });
+	});
 	const source = 'flowchart TD\n  A --> B\n  B --> ?';
 
 	it('memakai hash.line dari Mermaid (berbasis nol)', () => {
