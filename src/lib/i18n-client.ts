@@ -25,8 +25,8 @@ export function localizedText(element: HTMLElement | null, render: () => string)
 
 async function loadWorkspaceDictionaries(): Promise<void> {
 	const slugs = new Set<string>();
-	document.querySelectorAll<HTMLElement>('[data-i18n], [data-i18n-placeholder], [data-i18n-aria], [data-i18n-title]').forEach((element) => {
-		for (const value of [element.dataset.i18n, element.dataset.i18nPlaceholder, element.dataset.i18nAria, element.dataset.i18nTitle]) {
+	document.querySelectorAll<HTMLElement>('[data-i18n], [data-i18n-placeholder], [data-i18n-aria], [data-i18n-title], [data-i18n-alt]').forEach((element) => {
+		for (const value of [element.dataset.i18n, element.dataset.i18nPlaceholder, element.dataset.i18nAria, element.dataset.i18nTitle, element.dataset.i18nAlt]) {
 			const slug = value?.match(/^workspace\.([^.]+)\./)?.[1];
 			if (slug) slugs.add(slug);
 		}
@@ -161,6 +161,10 @@ export function applyLanguage(lang: Lang): void {
 	document.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach((element) => {
 		const key = element.dataset.i18nTitle;
 		if (key && t(lang, key) !== key) element.setAttribute('title', t(lang, key));
+	});
+	document.querySelectorAll<HTMLElement>('[data-i18n-alt]').forEach((element) => {
+		const key = element.dataset.i18nAlt;
+		if (key && t(lang, key) !== key) element.setAttribute('alt', t(lang, key));
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-lang-toggle]').forEach((element) => {
