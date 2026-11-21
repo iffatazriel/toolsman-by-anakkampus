@@ -1,19 +1,20 @@
 ---
 interface Props {
 	label: string;
+	labelKey?: string;
 	value: number;
 	max?: number;
 	hint?: string;
 }
 
-const { label, value, max = 100, hint } = Astro.props;
+const { label, labelKey, value, max = 100, hint } = Astro.props;
 const clamped = Math.min(Math.max(value, 0), max);
 const percent = max > 0 ? Math.round((clamped / max) * 100) : 0;
 ---
 
 <div>
 	<div class="flex items-center justify-between gap-3">
-		<span class="text-sm">{label}</span>
+		<span class="text-sm" data-i18n={labelKey}>{label}</span>
 		<span class="text-ink-muted font-mono text-xs">
 			{hint ?? `${percent}%`}
 		</span>
@@ -22,6 +23,7 @@ const percent = max > 0 ? Math.round((clamped / max) * 100) : 0;
 		class="progress mt-2"
 		role="progressbar"
 		aria-label={label}
+		data-i18n-aria={labelKey}
 		aria-valuemin="0"
 		aria-valuemax={max}
 		aria-valuenow={clamped}

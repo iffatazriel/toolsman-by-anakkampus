@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 ---
 
@@ -6,27 +7,27 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 	<div class="pane-grid pane-grid--split">
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Pengaturan</h2>
+				<h2 class="pane__title" data-i18n="workspace.mock-data.settings">{dict.id.settings}</h2>
 			</div>
 
 			<div class="form-grid">
 				<div>
-					<label class="field-label" for="mock-count">Jumlah baris</label>
+					<label class="field-label" for="mock-count" data-i18n="workspace.mock-data.count">{dict.id.count}</label>
 					<input class="field-input" id="mock-count" type="number" min="1" max="200" value="10" />
-					<p class="field-hint">Satu sampai 200 baris.</p>
+					<p class="field-hint" data-i18n="workspace.mock-data.countHint">{dict.id.countHint}</p>
 				</div>
 
 				<div>
 					<label class="field-label" for="mock-seed">Seed</label>
 					<div class="mock-seed-row">
 						<input class="field-input" id="mock-seed" type="number" value="42" />
-						<button type="button" class="btn btn--secondary" id="mock-random">Acak</button>
+						<button type="button" class="btn btn--secondary" id="mock-random" data-i18n="workspace.mock-data.random">{dict.id.random}</button>
 					</div>
-					<p class="field-hint">Seed yang sama menghasilkan data yang sama.</p>
+					<p class="field-hint" data-i18n="workspace.mock-data.seedHint">{dict.id.seedHint}</p>
 				</div>
 
 				<fieldset class="mock-fields">
-					<legend class="field-label">Field</legend>
+					<legend class="field-label" data-i18n="workspace.mock-data.fields">{dict.id.fields}</legend>
 					<div class="mock-field-grid">
 						{
 							mockFields.map((field) => (
@@ -37,7 +38,7 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 										checked={DEFAULT_MOCK_FIELDS.includes(field.id)}
 										data-mock-field
 									/>
-									{field.label}
+									<span data-i18n={`workspace.mock-data.${field.id}`}>{dict.id[field.id]}</span>
 								</label>
 							))
 						}
@@ -46,19 +47,17 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 			</div>
 
 			<div class="pane-actions">
-				<button type="button" class="btn btn--primary" id="mock-generate">Buat data</button>
+				<button type="button" class="btn btn--primary" id="mock-generate" data-i18n="workspace.mock-data.generate">{dict.id.generate}</button>
 			</div>
 
-			<p class="field-hint">
-				Data ini palsu. Jangan dipakai sebagai data nyata atau data pribadi sungguhan.
-			</p>
+			<p class="field-hint" data-i18n="workspace.mock-data.hint">{dict.id.hint}</p>
 		</div>
 
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Hasil</h2>
+				<h2 class="pane__title" data-i18n="workspace.mock-data.result">{dict.id.result}</h2>
 				<div class="pane-actions">
-					<div class="segmented" role="group" aria-label="Format hasil">
+					<div class="segmented" role="group" aria-label={dict.id.format} data-i18n-aria="workspace.mock-data.format">
 						<button type="button" class="segmented__btn" data-mock-output="json" aria-pressed="true">
 							JSON
 						</button>
@@ -66,13 +65,13 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 							CSV
 						</button>
 					</div>
-					<button type="button" class="btn btn--secondary" id="mock-copy" disabled>Salin</button>
-					<button type="button" class="btn btn--primary" id="mock-download" disabled>Unduh</button>
+					<button type="button" class="btn btn--secondary" id="mock-copy" disabled data-i18n="workspace.mock-data.copy">{dict.id.copy}</button>
+					<button type="button" class="btn btn--primary" id="mock-download" disabled data-i18n="workspace.mock-data.download">{dict.id.download}</button>
 				</div>
 			</div>
 
 			<pre class="code-block" id="mock-output" hidden><code id="mock-code"></code></pre>
-			<p class="preview-empty" id="mock-empty">Atur field lalu tekan Buat data.</p>
+			<p class="preview-empty" id="mock-empty" data-i18n="workspace.mock-data.empty">{dict.id.empty}</p>
 			<p class="field-hint" id="mock-status" role="status" aria-live="polite"></p>
 		</div>
 	</div>
@@ -82,6 +81,9 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { toast } from '../../lib/toast';
+	import { tr } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import {
 		generateMockData,
 		mockToCsv,
@@ -133,16 +135,10 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 			code.textContent = blank ? '' : text;
 			output.hidden = blank;
 			empty.hidden = !blank;
-			empty.textContent =
-				fields.length === 0
-					? 'Pilih minimal satu field untuk membuat data.'
-					: 'Atur field lalu tekan Buat data.';
+			localizedText(empty, () => tr(dict, fields.length === 0 ? 'chooseField' : 'empty'));
 			copyButton.disabled = blank;
 			downloadButton.disabled = blank;
-			status.textContent =
-				fields.length === 0
-					? ''
-					: `${rows.length} baris · ${fields.length} field · seed ${seed.value || '1'}`;
+			localizedText(status, () => fields.length === 0 ? '' : tr(dict, 'status', { rows: rows.length, fields: fields.length, seed: seed.value || '1' }));
 		};
 
 		const generate = () => {
@@ -181,7 +177,7 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 		copyButton.addEventListener('click', async () => {
 			const text = format === 'json' ? mockToJson(rows) : mockToCsv(rows);
 			const copied = await copyText(text);
-			toast(copied ? 'Data disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'copied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
 		downloadButton.addEventListener('click', () => {
@@ -191,7 +187,7 @@ import { DEFAULT_MOCK_FIELDS, mockFields } from './mock';
 				text,
 				format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8',
 			);
-			toast('Data diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'downloaded'), { tone: 'success' });
 		});
 
 		generate();

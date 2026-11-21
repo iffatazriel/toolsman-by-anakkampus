@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 import Icon from '../../components/ui/Icon.astro';
 ---
 
@@ -12,7 +13,7 @@ import Icon from '../../components/ui/Icon.astro';
 			</div>
 		</div>
 
-		<label class="sr-only" for="json-input">Teks JSON</label>
+		<label class="sr-only" for="json-input" data-i18n="workspace.generator.jsonText">{dict.id.jsonText}</label>
 		<textarea
 			id="json-input"
 			class="code-area"
@@ -29,17 +30,13 @@ import Icon from '../../components/ui/Icon.astro';
 
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Hasil</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.output">{dict.id.output}</h2>
 			<div class="pane-actions">
-				<div class="segmented" role="group" aria-label="Tampilan hasil">
-					<button type="button" class="segmented__btn" data-view="teks" aria-pressed="true">
-						Teks
-					</button>
-					<button type="button" class="segmented__btn" data-view="pohon" aria-pressed="false">
-						Pohon
-					</button>
+				<div class="segmented" role="group" aria-label={dict.id.view} data-i18n-aria="workspace.generator.view">
+					<button type="button" class="segmented__btn" data-view="teks" aria-pressed="true" data-i18n="workspace.generator.text">{dict.id.text}</button>
+					<button type="button" class="segmented__btn" data-view="pohon" aria-pressed="false" data-i18n="workspace.generator.tree">{dict.id.tree}</button>
 				</div>
-				<button type="button" class="btn btn--primary" id="json-copy" disabled>Salin</button>
+				<button type="button" class="btn btn--primary" id="json-copy" disabled data-i18n="workspace.generator.copy">{dict.id.copy}</button>
 			</div>
 		</div>
 
@@ -47,18 +44,20 @@ import Icon from '../../components/ui/Icon.astro';
 		<div class="json-tree-wrap" id="json-tree" hidden></div>
 
 		<div class="preview-empty" id="json-empty">
-			<p>Tempel JSON di kiri, hasilnya muncul di sini.</p>
-			<button type="button" class="btn btn--secondary mt-3" id="json-sample">
-				Isi contoh
-			</button>
+			<p data-i18n="workspace.generator.jsonEmpty">{dict.id.jsonEmpty}</p>
+			<button type="button" class="btn btn--secondary mt-3" id="json-sample" data-i18n="workspace.generator.sample">{dict.id.sample}</button>
 		</div>
 	</div>
 </div>
 
 <script>
+	import { tr, currentLang } from '../../lib/i18n';
+	import dict from './i18n';
+	import { localizedText } from '../../lib/i18n-client';
 	import { copyText } from '../../lib/clipboard';
 	import {
 		formatJson,
+		parseJson,
 		highlightJson,
 		minifyJson,
 		renderJsonTree,
@@ -91,6 +90,7 @@ import Icon from '../../components/ui/Icon.astro';
 		sample
 	) {
 		let currentText = '';
+		let currentData: unknown = null;
 		let view: 'teks' | 'pohon' = 'teks';
 
 		const paint = () => {
@@ -102,13 +102,14 @@ import Icon from '../../components/ui/Icon.astro';
 
 		const clearError = () => {
 			errorBox.hidden = true;
-			errorText.textContent = '';
+			localizedText(errorText, () => '');
 			input.removeAttribute('aria-invalid');
 			input.removeAttribute('aria-describedby');
 		};
 
 		const showError = (error: JsonError) => {
-			errorText.textContent = `Baris ${error.line}, kolom ${error.column}: ${error.message}`;
+			const source = input.value;
+			localizedText(errorText, () => { const parsed = parseJson(source, currentLang()); const detail = parsed.ok ? error : parsed.error; return tr(dict, 'jsonPosition', { line: detail.line, column: detail.column, message: detail.message }); });
 			errorBox.hidden = false;
 			input.setAttribute('aria-invalid', 'true');
 			input.setAttribute('aria-describedby', 'json-error-text');
@@ -119,6 +120,7 @@ import Icon from '../../components/ui/Icon.astro';
 
 		const reset = () => {
 			currentText = '';
+			currentData = null;
 			outputCode.textContent = '';
 			tree.innerHTML = '';
 			copy.disabled = true;
@@ -127,7 +129,7 @@ import Icon from '../../components/ui/Icon.astro';
 
 		const run = (mode: 'format' | 'minify') => {
 			clearError();
-			const result = mode === 'format' ? formatJson(input.value) : minifyJson(input.value);
+			const result = mode === 'format' ? formatJson(input.value, currentLang()) : minifyJson(input.value, currentLang());
 
 			if (!result.ok) {
 				reset();
@@ -136,8 +138,9 @@ import Icon from '../../components/ui/Icon.astro';
 			}
 
 			currentText = result.text;
+			currentData = result.data;
 			outputCode.innerHTML = highlightJson(result.text);
-			tree.innerHTML = renderJsonTree(result.data, { openDepth: 1 });
+			tree.innerHTML = renderJsonTree(result.data, { openDepth: 1, lang: currentLang() });
 			copy.disabled = false;
 			paint();
 		};
@@ -165,7 +168,7 @@ import Icon from '../../components/ui/Icon.astro';
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(currentText);
-			toast(copied ? 'JSON disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'jsonCopied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
 		sample.addEventListener('click', () => {
@@ -174,6 +177,12 @@ import Icon from '../../components/ui/Icon.astro';
 			run('format');
 		});
 
+		document.addEventListener('lang:change', () => {
+			if (!currentText) return;
+			const opened = Array.from(tree.querySelectorAll('details'), node => node.open);
+			tree.innerHTML = renderJsonTree(currentData, { openDepth: 1, lang: currentLang() });
+			tree.querySelectorAll('details').forEach((node, index) => { node.open = opened[index] ?? node.open; });
+		});
 		paint();
 	}
 </script>

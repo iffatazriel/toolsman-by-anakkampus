@@ -1,6 +1,7 @@
 ---
+import dict from './i18n';
 const licenses = [
-	{ value: '', label: 'Tanpa lisensi' },
+	{ value: '', label: dict.id.noLicense },
 	{ value: 'MIT', label: 'MIT' },
 	{ value: 'Apache-2.0', label: 'Apache-2.0' },
 	{ value: 'GPL-3.0', label: 'GPL-3.0' },
@@ -10,12 +11,12 @@ const licenses = [
 <div class="pane-grid pane-grid--split">
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Isian</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.fields">{dict.id.fields}</h2>
 		</div>
 
 		<form class="form-grid" id="readme-form" autocomplete="off">
 			<div>
-				<label class="field-label" for="readme-name">Nama proyek</label>
+				<label class="field-label" for="readme-name" data-i18n="workspace.generator.projectName">{dict.id.projectName}</label>
 				<input
 					class="field-input"
 					id="readme-name"
@@ -23,34 +24,34 @@ const licenses = [
 					type="text"
 					placeholder="alat-pdf"
 				/>
-				<p class="field-hint">Dipakai sebagai judul README. Wajib diisi.</p>
+				<p class="field-hint" data-i18n="workspace.generator.readmeNameHint">{dict.id.readmeNameHint}</p>
 			</div>
 
 			<div>
-				<label class="field-label" for="readme-description">Deskripsi singkat</label>
+				<label class="field-label" for="readme-description" data-i18n="workspace.generator.description">{dict.id.description}</label>
 				<textarea
 					class="field-input field-textarea"
 					id="readme-description"
 					name="description"
 					rows="2"
-					placeholder="Gabung, pisah, dan kompres PDF langsung di browser."
+					placeholder={dict.id.descriptionPlaceholder} data-i18n-placeholder="workspace.generator.descriptionPlaceholder"
 				></textarea>
 			</div>
 
 			<div>
-				<label class="field-label" for="readme-features">Fitur</label>
+				<label class="field-label" for="readme-features" data-i18n="workspace.generator.features">{dict.id.features}</label>
 				<textarea
 					class="field-input field-textarea"
 					id="readme-features"
 					name="features"
 					rows="4"
-					placeholder="Gabung beberapa PDF&#10;Pisah halaman tertentu&#10;Kompres tiga tingkat"
+					placeholder={dict.id.featuresPlaceholder} data-i18n-placeholder="workspace.generator.featuresPlaceholder"
 				></textarea>
-				<p class="field-hint">Satu fitur per baris.</p>
+				<p class="field-hint" data-i18n="workspace.generator.featureHint">{dict.id.featureHint}</p>
 			</div>
 
 			<div>
-				<label class="field-label" for="readme-install">Perintah instalasi</label>
+				<label class="field-label" for="readme-install" data-i18n="workspace.generator.installation">{dict.id.installation}</label>
 				<textarea
 					class="field-input field-textarea"
 					id="readme-install"
@@ -58,61 +59,53 @@ const licenses = [
 					rows="3"
 					placeholder="npm install&#10;npm run dev"
 				></textarea>
-				<p class="field-hint">Satu perintah per baris, ditulis sebagai blok kode bash.</p>
+				<p class="field-hint" data-i18n="workspace.generator.installationHint">{dict.id.installationHint}</p>
 			</div>
 
 			<div>
-				<label class="field-label" for="readme-usage">Cara pakai</label>
+				<label class="field-label" for="readme-usage" data-i18n="workspace.generator.usage">{dict.id.usage}</label>
 				<textarea
 					class="field-input field-textarea"
 					id="readme-usage"
 					name="usage"
 					rows="3"
-					placeholder="Buka halaman alat, lalu pilih berkas PDF."
+					placeholder={dict.id.usagePlaceholder} data-i18n-placeholder="workspace.generator.usagePlaceholder"
 				></textarea>
 			</div>
 
 			<div>
-				<label class="field-label" for="readme-license">Lisensi</label>
+				<label class="field-label" for="readme-license" data-i18n="workspace.generator.license">{dict.id.license}</label>
 				<select class="field-input" id="readme-license" name="license">
-					{licenses.map((item) => <option value={item.value}>{item.label}</option>)}
+					{licenses.map((item) => <option value={item.value} data-i18n={item.value === '' ? 'workspace.generator.noLicense' : undefined}>{item.label}</option>)}
 				</select>
 			</div>
 
 			<div class="check-row">
 				<input type="checkbox" id="readme-badge" name="badge" />
-				<label for="readme-badge">Sertakan badge lisensi</label>
+				<label for="readme-badge" data-i18n="workspace.generator.badge">{dict.id.badge}</label>
 			</div>
-			<p class="field-hint check-hint">
-				Badge memakai gambar dari shields.io. Tanpa lisensi, badge tidak ditambahkan.
-			</p>
+			<p class="field-hint check-hint" data-i18n="workspace.generator.badgeHint">{dict.id.badgeHint}</p>
 
-			<p class="field-hint">
-				README ini kerangka awal. Periksa lagi isinya sebelum ditempel ke repo.
-			</p>
+			<p class="field-hint" data-i18n="workspace.generator.readmeHint">{dict.id.readmeHint}</p>
 		</form>
 	</div>
 
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Pratinjau README</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.readmePreview">{dict.id.readmePreview}</h2>
 			<div class="pane-actions">
-				<button type="button" class="btn btn--secondary" id="readme-copy" disabled>
-					Salin .md
-				</button>
-				<button type="button" class="btn btn--primary" id="readme-download" disabled>
-					Unduh .md
-				</button>
+				<button type="button" class="btn btn--secondary" id="readme-copy" disabled data-i18n="workspace.generator.copyMd">{dict.id.copyMd}</button>
+				<button type="button" class="btn btn--primary" id="readme-download" disabled data-i18n="workspace.generator.downloadMd">{dict.id.downloadMd}</button>
 			</div>
 		</div>
 		<div class="preview prose" id="readme-preview" hidden></div>
-		<p class="preview-empty" id="readme-preview-empty">
-			Isi nama proyek dulu, README-nya muncul di sini.
-		</p>
+		<p class="preview-empty" id="readme-preview-empty" data-i18n="workspace.generator.readmeEmpty">{dict.id.readmeEmpty}</p>
 	</div>
 </div>
 
 <script>
+	import { tr, currentLang } from '../../lib/i18n';
+	import dict from './i18n';
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { markdownFilename } from '../../lib/files';
@@ -158,7 +151,7 @@ const licenses = [
 				usage: usage.value,
 				license: license.value as ReadmeLicense | '',
 				showLicenseBadge: badge.checked,
-			});
+			}, currentLang());
 
 			const blank = markdown === '';
 			preview.innerHTML = blank ? '' : renderMarkdown(markdown);
@@ -168,18 +161,19 @@ const licenses = [
 			download.disabled = blank;
 		};
 
+		document.addEventListener('lang:change', update);
 		form.addEventListener('input', update);
 		form.addEventListener('change', update);
 		form.addEventListener('submit', (event) => event.preventDefault());
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(markdown);
-			toast(copied ? 'README disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'readmeCopied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText(markdownFilename(markdown), markdown);
-			toast('File README diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'readmeDownloaded'), { tone: 'success' });
 		});
 
 		update();

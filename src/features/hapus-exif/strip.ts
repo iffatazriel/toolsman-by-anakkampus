@@ -1,8 +1,11 @@
+import dict from './i18n';
+
 export interface StripResult {
 	ok: boolean;
 	bytes?: Uint8Array;
 	removedBytes?: number;
 	error?: string;
+	errorKey?: 'notJpeg' | 'notPng' | 'unsupported';
 }
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -28,7 +31,7 @@ function isJpeg(bytes: Uint8Array): boolean {
 }
 
 export function stripJpegMetadata(bytes: Uint8Array): StripResult {
-	if (!isJpeg(bytes)) return { ok: false, error: 'Berkas ini bukan JPEG.' };
+	if (!isJpeg(bytes)) return { ok: false, error: dict.id.notJpeg, errorKey: 'notJpeg' };
 
 	const parts: Uint8Array[] = [bytes.slice(0, 2)];
 	let removedBytes = 0;
@@ -91,7 +94,7 @@ export function stripJpegMetadata(bytes: Uint8Array): StripResult {
 }
 
 export function stripPngMetadata(bytes: Uint8Array): StripResult {
-	if (!isPng(bytes)) return { ok: false, error: 'Berkas ini bukan PNG.' };
+	if (!isPng(bytes)) return { ok: false, error: dict.id.notPng, errorKey: 'notPng' };
 
 	const parts: Uint8Array[] = [bytes.slice(0, 8)];
 	let removedBytes = 0;
@@ -135,5 +138,5 @@ export function stripMetadata(bytes: Uint8Array, mime = ''): StripResult {
 	if (mime.includes('jpeg') || mime.includes('jpg') || isJpeg(bytes)) {
 		return stripJpegMetadata(bytes);
 	}
-	return { ok: false, error: 'Format ini belum didukung. Pakai JPG atau PNG.' };
+	return { ok: false, error: dict.id.unsupported, errorKey: 'unsupported' };
 }

@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 import { licenseOptions } from '../../lib/license';
 
 const currentYear = new Date().getFullYear();
@@ -7,19 +8,19 @@ const currentYear = new Date().getFullYear();
 <div class="pane-grid pane-grid--split">
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Isian</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.fields">{dict.id.fields}</h2>
 		</div>
 
 		<form class="form-grid" id="license-form" autocomplete="off">
 			<div>
-				<label class="field-label" for="license-kind">Lisensi</label>
+				<label class="field-label" for="license-kind" data-i18n="workspace.generator.license">{dict.id.license}</label>
 				<select class="field-input" id="license-kind">
 					{licenseOptions.map((option) => <option value={option.id}>{option.label}</option>)}
 				</select>
 			</div>
 
 			<div>
-				<label class="field-label" for="license-year">Tahun</label>
+				<label class="field-label" for="license-year" data-i18n="workspace.generator.year">{dict.id.year}</label>
 				<input
 					class="field-input"
 					id="license-year"
@@ -31,58 +32,47 @@ const currentYear = new Date().getFullYear();
 			</div>
 
 			<div>
-				<label class="field-label" for="license-holder">Pemilik hak cipta</label>
+				<label class="field-label" for="license-holder" data-i18n="workspace.generator.holder">{dict.id.holder}</label>
 				<input
 					class="field-input"
 					id="license-holder"
 					type="text"
-					placeholder="Nama kamu atau organisasi"
+					placeholder={dict.id.holderPlaceholder} data-i18n-placeholder="workspace.generator.holderPlaceholder"
 				/>
-				<p class="field-hint">Wajib diisi. Dipakai di baris copyright.</p>
+				<p class="field-hint" data-i18n="workspace.generator.holderHint">{dict.id.holderHint}</p>
 			</div>
 
 			<div>
-				<label class="field-label" for="license-project">Nama proyek</label>
+				<label class="field-label" for="license-project" data-i18n="workspace.generator.projectName">{dict.id.projectName}</label>
 				<input
 					class="field-input"
 					id="license-project"
 					type="text"
 					placeholder="alat-pdf"
 				/>
-				<p class="field-hint">
-					Dipakai di bagian cara pakai GPL. Kalau kosong, nama pemilik yang dipakai.
-				</p>
+				<p class="field-hint" data-i18n="workspace.generator.licenseProjectHint">{dict.id.licenseProjectHint}</p>
 			</div>
 
-			<p class="field-hint">
-				Teks diambil dari naskah resmi. Ini templat, bukan nasihat hukum. Periksa lagi
-				sebelum dipakai.
-			</p>
+			<p class="field-hint" data-i18n="workspace.generator.licenseHint">{dict.id.licenseHint}</p>
 		</form>
 	</div>
 
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Isi LICENSE</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.licenseOutput">{dict.id.licenseOutput}</h2>
 			<div class="pane-actions">
-				<button type="button" class="btn btn--secondary" id="license-copy" disabled>
-					Salin
-				</button>
+				<button type="button" class="btn btn--secondary" id="license-copy" disabled data-i18n="workspace.generator.copy">{dict.id.copy}</button>
 				<button
 					type="button"
 					class="btn btn--primary"
 					id="license-download"
 					disabled
-				>
-					Unduh LICENSE
-				</button>
+				 data-i18n="workspace.generator.licenseDownload">{dict.id.licenseDownload}</button>
 			</div>
 		</div>
 
 		<pre class="code-block" id="license-output" hidden><code id="license-code"></code></pre>
-		<p class="preview-empty" id="license-empty">
-			Isi pemilik hak cipta, teks lisensinya muncul di sini.
-		</p>
+		<p class="preview-empty" id="license-empty" data-i18n="workspace.generator.licenseEmpty">{dict.id.licenseEmpty}</p>
 		<div class="license-status-row">
 			<span class="spinner" data-license-spinner hidden aria-hidden="true"></span>
 			<p class="field-hint" id="license-status" role="status" aria-live="polite"></p>
@@ -91,6 +81,9 @@ const currentYear = new Date().getFullYear();
 </div>
 
 <script>
+	import { tr, WorkspaceError, workspaceErrorMessage } from '../../lib/i18n';
+	import dict from './i18n';
+	import { localizedText } from '../../lib/i18n-client';
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { fillLicense, licenseOptions, type LicenseId } from '../../lib/license';
@@ -148,12 +141,12 @@ const currentYear = new Date().getFullYear();
 			if (holder.value.trim() === '') {
 				paint('');
 				setLoading(false);
-				status.textContent = 'Pemilik hak cipta masih kosong.';
+				localizedText(status, () => tr(dict, 'holderEmpty'));
 				return;
 			}
 
 			setLoading(Boolean(option.url));
-			status.textContent = option.url ? 'Memuat naskah lisensi…' : '';
+			localizedText(status, () => option.url ? tr(dict, 'licenseLoading') : '');
 
 			try {
 				let template = option.text;
@@ -161,7 +154,7 @@ const currentYear = new Date().getFullYear();
 					template = cache.get(option.url);
 					if (!template) {
 						const response = await fetch(option.url);
-						if (!response.ok) throw new Error('Naskah lisensi tidak bisa dimuat.');
+						if (!response.ok) throw new WorkspaceError(dict, 'licenseFetchError');
 						template = await response.text();
 						cache.set(option.url, template);
 					}
@@ -177,16 +170,12 @@ const currentYear = new Date().getFullYear();
 						project: project.value,
 					}),
 				);
-				status.textContent =
-					option.id === 'GPL-3.0'
-						? 'GPL-3.0 mewajibkan kode sumber tetap terbuka saat kamu menyebarkan salinannya.'
-						: '';
+				localizedText(status, () => option.id === 'GPL-3.0' ? tr(dict, 'gplNote') : '');
 			} catch (error) {
 				if (current !== request) return;
 				setLoading(false);
 				paint('');
-				status.textContent =
-					error instanceof Error ? error.message : 'Gagal memuat naskah lisensi.';
+				localizedText(status, () => workspaceErrorMessage(error, tr(dict, 'licenseFailed')));
 			}
 		};
 
@@ -196,12 +185,12 @@ const currentYear = new Date().getFullYear();
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(text);
-			toast(copied ? 'Lisensi disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'licenseCopied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText('LICENSE', text, 'text/plain;charset=utf-8');
-			toast('Berkas LICENSE diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'licenseDownloaded'), { tone: 'success' });
 		});
 
 		void update();

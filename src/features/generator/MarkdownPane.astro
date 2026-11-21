@@ -1,16 +1,17 @@
 ---
+import dict from './i18n';
 import Icon from '../../components/ui/Icon.astro';
 import type { IconName } from '../../lib/icons';
 import type { ToolbarAction } from '../../lib/markdown-toolbar';
 
-const toolbarItems: { action: ToolbarAction; label: string; icon: IconName }[] = [
-	{ action: 'bold', label: 'Tebal', icon: 'bold' },
-	{ action: 'italic', label: 'Miring', icon: 'italic' },
-	{ action: 'heading', label: 'Judul', icon: 'heading' },
-	{ action: 'list', label: 'Daftar', icon: 'list' },
-	{ action: 'code', label: 'Kode', icon: 'code' },
-	{ action: 'link', label: 'Tautan', icon: 'link' },
-	{ action: 'table', label: 'Tabel', icon: 'table' },
+const toolbarItems: { action: ToolbarAction; label: string; labelKey: string; icon: IconName }[] = [
+	{ action: 'bold', label: dict.id.bold, labelKey: 'workspace.generator.bold', icon: 'bold' },
+	{ action: 'italic', label: dict.id.italic, labelKey: 'workspace.generator.italic', icon: 'italic' },
+	{ action: 'heading', label: dict.id.heading, labelKey: 'workspace.generator.heading', icon: 'heading' },
+	{ action: 'list', label: dict.id.list, labelKey: 'workspace.generator.list', icon: 'list' },
+	{ action: 'code', label: dict.id.code, labelKey: 'workspace.generator.code', icon: 'code' },
+	{ action: 'link', label: dict.id.link, labelKey: 'workspace.generator.link', icon: 'link' },
+	{ action: 'table', label: dict.id.table, labelKey: 'workspace.generator.table', icon: 'table' },
 ];
 ---
 
@@ -19,23 +20,19 @@ const toolbarItems: { action: ToolbarAction; label: string; icon: IconName }[] =
 		<div class="pane__head">
 			<h2 class="pane__title" id="md-editor-title">Editor</h2>
 			<div class="pane-actions">
-				<button type="button" class="btn btn--secondary" id="md-copy" disabled>
-					Salin
-				</button>
-				<button type="button" class="btn btn--primary" id="md-download" disabled>
-					Unduh .md
-				</button>
+				<button type="button" class="btn btn--secondary" id="md-copy" disabled data-i18n="workspace.generator.copy">{dict.id.copy}</button>
+				<button type="button" class="btn btn--primary" id="md-download" disabled data-i18n="workspace.generator.downloadMd">{dict.id.downloadMd}</button>
 			</div>
 		</div>
 
-		<div class="toolbar" role="toolbar" aria-label="Format Markdown" id="md-toolbar">
+		<div class="toolbar" role="toolbar" aria-label={dict.id.formatMarkdown} data-i18n-aria="workspace.generator.formatMarkdown" id="md-toolbar">
 			{
 				toolbarItems.map((item) => (
 					<button
 						type="button"
 						class="toolbar__btn"
 						data-action={item.action}
-						aria-label={item.label}
+						aria-label={item.label} data-i18n-aria={item.labelKey}
 					>
 						<Icon name={item.icon} size={20} />
 					</button>
@@ -43,28 +40,28 @@ const toolbarItems: { action: ToolbarAction; label: string; icon: IconName }[] =
 			}
 		</div>
 
-		<label class="sr-only" for="md-input">Teks Markdown</label>
+		<label class="sr-only" for="md-input" data-i18n="workspace.generator.markdownText">{dict.id.markdownText}</label>
 		<textarea
 			id="md-input"
 			class="code-area"
 			spellcheck="false"
 			aria-labelledby="md-editor-title"
-			placeholder={'# Judul\n\nTulis Markdown di sini. Tabel, daftar tugas, dan blok kode ikut tampil di pratinjau.'}
+			placeholder={dict.id.markdownPlaceholder} data-i18n-placeholder="workspace.generator.markdownPlaceholder"
 		></textarea>
 	</div>
 
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Pratinjau</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.preview">{dict.id.preview}</h2>
 		</div>
 		<div class="preview prose" id="md-preview" hidden></div>
-		<p class="preview-empty" id="md-preview-empty">
-			Pratinjau muncul di sini setelah kamu menulis.
-		</p>
+		<p class="preview-empty" id="md-preview-empty" data-i18n="workspace.generator.markdownEmpty">{dict.id.markdownEmpty}</p>
 	</div>
 </div>
 
 <script>
+	import { tr } from '../../lib/i18n';
+	import dict from './i18n';
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { markdownFilename } from '../../lib/files';
@@ -118,12 +115,12 @@ const toolbarItems: { action: ToolbarAction; label: string; icon: IconName }[] =
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(input.value);
-			toast(copied ? 'Markdown disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'markdownCopied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText(markdownFilename(input.value), input.value);
-			toast('File .md diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'markdownDownloaded'), { tone: 'success' });
 		});
 
 		render();

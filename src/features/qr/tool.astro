@@ -1,14 +1,15 @@
 ---
+import dict from './i18n';
 ---
 
 <div class="tool-shell">
 	<div class="qr-layout">
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Isian</h2>
+				<h2 class="pane__title" data-i18n="workspace.qr.input">{dict.id.input}</h2>
 			</div>
 
-			<label class="field-label" for="qr-text">Teks atau URL</label>
+			<label class="field-label" for="qr-text" data-i18n="workspace.qr.text">{dict.id.text}</label>
 			<textarea
 				id="qr-text"
 				class="field-input field-textarea qr-text"
@@ -18,7 +19,7 @@
 
 			<div class="qr-options">
 				<div>
-					<label class="field-label" for="qr-size">Ukuran</label>
+					<label class="field-label" for="qr-size" data-i18n="workspace.qr.size">{dict.id.size}</label>
 					<select class="field-input" id="qr-size">
 						<option value="256" selected>256 px</option>
 						<option value="512">512 px</option>
@@ -26,12 +27,12 @@
 					</select>
 				</div>
 				<div>
-					<label class="field-label" for="qr-correction">Koreksi error</label>
+					<label class="field-label" for="qr-correction" data-i18n="workspace.qr.correction">{dict.id.correction}</label>
 					<select class="field-input" id="qr-correction">
-						<option value="L">L (rendah)</option>
-						<option value="M" selected>M (sedang)</option>
-						<option value="Q">Q (tinggi)</option>
-						<option value="H">H (paling tinggi)</option>
+						<option value="L" data-i18n="workspace.qr.low">{dict.id.low}</option>
+						<option value="M" selected data-i18n="workspace.qr.medium">{dict.id.medium}</option>
+						<option value="Q" data-i18n="workspace.qr.high">{dict.id.high}</option>
+						<option value="H" data-i18n="workspace.qr.highest">{dict.id.highest}</option>
 					</select>
 				</div>
 				<div>
@@ -47,9 +48,7 @@
 				</div>
 			</div>
 
-			<p class="field-hint">
-				Koreksi lebih tinggi membuat QR lebih tahan gores, tapi polanya lebih padat.
-			</p>
+			<p class="field-hint" data-i18n="workspace.qr.hint">{dict.id.hint}</p>
 
 			<div class="alert" id="qr-error" role="alert" hidden>
 				<p id="qr-error-text"></p>
@@ -57,28 +56,22 @@
 
 			<p class="field-hint qr-status-row">
 				<span class="spinner" id="qr-loading" hidden aria-hidden="true"></span>
-				<span id="qr-status" role="status" aria-live="polite">
-					Pratinjau muncul setelah teks diisi.
-				</span>
+				<span id="qr-status" role="status" aria-live="polite" data-i18n="workspace.qr.initial">{dict.id.initial}</span>
 			</p>
 		</div>
 
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Pratinjau</h2>
+				<h2 class="pane__title" data-i18n="workspace.qr.preview">{dict.id.preview}</h2>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--secondary" id="qr-png" disabled>
-						Unduh PNG
-					</button>
-					<button type="button" class="btn btn--secondary" id="qr-svg" disabled>
-						Unduh SVG
-					</button>
+					<button type="button" class="btn btn--secondary" id="qr-png" disabled data-i18n="workspace.qr.png">{dict.id.png}</button>
+					<button type="button" class="btn btn--secondary" id="qr-svg" disabled data-i18n="workspace.qr.svg">{dict.id.svg}</button>
 				</div>
 			</div>
 
 			<div class="qr-preview">
-				<img id="qr-image" alt="Pratinjau QR code" hidden />
-				<p class="qr-empty" id="qr-empty">Tulis teks atau URL dulu.</p>
+				<img id="qr-image" alt={dict.id.alt} data-i18n-alt="workspace.qr.alt" hidden />
+				<p class="qr-empty" id="qr-empty" data-i18n="workspace.qr.empty">{dict.id.empty}</p>
 			</div>
 		</div>
 	</div>
@@ -87,6 +80,9 @@
 <script>
 	import { downloadText } from '../../lib/download';
 	import { toast } from '../../lib/toast';
+	import { tr } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import { qrFilename, qrOptions, type QrCorrection, type QrSize } from './qr-options';
 
 	const text = document.getElementById('qr-text') as HTMLTextAreaElement | null;
@@ -119,14 +115,14 @@
 		let timer: number | undefined;
 		let request = 0;
 
-		const setError = (message: string | null) => {
+		const setError = (message: (() => string) | null) => {
 			errorBox.hidden = message === null;
-			errorText.textContent = message ?? '';
+			localizedText(errorText, message ?? (() => ''));
 		};
 
-		const setLoading = (busy: boolean, message = '') => {
+		const setLoading = (busy: boolean, message: () => string = () => '') => {
 			if (loading) loading.hidden = !busy;
-			if (status) status.textContent = busy ? 'Membuat QR…' : message;
+			localizedText(status, busy ? () => tr(dict, 'loading') : message);
 			if (busy) {
 				png.disabled = true;
 				svgButton.disabled = true;
@@ -150,7 +146,7 @@
 				svgText = '';
 				image.removeAttribute('src');
 				paint(false);
-				setLoading(false, 'Pratinjau muncul setelah teks diisi.');
+				setLoading(false, () => tr(dict, 'initial'));
 				return;
 			}
 
@@ -174,18 +170,16 @@
 				svgText = svgData;
 				image.src = pngData;
 				paint(true);
-				setLoading(false, `${settings.width} px siap diunduh.`);
+				setLoading(false, () => tr(dict, 'ready', { width: settings.width }));
 			} catch (error) {
 				if (current !== request) return;
 				pngUrl = '';
 				svgText = '';
 				image.removeAttribute('src');
 				paint(false);
-				setLoading(false, '');
+				setLoading(false);
 				setError(
-					error instanceof Error && /too (big|long)|length/i.test(error.message)
-						? 'Isinya terlalu panjang untuk ukuran QR ini. Pendekkan teks atau pilih koreksi error lebih rendah.'
-						: 'QR tidak bisa dibuat. Coba lagi dengan teks yang lebih pendek.',
+					() => tr(dict, error instanceof Error && /too (big|long)|length/i.test(error.message) ? 'tooLong' : 'failed'),
 				);
 			}
 		};
@@ -209,7 +203,7 @@
 			document.body.append(link);
 			link.click();
 			link.remove();
-			toast('QR PNG diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'pngDownloaded'), { tone: 'success' });
 		});
 
 		svgButton.addEventListener('click', () => {
@@ -219,7 +213,7 @@
 				svgText,
 				'image/svg+xml;charset=utf-8',
 			);
-			toast('QR SVG diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'svgDownloaded'), { tone: 'success' });
 		});
 
 		paint(false);

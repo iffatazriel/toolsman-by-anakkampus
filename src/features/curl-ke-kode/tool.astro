@@ -1,28 +1,32 @@
 ---
+import dict from './i18n';
 ---
 
 <div class="tool-shell curl-shell">
 	<div class="pane-grid pane-grid--split">
 		<section class="pane">
-			<label class="field-label" for="curl-input">Perintah cURL (maksimal 200.000 karakter)</label>
+			<label class="field-label" for="curl-input" data-i18n="workspace.curl-ke-kode.input">{dict.id.input}</label>
 			<textarea class="code-area" id="curl-input" maxlength="200000" spellcheck="false" placeholder={'curl https://example.com/api \\\n  --json \'{"nama":"Kamu"}\''}></textarea>
-			<p class="field-hint">Mendukung kutip tunggal/ganda dan lanjutan baris dengan \ atau ^. Request tidak dijalankan. Token, password, dan cookie di input maupun hasil tetap rahasia.</p>
-			<label class="field-label" for="curl-target">Target kode</label>
+			<p class="field-hint" data-i18n="workspace.curl-ke-kode.hint">{dict.id.hint}</p>
+			<label class="field-label" for="curl-target" data-i18n="workspace.curl-ke-kode.target">{dict.id.target}</label>
 			<select class="field-input" id="curl-target"><option value="fetch">JavaScript Fetch</option><option value="axios">Axios (Node.js / browser)</option></select>
-			<div class="actions"><button type="button" class="btn btn--primary" id="curl-convert">Konversi</button><button type="button" class="btn btn--secondary" id="curl-clear">Hapus input dan hasil</button></div>
+			<div class="actions"><button type="button" class="btn btn--primary" id="curl-convert" data-i18n="workspace.curl-ke-kode.convert">{dict.id.convert}</button><button type="button" class="btn btn--secondary" id="curl-clear" data-i18n="workspace.curl-ke-kode.clear">{dict.id.clear}</button></div>
 			<p class="field-error" role="alert" id="curl-error" hidden></p>
 		</section>
 		<section class="pane">
-			<label class="field-label" for="curl-output">Kode hasil</label><textarea class="code-area" id="curl-output" readonly spellcheck="false"></textarea>
-			<button type="button" class="btn btn--secondary" id="curl-copy" disabled>Salin kode</button>
+			<label class="field-label" for="curl-output" data-i18n="workspace.curl-ke-kode.output">{dict.id.output}</label><textarea class="code-area" id="curl-output" readonly spellcheck="false"></textarea>
+			<button type="button" class="btn btn--secondary" id="curl-copy" disabled data-i18n="workspace.curl-ke-kode.copy">{dict.id.copy}</button>
 			<p class="field-hint" role="status" id="curl-status"></p>
-			<div id="curl-warnings" hidden><h3>Periksa sebelum menjalankan</h3><ul id="curl-warning-list"></ul></div>
+			<div id="curl-warnings" hidden><h3 data-i18n="workspace.curl-ke-kode.review">{dict.id.review}</h3><ul id="curl-warning-list"></ul></div>
 		</section>
 	</div>
 </div>
 
 <script>
 	import { copyText } from '../../lib/clipboard';
+	import { currentLang, tr, workspaceErrorMessage } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import { generateCode, parseCurl } from './curl';
 	const source = document.querySelector<HTMLTextAreaElement>('#curl-input')!;
 	const output = document.querySelector<HTMLTextAreaElement>('#curl-output')!;
@@ -32,22 +36,29 @@
 	const list = document.getElementById('curl-warning-list')!;
 	const status = document.getElementById('curl-status')!;
 	const copy = document.querySelector<HTMLButtonElement>('#curl-copy')!;
-	const clearResult = () => { output.value = ''; copy.disabled = true; errorNode.hidden = true; warnings.hidden = true; list.replaceChildren(); status.textContent = ''; };
+	let lastCommand: string | null = null;
+	const clearResult = () => { lastCommand = null; output.value = ''; copy.disabled = true; errorNode.hidden = true; warnings.hidden = true; list.replaceChildren(); localizedText(status, () => ''); };
+	const paintWarnings = () => {
+		if (lastCommand === null) return;
+		list.replaceChildren();
+		for (const warning of parseCurl(lastCommand, currentLang()).warnings) { const item = document.createElement('li'); item.textContent = warning; list.append(item); }
+	};
 	const convert = () => {
 		clearResult();
 		try {
 			const request = parseCurl(source.value);
 			output.value = generateCode(request, target.value as 'fetch' | 'axios');
-			for (const warning of request.warnings) { const item = document.createElement('li'); item.textContent = warning; list.append(item); }
+			lastCommand = source.value; paintWarnings();
 			warnings.hidden = !request.warnings.length; copy.disabled = false;
-			status.textContent = 'Kode siap. Request tidak dijalankan.';
-		} catch (error) { errorNode.textContent = error instanceof Error ? error.message : 'Periksa format perintah kamu.'; errorNode.hidden = false; }
+			localizedText(status, () => tr(dict, 'ready'));
+		} catch (error) { localizedText(errorNode, () => workspaceErrorMessage(error, tr(dict, 'fallback'))); errorNode.hidden = false; }
 	};
 	document.getElementById('curl-convert')!.addEventListener('click', convert);
 	source.addEventListener('input', clearResult);
 	target.addEventListener('change', () => { if (source.value.trim()) convert(); });
 	document.getElementById('curl-clear')!.addEventListener('click', () => { source.value = ''; clearResult(); source.focus(); });
-	copy.addEventListener('click', async () => { status.textContent = await copyText(output.value) ? 'Kode disalin. Periksa rahasia dan placeholder sebelum membagikan.' : 'Gagal menyalin. Pilih hasil lalu tekan Ctrl+C.'; });
+	copy.addEventListener('click', async () => { const copied = await copyText(output.value); localizedText(status, () => tr(dict, copied ? 'copied' : 'copyFailed')); });
+	document.addEventListener('lang:change', paintWarnings);
 </script>
 
 <style>

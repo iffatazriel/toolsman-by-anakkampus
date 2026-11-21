@@ -1,14 +1,15 @@
 ---
 interface Props {
 	label: string;
-	items: { id: string; label: string }[];
+	labelKey?: string;
+	items: { id: string; label: string; labelKey?: string }[];
 }
 
-const { label, items } = Astro.props;
+const { label, labelKey, items } = Astro.props;
 const first = items[0]?.id;
 ---
 
-<div class="tabs" role="tablist" aria-label={label}>
+<div class="tabs" role="tablist" aria-label={label} data-i18n-aria={labelKey}>
 	{
 		items.map((item) => (
 			<button
@@ -20,6 +21,7 @@ const first = items[0]?.id;
 				aria-selected={item.id === first ? 'true' : 'false'}
 				tabindex={item.id === first ? 0 : -1}
 				data-tab={item.id}
+				data-i18n={item.labelKey}
 			>
 				{item.label}
 			</button>

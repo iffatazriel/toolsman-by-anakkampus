@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
 import '@excalidraw/excalidraw/index.css';
 import { decodeSession, sessionTokenFromHash } from '../../lib/share-session';
+import { currentLang } from '../../lib/i18n';
+import dict from './i18n';
 
 const STORAGE_KEY = 'toolsman-draw-scene';
 const NAME_KEY = 'toolsman-draw-name';
+const defaultFileName = 'gambar';
 
 interface Scene {
 	elements: unknown[];
@@ -32,11 +35,18 @@ function readSaved(): Scene | null {
 export default function ExcalidrawCanvas() {
 	const [Excalidraw, setExcalidraw] = useState<ExcalidrawComponent | null>(null);
 	const [api, setApi] = useState<Api | null>(null);
-	const [status, setStatus] = useState('Tersimpan otomatis');
-	const [name, setName] = useState('gambar');
+	const [lang, setLang] = useState(currentLang);
+	const [status, setStatus] = useState<keyof typeof dict.id>('saved');
+	const [name, setName] = useState(defaultFileName);
 	const [dark, setDark] = useState(false);
 	const [shared, setShared] = useState(false);
-	const [linkProblem, setLinkProblem] = useState('');
+	const [linkProblem, setLinkProblem] = useState<keyof typeof dict.id | ''>('');
+	useEffect(() => {
+		const sync = () => setLang(currentLang());
+		sync();
+		document.addEventListener('lang:change', sync);
+		return () => document.removeEventListener('lang:change', sync);
+	}, []);
 	const initial = useRef<Scene | null>(null);
 	const saveTimer = useRef<number | undefined>(undefined);
 
@@ -61,18 +71,18 @@ export default function ExcalidrawCanvas() {
 						initial.current = payload.scene;
 						if (active) {
 							setShared(true);
-							setStatus('Hanya-baca dari link');
+							setStatus('fromLink');
 						}
 					} else {
-						throw new Error('Sesi tidak dikenali.');
+						throw new Error(dict[lang].unknownSession);
 					}
 				} catch (error) {
 					initial.current = readSaved();
 					if (active) {
 						setLinkProblem(
 							error instanceof Error && error.message.includes('terlalu panjang')
-								? 'Link sesi terpotong atau terlalu panjang, jadi kanvas ini memakai draf tersimpan di browser. Minta pengirim membagi gambarnya atau mengirim berkas .excalidraw.'
-								: 'Link sesi tidak bisa dibaca, jadi kanvas ini memakai draf tersimpan di browser.',
+								? 'longLink'
+								: 'invalidLink',
 						);
 					}
 				}
@@ -85,7 +95,7 @@ export default function ExcalidrawCanvas() {
 		};
 
 		void load();
-		setName(localStorage.getItem(NAME_KEY) ?? 'gambar');
+		setName(localStorage.getItem(NAME_KEY) ?? defaultFileName);
 		return () => {
 			active = false;
 			window.clearTimeout(saveTimer.current);
@@ -123,7 +133,7 @@ export default function ExcalidrawCanvas() {
 
 	const handleChange = (elements: readonly unknown[], appState: { viewBackgroundColor?: string }) => {
 		if (shared) return;
-		setStatus('Menyimpan…');
+		setStatus('saving');
 		window.clearTimeout(saveTimer.current);
 		saveTimer.current = window.setTimeout(() => {
 			try {
@@ -132,9 +142,9 @@ export default function ExcalidrawCanvas() {
 					appState: { viewBackgroundColor: appState.viewBackgroundColor },
 				};
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(scene));
-				setStatus('Tersimpan otomatis');
+				setStatus('saved');
 			} catch {
-				setStatus('Gambar terlalu besar untuk disimpan otomatis.');
+				setStatus('saveFailed');
 			}
 		}, 500);
 	};
@@ -206,28 +216,24 @@ export default function ExcalidrawCanvas() {
 		setShared(false);
 		setLinkProblem('');
 		window.history.replaceState(null, '', window.location.pathname);
-		setStatus('Tersimpan otomatis');
+		setStatus('saved');
 	};
 
 	return (
 		<div className="draw-root">
 			{linkProblem !== '' ? (
 				<div className="draw-share-banner draw-share-banner--warning" role="alert">
-					<span>{linkProblem}</span>
+					<span>{dict[lang][linkProblem]}</span>
 				</div>
 			) : null}
 			{shared ? (
 				<div className="draw-share-banner">
-					<span>Kanvas ini dibuka dari link dan hanya-baca.</span>
-					<button type="button" className="btn btn--secondary" onClick={openAsDraft}>
-						Buka sebagai draf
-					</button>
+					<span>{dict[lang].readOnly}</span>
+					<button type="button" className="btn btn--secondary" onClick={openAsDraft}>{dict[lang].draft}</button>
 				</div>
 			) : null}
 			<div className="draw-bar">
-				<label className="sr-only" htmlFor="draw-name">
-					Nama berkas
-				</label>
+				<label className="sr-only" htmlFor="draw-name">{dict[lang].filename}</label>
 				<input
 					id="draw-name"
 					className="field-input draw-name"
@@ -235,12 +241,13 @@ export default function ExcalidrawCanvas() {
 					onChange={(event) => setName(event.target.value)}
 				/>
 				<span className="field-hint" aria-live="polite">
-					{status}
+					{dict[lang][status]}
 				</span>
 			</div>
 			<div className="draw-canvas">
 				{Excalidraw ? (
 					<Excalidraw
+						langCode={lang === 'id' ? 'id-ID' : 'en'}
 						excalidrawAPI={(instance: Api) => setApi(instance)}
 						initialData={{
 							elements: initial.current?.elements ?? [],
@@ -255,7 +262,7 @@ export default function ExcalidrawCanvas() {
 						viewModeEnabled={shared}
 					/>
 				) : (
-					<p className="field-hint draw-loading">Memuat kanvas…</p>
+					<p className="field-hint draw-loading">{dict[lang].loading}</p>
 				)}
 			</div>
 		</div>

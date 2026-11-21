@@ -1,13 +1,14 @@
 ---
+import dict from './i18n';
 import Dropzone from '../../components/ui/Dropzone.astro';
 ---
 
 <div class="tool-shell kompres-shell">
 	<Dropzone
 		id="img-input"
-		label="Pilih gambar"
+		label={dict.id.choose} labelKey="workspace.kompres-gambar.choose"
 		accept="image/jpeg,image/png,image/webp"
-		hint="JPG, PNG, atau WebP, maks. 25 MB. Gambar tidak dikirim ke server."
+		hint={dict.id.hint} hintKey="workspace.kompres-gambar.hint"
 	/>
 
 	<div class="upload-preview" data-img-preview hidden>
@@ -23,13 +24,13 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	<div class="pane-grid pane-grid--split" data-img-workspace hidden>
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Pengaturan</h2>
+				<h2 class="pane__title" data-i18n="workspace.kompres-gambar.settings">{dict.id.settings}</h2>
 			</div>
 
 			<div class="form-grid">
 				<div>
-					<span class="field-label">Format hasil</span>
-					<div class="segmented" role="radiogroup" aria-label="Format hasil">
+					<span class="field-label" data-i18n="workspace.kompres-gambar.format">{dict.id.format}</span>
+					<div class="segmented" role="radiogroup" aria-label={dict.id.format} data-i18n-aria="workspace.kompres-gambar.format">
 						<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-img-format="jpeg">
 							JPG
 						</button>
@@ -43,31 +44,27 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				</div>
 
 				<div>
-					<label class="field-label" for="img-quality">Kualitas</label>
+					<label class="field-label" for="img-quality" data-i18n="workspace.kompres-gambar.quality">{dict.id.quality}</label>
 					<input id="img-quality" type="range" min="40" max="100" step="5" value="80" />
 					<p class="field-hint" id="img-quality-value">80%</p>
 				</div>
 
 				<div>
-					<label class="field-label" for="img-max">Batas dimensi</label>
+					<label class="field-label" for="img-max" data-i18n="workspace.kompres-gambar.limit">{dict.id.limit}</label>
 					<select class="field-input" id="img-max">
-						<option value="0">Ikuti ukuran asli</option>
-						<option value="1920" selected>Maks. 1920 px</option>
-						<option value="1280">Maks. 1280 px</option>
-						<option value="800">Maks. 800 px</option>
+						<option value="0" data-i18n="workspace.kompres-gambar.original">{dict.id.original}</option>
+						<option value="1920" selected data-i18n="workspace.kompres-gambar.max1920">{dict.id.max1920}</option>
+						<option value="1280" data-i18n="workspace.kompres-gambar.max1280">{dict.id.max1280}</option>
+						<option value="800" data-i18n="workspace.kompres-gambar.max800">{dict.id.max800}</option>
 					</select>
-					<p class="field-hint">Sisi terpanjang diperkecil. Gambar kecil tidak diperbesar.</p>
+					<p class="field-hint" data-i18n="workspace.kompres-gambar.resizeHint">{dict.id.resizeHint}</p>
 				</div>
 			</div>
 
-			<p class="field-hint">
-				PNG mengabaikan kualitas dan biasanya paling besar. WebP paling kecil untuk foto.
-			</p>
+			<p class="field-hint" data-i18n="workspace.kompres-gambar.formatHint">{dict.id.formatHint}</p>
 
 			<div class="pane-actions">
-				<button type="button" class="btn btn--primary" id="img-download" disabled>
-					Unduh hasil
-				</button>
+				<button type="button" class="btn btn--primary" id="img-download" disabled data-i18n="workspace.kompres-gambar.download">{dict.id.download}</button>
 			</div>
 
 			<div class="alert" id="img-error" role="alert" hidden>
@@ -77,26 +74,26 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Hasil</h2>
-				<span class="field-hint" id="img-state">Belum ada gambar</span>
+				<h2 class="pane__title" data-i18n="workspace.kompres-gambar.result">{dict.id.result}</h2>
+				<span class="field-hint" id="img-state" data-i18n="workspace.kompres-gambar.initial">{dict.id.initial}</span>
 			</div>
 
 			<div class="img-result">
-				<img id="img-preview" alt="Pratinjau hasil kompres" hidden />
-				<p class="preview-empty" id="img-empty">Pilih gambar untuk melihat hasilnya.</p>
+				<img id="img-preview" alt={dict.id.alt} data-i18n-alt="workspace.kompres-gambar.alt" hidden />
+				<p class="preview-empty" id="img-empty" data-i18n="workspace.kompres-gambar.empty">{dict.id.empty}</p>
 			</div>
 
 			<dl class="img-stats" id="img-stats" hidden>
 				<div>
-					<dt>Ukuran</dt>
+					<dt data-i18n="workspace.kompres-gambar.size">{dict.id.size}</dt>
 					<dd id="img-size"></dd>
 				</div>
 				<div>
-					<dt>Dimensi</dt>
+					<dt data-i18n="workspace.kompres-gambar.dimensions">{dict.id.dimensions}</dt>
 					<dd id="img-dims"></dd>
 				</div>
 				<div>
-					<dt>Selisih</dt>
+					<dt data-i18n="workspace.kompres-gambar.difference">{dict.id.difference}</dt>
 					<dd id="img-saving"></dd>
 				</div>
 			</dl>
@@ -108,6 +105,9 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	import { formatBytes } from '../../lib/page-range';
 	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
+	import { tr } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import {
 		fitWithin,
 		mimeFor,
@@ -166,7 +166,8 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		let timer: number | undefined;
 		let job = 0;
 
-		const setStatus = (message: string, loading: boolean) => {
+		const setStatus = (message: () => string, loading: boolean) => {
+			stateText.removeAttribute('data-i18n');
 			stateText.textContent = '';
 			if (loading) {
 				const spinner = document.createElement('span');
@@ -174,12 +175,14 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				spinner.setAttribute('aria-hidden', 'true');
 				stateText.append(spinner);
 			}
-			stateText.append(document.createTextNode(message));
+			const text = document.createElement('span');
+			localizedText(text, message);
+			stateText.append(text);
 		};
 
-		const setError = (message: string | null) => {
+		const setError = (message: (() => string) | null) => {
 			errorBox.hidden = message === null;
-			errorText.textContent = message ?? '';
+			localizedText(errorText, message ?? (() => ''));
 		};
 
 		const saveBlob = (blob: Blob, name: string) => {
@@ -200,7 +203,8 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			if (!source || !file) return;
 			const current = ++job;
 			setError(null);
-			setStatus('Memproses…', true);
+			setStatus(() => tr(dict, 'processing'), true);
+			let failureKey: keyof typeof dict.id = 'failed';
 			setDropzoneState(zone, 'processing');
 
 			try {
@@ -213,7 +217,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				canvas.width = fitted.width;
 				canvas.height = fitted.height;
 				const context = canvas.getContext('2d');
-				if (!context) throw new Error('Kanvas tidak tersedia di peramban ini.');
+				if (!context) { failureKey = 'canvasUnavailable'; throw new Error(); }
 
 				if (format !== 'png') {
 					context.fillStyle = '#ffffff';
@@ -231,7 +235,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 					);
 				});
 				if (current !== job) return;
-				if (!blob) throw new Error('Gambar gagal dibuat dalam format ini.');
+				if (!blob) { failureKey = 'encodeFailed'; throw new Error(); }
 
 				resultBlob = blob;
 				if (resultUrl) URL.revokeObjectURL(resultUrl);
@@ -242,21 +246,18 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				stats.hidden = false;
 
 				sizeText.textContent = `${formatBytes(file.size)} → ${formatBytes(blob.size)}`;
-				dimsText.textContent = fitted.scaled
-					? `${fitted.width} × ${fitted.height} px (asli ${source.width} × ${source.height})`
-					: `${fitted.width} × ${fitted.height} px`;
+				localizedText(dimsText, () => fitted.scaled ? tr(dict, 'scaled', { width: fitted.width, height: fitted.height, originalWidth: source.width, originalHeight: source.height }) : `${fitted.width} × ${fitted.height} px`);
 				const saving = Math.round((1 - blob.size / file.size) * 100);
-				savingText.textContent =
-					saving > 0 ? `${saving}% lebih kecil` : saving === 0 ? 'Ukurannya sama' : `${Math.abs(saving)}% lebih besar`;
+				localizedText(savingText, () => tr(dict, saving > 0 ? 'smaller' : saving === 0 ? 'same' : 'larger', { n: Math.abs(saving) }));
 				downloadButton.disabled = false;
-				setStatus('Siap diunduh', false);
+				setStatus(() => tr(dict, 'ready'), false);
 				setDropzoneState(zone, 'done');
-			} catch (error) {
+			} catch {
 				if (current !== job) return;
 				resultBlob = null;
 				downloadButton.disabled = true;
-				setStatus('Gagal memproses', false);
-				setError(error instanceof Error ? error.message : 'Gagal memproses gambar.');
+				setStatus(() => tr(dict, 'processingFailed'), false);
+				setError(() => tr(dict, failureKey));
 				setDropzoneState(zone, 'empty');
 			}
 		};
@@ -272,11 +273,11 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			if (!selected) return;
 
 			if (!selected.type.startsWith('image/')) {
-				setError('Berkas ini bukan gambar.');
+				setError(() => tr(dict, 'notImage'));
 				return;
 			}
 			if (selected.size > 25 * 1024 * 1024) {
-				setError('Gambar lebih dari 25 MB. Kecilkan dulu atau pilih berkas lain.');
+				setError(() => tr(dict, 'tooLarge'));
 				return;
 			}
 
@@ -298,20 +299,21 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			previewName.textContent = `${selected.name} · ${formatBytes(selected.size)}`;
 			preview.hidden = false;
 			previewStatus.classList.remove('is-ready', 'is-failed');
-			previewStatus.textContent = 'Membaca gambar…';
+			localizedText(previewStatus, () => tr(dict, 'reading'));
 			workspace.hidden = false;
-			setStatus('Menyiapkan…', true);
+			setStatus(() => tr(dict, 'preparing'), true);
 
 			try {
 				bitmap = await createImageBitmap(selected);
-				previewStatus.textContent = `Gambar siap · ${bitmap.width} × ${bitmap.height} px`;
+				const { width, height } = bitmap;
+				localizedText(previewStatus, () => tr(dict, 'imageReady', { width, height }));
 				previewStatus.classList.add('is-ready');
 				void process();
 			} catch {
-				previewStatus.textContent = 'Gagal membaca gambar.';
+				localizedText(previewStatus, () => tr(dict, 'readFailed'));
 				previewStatus.classList.add('is-failed');
-				setStatus('Gagal membaca', false);
-				setError('Gambar tidak bisa dibaca. Coba JPG atau PNG lain.');
+				setStatus(() => tr(dict, 'readingFailed'), false);
+				setError(() => tr(dict, 'cannotRead'));
 			}
 		});
 
@@ -335,7 +337,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		downloadButton.addEventListener('click', () => {
 			if (!resultBlob || !file) return;
 			saveBlob(resultBlob, outputFileName(file.name, format));
-			toast('Gambar diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'downloaded'), { tone: 'success' });
 		});
 	}
 </script>

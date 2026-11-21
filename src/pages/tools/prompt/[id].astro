@@ -1,4 +1,6 @@
 ---
+import dict from '../../../features/prompt/i18n';
+import {fill} from '../../../lib/i18n';
 import Layout from '../../../layouts/Layout.astro';
 import Icon from '../../../components/ui/Icon.astro';
 import { prompts } from '../../../lib/prompts';
@@ -60,7 +62,7 @@ const jsonLd = {
 			<span aria-hidden="true">/</span>
 			<a href="/#katalog" data-category-label="ai">AI</a>
 			<span aria-hidden="true">/</span>
-			<a href="/tools/prompt/">Bank Prompt</a>
+			<a href="/tools/prompt/" data-i18n="workspace.prompt.bank">{dict.id.bank}</a>
 			<span aria-hidden="true">/</span>
 			<span aria-current="page">{prompt.judul}</span>
 		</nav>
@@ -80,10 +82,9 @@ const jsonLd = {
 				class="btn btn--ghost prompt-head__fav"
 				data-prompt-fav
 				aria-pressed="false"
-				data-p="detail.favorite"
 			>
 				<Icon name="star" size={16} />
-				<span data-p="filter.favorite">Favorit</span>
+				<span data-i18n="workspace.prompt.filter.favorite">{dict.id["filter.favorite"]}</span>
 			</button>
 		</header>
 
@@ -91,17 +92,14 @@ const jsonLd = {
 			<span class="badge"><span data-meta-bahasa={prompt.bahasa}>{bahasa}</span></span>
 			<span class="badge"><span data-meta-ai={prompt.ai.join(',')}>{ai}</span></span>
 			<span class="badge">{prompt.lisensi}</span>
-			{learningNote && <span class="badge">{category}</span>}
+			{learningNote && <span class="badge" data-meta-kategori={prompt.kategori}>{category}</span>}
 		</div>
 
 		{
 			learningNote && (
 				<p class="prompt-learnnote">
 					<Icon name="alert" size={16} />
-					<span data-p="note.learning">
-						Gunakan untuk belajar, bukan menyalin mentah. Tulis ulang dengan kata-katamu dan
-						sebutkan sumbernya.
-					</span>
+					<span data-i18n="workspace.prompt.note.learning">{dict.id["note.learning"]}</span>
 				</p>
 			)
 		}
@@ -109,12 +107,8 @@ const jsonLd = {
 		<div class="prompt-detail__grid">
 			<div class="prompt-detail__main">
 				<section class="prompt-panel" aria-labelledby="vars-title">
-					<h2 class="prompt-panel__title" id="vars-title" data-p="detail.variables">
-						Isi variabel
-					</h2>
-					<p class="field-hint" data-p="detail.variablesHint">
-						Kosongkan yang belum kamu tahu. Pratinjau akan menandainya.
-					</p>
+					<h2 class="prompt-panel__title" id="vars-title" data-i18n="workspace.prompt.detail.variables">{dict.id["detail.variables"]}</h2>
+					<p class="field-hint" data-i18n="workspace.prompt.detail.variablesHint">{dict.id["detail.variablesHint"]}</p>
 					<div class="prompt-form" data-prompt-form>
 						{
 							prompt.variabel.map((variable) => (
@@ -136,7 +130,7 @@ const jsonLd = {
 											class="field-input"
 											data-var={variable.nama}
 										>
-											<option value="">Pilih {variable.label.toLowerCase()}</option>
+											<option value="" data-i18n="workspace.prompt.detail.select" data-name-value={variable.label.toLowerCase()}>{fill(dict.id['detail.select'],{name:variable.label.toLowerCase()})}</option>
 											{variable.pilihan?.map((option) => (
 												<option value={option}>{option}</option>
 											))}
@@ -151,7 +145,7 @@ const jsonLd = {
 											data-var={variable.nama}
 										/>
 									)}
-									<p class="field-hint">Contoh: {variable.contoh}</p>
+									<p class="field-hint"><span data-i18n="workspace.prompt.detail.example">{dict.id['detail.example']}</span> {variable.contoh}</p>
 								</div>
 							))
 						}
@@ -160,66 +154,60 @@ const jsonLd = {
 
 				<section class="prompt-panel" aria-labelledby="preview-title">
 					<div class="prompt-preview__head">
-						<h2 class="prompt-panel__title" id="preview-title" data-p="detail.preview">
-							Pratinjau prompt
-						</h2>
+						<h2 class="prompt-panel__title" id="preview-title" data-i18n="workspace.prompt.detail.preview">{dict.id["detail.preview"]}</h2>
 						<div class="prompt-actions">
 							<button
 								type="button"
 								class="btn btn--secondary"
 								data-prompt-copy
-								data-p-aria="copy.aria"
+								data-i18n-aria="workspace.prompt.copy.aria"
 							>
-								<span data-p="detail.copy">Salin</span>
+								<span data-i18n="workspace.prompt.detail.copy">{dict.id["detail.copy"]}</span>
 							</button>
 							<button
 								type="button"
 								class="btn btn--primary"
 								data-prompt-download
-								data-p-aria="download.aria"
+								data-i18n-aria="workspace.prompt.download.aria"
 							>
-								<span data-p="detail.download">Unduh .md</span>
+								<span data-i18n="workspace.prompt.detail.download">{dict.id["detail.download"]}</span>
 							</button>
 						</div>
 					</div>
-					<p class="prompt-missing" data-prompt-missing aria-live="polite" data-p="detail.complete">
-						Semua variabel terisi.
+					<p class="prompt-missing" data-prompt-missing aria-live="polite" >
+						{dict.id['detail.complete']}
 					</p>
 					<pre
 						class="prompt-preview"
 						data-prompt-preview
 						tabindex="0"
-						aria-label="Pratinjau prompt akhir">{prompt.prompt}</pre>
-					<p class="field-hint" data-p="privacy">
-						Semua isian diproses di browser ini. Tidak ada yang dikirim ke server.
-					</p>
+						aria-label={dict.id['detail.previewAria']} data-i18n-aria="workspace.prompt.detail.previewAria">{prompt.prompt}</pre>
+					<p class="field-hint" data-i18n="workspace.prompt.privacy">{dict.id["privacy"]}</p>
 				</section>
 			</div>
 
 			<aside class="prompt-panel prompt-aside" aria-labelledby="about-title">
-				<h2 class="prompt-panel__title" id="about-title" data-p="detail.about">
-					Tentang prompt ini
-				</h2>
+				<h2 class="prompt-panel__title" id="about-title" data-i18n="workspace.prompt.detail.about">{dict.id["detail.about"]}</h2>
 				<div class="prompt-note" data-prompt-note>{prompt.catatan}</div>
 				<dl class="prompt-meta">
-					<dt data-p="detail.license">Lisensi</dt>
+					<dt data-i18n="workspace.prompt.detail.license">{dict.id["detail.license"]}</dt>
 					<dd>{prompt.lisensi}</dd>
-					<dt data-p="detail.author">Penulis</dt>
+					<dt data-i18n="workspace.prompt.detail.author">{dict.id["detail.author"]}</dt>
 					<dd>{prompt.penulis}</dd>
-					<dt data-p="detail.created">Dibuat</dt>
+					<dt data-i18n="workspace.prompt.detail.created">{dict.id["detail.created"]}</dt>
 					<dd>{prompt.dibuat}</dd>
-					<dt data-p="detail.language">Bahasa</dt>
+					<dt data-i18n="workspace.prompt.detail.language">{dict.id["detail.language"]}</dt>
 					<dd><span data-meta-bahasa={prompt.bahasa}>{bahasa}</span></dd>
-					<dt data-p="detail.level">Level</dt>
+					<dt data-i18n="workspace.prompt.detail.level">{dict.id["detail.level"]}</dt>
 					<dd><span data-meta-level={prompt.level}>{level}</span></dd>
-					<dt data-p="detail.category">Kategori</dt>
+					<dt data-i18n="workspace.prompt.detail.category">{dict.id["detail.category"]}</dt>
 					<dd><span data-meta-kategori={prompt.kategori}>{category}</span></dd>
-					<dt data-p="detail.ai">Cocok untuk</dt>
+					<dt data-i18n="workspace.prompt.detail.ai">{dict.id["detail.ai"]}</dt>
 					<dd><span data-meta-ai={prompt.ai.join(',')}>{ai}</span></dd>
-					<dt data-p="detail.tags">Tag</dt>
+					<dt data-i18n="workspace.prompt.detail.tags">{dict.id["detail.tags"]}</dt>
 					<dd>{prompt.tag.join(' · ')}</dd>
 				</dl>
-				<a class="btn btn--secondary" href="/tools/prompt/" data-p="detail.all">Semua prompt</a>
+				<a class="btn btn--secondary" href="/tools/prompt/" data-i18n="workspace.prompt.detail.all">{dict.id["detail.all"]}</a>
 			</aside>
 		</div>
 	</div>
@@ -244,7 +232,7 @@ const jsonLd = {
 	import { toast } from '../../../lib/toast';
 	import { assemblePrompt, missingVariables, promptMarkdown, promptSegments } from '../../../features/prompt/assemble';
 	import { renderNote } from '../../../features/prompt/render-note';
-	import { fillPromptText, initPromptStrings, promptText } from '../../../features/prompt/strings';
+	import { fillPromptText, promptText } from '../../../features/prompt/strings';
 
 	const root = document.querySelector<HTMLElement>('[data-prompt-detail]');
 	const preview = root?.querySelector<HTMLElement>('[data-prompt-preview]');
@@ -325,7 +313,7 @@ const jsonLd = {
 
 		copyButton?.addEventListener('click', async () => {
 			const copied = await copyText(assembled);
-			toast(copied ? promptText(readLang(), 'detail.copied') : promptText(readLang(), 'detail.copyFailed'), {
+			toast(()=> copied ? promptText(readLang(), 'detail.copied') : promptText(readLang(), 'detail.copyFailed'), {
 				tone: copied ? 'success' : 'error',
 			});
 		});
@@ -360,7 +348,6 @@ const jsonLd = {
 			syncFavorite();
 		});
 
-		initPromptStrings();
 		syncFavorite();
 		update();
 	}

@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 import { cronTimezones } from './cron';
 ---
 
@@ -6,58 +7,58 @@ import { cronTimezones } from './cron';
 	<div class="pane-grid pane-grid--split">
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Ekspresi</h2>
+				<h2 class="pane__title" data-i18n="workspace.cron.expression">{dict.id.expression}</h2>
 				<select class="field-input cron-preset" id="cron-preset">
-					<option value="">Pilih contoh…</option>
-					<option value="* * * * *">Setiap menit</option>
-					<option value="*/15 * * * *">Setiap 15 menit</option>
-					<option value="0 * * * *">Setiap jam</option>
-					<option value="0 9 * * *">Setiap hari 09.00</option>
-					<option value="30 8 * * 1-5">Hari kerja 08.30</option>
-					<option value="0 7 * * 0">Setiap Minggu 07.00</option>
-					<option value="0 0 1 * *">Tanggal 1 tiap bulan 00.00</option>
+					<option value="" data-i18n="workspace.cron.choose">{dict.id.choose}</option>
+					<option value="* * * * *" data-i18n="workspace.cron.presetMinute">{dict.id.presetMinute}</option>
+					<option value="*/15 * * * *" data-i18n="workspace.cron.preset15">{dict.id.preset15}</option>
+					<option value="0 * * * *" data-i18n="workspace.cron.presetHour">{dict.id.presetHour}</option>
+					<option value="0 9 * * *" data-i18n="workspace.cron.presetDaily">{dict.id.presetDaily}</option>
+					<option value="30 8 * * 1-5" data-i18n="workspace.cron.presetWeekday">{dict.id.presetWeekday}</option>
+					<option value="0 7 * * 0" data-i18n="workspace.cron.presetSunday">{dict.id.presetSunday}</option>
+					<option value="0 0 1 * *" data-i18n="workspace.cron.presetMonthly">{dict.id.presetMonthly}</option>
 				</select>
 			</div>
 
 			<div class="cron-fields">
 				<div>
-					<label class="field-label" for="cron-minute">Menit</label>
+					<label class="field-label" for="cron-minute" data-i18n="workspace.cron.minute">{dict.id.minute}</label>
 					<input class="field-input field-mono" id="cron-minute" type="text" value="0" spellcheck="false" />
 					<p class="field-hint">0–59</p>
 				</div>
 				<div>
-					<label class="field-label" for="cron-hour">Jam</label>
+					<label class="field-label" for="cron-hour" data-i18n="workspace.cron.hour">{dict.id.hour}</label>
 					<input class="field-input field-mono" id="cron-hour" type="text" value="9" spellcheck="false" />
 					<p class="field-hint">0–23</p>
 				</div>
 				<div>
-					<label class="field-label" for="cron-day">Tanggal</label>
+					<label class="field-label" for="cron-day" data-i18n="workspace.cron.day">{dict.id.day}</label>
 					<input class="field-input field-mono" id="cron-day" type="text" value="*" spellcheck="false" />
 					<p class="field-hint">1–31</p>
 				</div>
 				<div>
-					<label class="field-label" for="cron-month">Bulan</label>
+					<label class="field-label" for="cron-month" data-i18n="workspace.cron.month">{dict.id.month}</label>
 					<input class="field-input field-mono" id="cron-month" type="text" value="*" spellcheck="false" />
 					<p class="field-hint">1–12</p>
 				</div>
 				<div>
-					<label class="field-label" for="cron-weekday">Hari</label>
+					<label class="field-label" for="cron-weekday" data-i18n="workspace.cron.weekday">{dict.id.weekday}</label>
 					<input class="field-input field-mono" id="cron-weekday" type="text" value="*" spellcheck="false" />
-					<p class="field-hint">0–6, Minggu = 0</p>
+					<p class="field-hint" data-i18n="workspace.cron.weekdayHint">{dict.id.weekdayHint}</p>
 				</div>
 			</div>
 
 			<div>
-				<label class="field-label" for="cron-timezone">Zona waktu</label>
+				<label class="field-label" for="cron-timezone" data-i18n="workspace.cron.timezone">{dict.id.timezone}</label>
 				<select class="field-input" id="cron-timezone">
 					{cronTimezones.map((zone) => <option value={zone.id}>{zone.label}</option>)}
 				</select>
 			</div>
 
 			<div class="cron-expression">
-				<p class="field-label">Ekspresi cron</p>
+				<p class="field-label" data-i18n="workspace.cron.cronExpression">{dict.id.cronExpression}</p>
 				<code id="cron-expression">0 9 * * *</code>
-				<button type="button" class="btn btn--secondary" id="cron-copy">Salin</button>
+				<button type="button" class="btn btn--secondary" id="cron-copy" data-i18n="workspace.cron.copy">{dict.id.copy}</button>
 			</div>
 
 			<p class="cron-explain" id="cron-explain" aria-live="polite"></p>
@@ -68,13 +69,10 @@ import { cronTimezones } from './cron';
 
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">5 jadwal berikutnya</h2>
+				<h2 class="pane__title" data-i18n="workspace.cron.next">{dict.id.next}</h2>
 			</div>
 			<ol class="cron-runs" id="cron-runs"></ol>
-			<p class="field-hint">
-				Format standar 5 field: menit, jam, tanggal, bulan, hari. Tanpa detik dan tanpa
-				sintaks Quartz.
-			</p>
+			<p class="field-hint" data-i18n="workspace.cron.hint">{dict.id.hint}</p>
 		</div>
 	</div>
 </div>
@@ -82,6 +80,8 @@ import { cronTimezones } from './cron';
 <script>
 	import { copyText } from '../../lib/clipboard';
 	import { toast } from '../../lib/toast';
+	import { currentLang, tr } from '../../lib/i18n';
+	import dict from './i18n';
 	import { previewCron } from './cron';
 
 	const fields = {
@@ -129,7 +129,7 @@ import { cronTimezones } from './cron';
 				.join(' ');
 
 		const formatRun = (date: Date) =>
-			new Intl.DateTimeFormat('id-ID', {
+			new Intl.DateTimeFormat(currentLang() === 'en' ? 'en-US' : 'id-ID', {
 				timeZone: timezone.value,
 				weekday: 'long',
 				day: '2-digit',
@@ -144,7 +144,7 @@ import { cronTimezones } from './cron';
 		const update = () => {
 			const value = expression();
 			expressionText.textContent = value;
-			const result = previewCron(value, timezone.value, 5);
+			const result = previewCron(value, timezone.value, 5, new Date(), currentLang());
 
 			if (!result.ok) {
 				errorBox.hidden = false;
@@ -202,9 +202,10 @@ import { cronTimezones } from './cron';
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(expressionText.textContent ?? '');
-			toast(copied ? 'Ekspresi cron disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'copied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
+		document.addEventListener('lang:change', update);
 		update();
 	}
 </script>

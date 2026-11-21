@@ -1,85 +1,84 @@
 ---
+import dict from './i18n';
 ---
 
 <div class="tool-shell warna-shell">
 	<div class="pane-grid pane-grid--split">
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Pilih warna</h2>
+				<h2 class="pane__title" data-i18n="workspace.warna.choose">{dict.id.choose}</h2>
 			</div>
 
 			<div class="color-field">
-				<label class="field-label" for="fg-color">Teks</label>
+				<label class="field-label" for="fg-color" data-i18n="workspace.warna.text">{dict.id.text}</label>
 				<div class="color-inputs">
-					<input type="color" id="fg-color" value="#1f1d1a" aria-label="Warna teks" />
+					<input type="color" id="fg-color" value="#1f1d1a" aria-label={dict.id.foreground} data-i18n-aria="workspace.warna.foreground" />
 					<input
 						class="field-input color-hex"
 						id="fg-hex"
 						type="text"
 						value="#1f1d1a"
 						spellcheck="false"
-						aria-label="HEX warna teks"
+						aria-label={dict.id.foregroundHex} data-i18n-aria="workspace.warna.foregroundHex"
 					/>
 				</div>
 			</div>
 
 			<div class="color-field">
-				<label class="field-label" for="bg-color">Latar</label>
+				<label class="field-label" for="bg-color" data-i18n="workspace.warna.background">{dict.id.background}</label>
 				<div class="color-inputs">
-					<input type="color" id="bg-color" value="#faf8f5" aria-label="Warna latar" />
+					<input type="color" id="bg-color" value="#faf8f5" aria-label={dict.id.backgroundColor} data-i18n-aria="workspace.warna.backgroundColor" />
 					<input
 						class="field-input color-hex"
 						id="bg-hex"
 						type="text"
 						value="#faf8f5"
 						spellcheck="false"
-						aria-label="HEX warna latar"
+						aria-label={dict.id.backgroundHex} data-i18n-aria="workspace.warna.backgroundHex"
 					/>
 				</div>
 			</div>
 
 			<div class="pane-actions">
-				<button type="button" class="btn btn--secondary" id="color-swap">Tukar teks dan latar</button>
+				<button type="button" class="btn btn--secondary" id="color-swap" data-i18n="workspace.warna.swap">{dict.id.swap}</button>
 			</div>
 
 			<div class="contrast-card" id="contrast-card">
-				<p class="sample-normal" id="sample-normal">Contoh teks biasa 16 px di atas latar ini.</p>
-				<p class="sample-large" id="sample-large">Contoh teks besar 24 px.</p>
+				<p class="sample-normal" id="sample-normal" data-i18n="workspace.warna.sampleNormal">{dict.id.sampleNormal}</p>
+				<p class="sample-large" id="sample-large" data-i18n="workspace.warna.sampleLarge">{dict.id.sampleLarge}</p>
 			</div>
 		</div>
 
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Kontras</h2>
+				<h2 class="pane__title" data-i18n="workspace.warna.contrast">{dict.id.contrast}</h2>
 				<span class="ratio" id="color-ratio">16.00:1</span>
 			</div>
 
 			<div class="wcag-list">
 				<div class="wcag-row">
-					<span>Teks biasa, AA (4.5:1)</span>
+					<span data-i18n="workspace.warna.normalAA">{dict.id.normalAA}</span>
 					<span class="badge" id="wcag-normal-aa"></span>
 				</div>
 				<div class="wcag-row">
-					<span>Teks biasa, AAA (7:1)</span>
+					<span data-i18n="workspace.warna.normalAAA">{dict.id.normalAAA}</span>
 					<span class="badge" id="wcag-normal-aaa"></span>
 				</div>
 				<div class="wcag-row">
-					<span>Teks besar, AA (3:1)</span>
+					<span data-i18n="workspace.warna.largeAA">{dict.id.largeAA}</span>
 					<span class="badge" id="wcag-large-aa"></span>
 				</div>
 				<div class="wcag-row">
-					<span>Teks besar, AAA (4.5:1)</span>
+					<span data-i18n="workspace.warna.largeAAA">{dict.id.largeAAA}</span>
 					<span class="badge" id="wcag-large-aaa"></span>
 				</div>
 			</div>
 
-			<p class="field-hint">
-				Rasio dihitung dari luminansi relatif. Teks besar berarti 18 px tebal atau 24 px biasa.
-			</p>
+			<p class="field-hint" data-i18n="workspace.warna.hint">{dict.id.hint}</p>
 
 			<div class="pane__head scale-head">
-				<h2 class="pane__title">Palet turunan</h2>
-				<p class="field-hint">Klik untuk menyalin HEX.</p>
+				<h2 class="pane__title" data-i18n="workspace.warna.palette">{dict.id.palette}</h2>
+				<p class="field-hint" data-i18n="workspace.warna.paletteHint">{dict.id.paletteHint}</p>
 			</div>
 			<div class="scale" id="color-scale"></div>
 		</div>
@@ -89,6 +88,9 @@
 <script>
 	import { copyText } from '../../lib/clipboard';
 	import { toast } from '../../lib/toast';
+	import { tr } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import {
 		contrastRatio,
 		generateScale,
@@ -128,7 +130,7 @@
 
 		const setBadge = (element: HTMLElement | null, pass: boolean) => {
 			if (!element) return;
-			element.textContent = pass ? 'Lolos' : 'Gagal';
+			localizedText(element, () => tr(dict, pass ? 'pass' : 'fail'));
 			element.classList.toggle('is-pass', pass);
 			element.classList.toggle('is-fail', !pass);
 		};
@@ -143,10 +145,10 @@
 				button.type = 'button';
 				button.className = 'scale-swatch';
 				button.style.setProperty('--swatch', step.hex);
-				button.setAttribute('aria-label', `Salin ${step.hex}`);
+				button.setAttribute('aria-label', tr(dict, 'copyColor', { hex: step.hex }));
 				button.addEventListener('click', async () => {
 					const copied = await copyText(step.hex);
-					toast(copied ? `${step.hex} disalin.` : 'Gagal menyalin. Tulis manual.', {
+					toast(() => tr(dict, copied ? 'copied' : 'copyFailed', { hex: step.hex }), {
 		tone: copied ? 'success' : 'error',
 	});
 				});
@@ -224,6 +226,7 @@
 			apply();
 		});
 
+		document.addEventListener('lang:change', renderScale);
 		apply();
 	}
 </script>

@@ -1,3 +1,5 @@
+import { WorkspaceError } from '../../lib/i18n';
+import dict from './i18n';
 import { PDFDocument, degrees } from 'pdf-lib';
 
 export type Orientation = 'portrait' | 'landscape' | 'auto';
@@ -42,7 +44,7 @@ export async function editPdf(bytes: ArrayBuffer, edits: PageEdits): Promise<Uin
 	const source = await PDFDocument.load(bytes);
 	const removed = new Set(edits.removed);
 	const keep = source.getPageIndices().filter((index) => !removed.has(index));
-	if (keep.length === 0) throw new Error('Minimal sisakan satu halaman.');
+	if (keep.length === 0) throw new WorkspaceError(dict,'keepPage');
 
 	const out = await PDFDocument.create();
 	const copied = await out.copyPages(source, keep);

@@ -1,3 +1,5 @@
+import { WorkspaceError } from '../../lib/i18n';
+import dict from './i18n';
 export function encodeBase64(text: string): string {
 	const bytes = new TextEncoder().encode(text);
 	let binary = '';
@@ -30,8 +32,8 @@ export interface JwtParts {
 
 export function decodeJwt(token: string): JwtParts {
 	const parts = token.trim().split('.');
-	if (parts.length < 3) throw new Error('JWT butuh tiga bagian yang dipisah titik.');
-	if (!parts[0] || !parts[1]) throw new Error('Bagian header atau payload kosong.');
+	if (parts.length < 3) throw new WorkspaceError(dict, 'jwtParts');
+	if (!parts[0] || !parts[1]) throw new WorkspaceError(dict, 'jwtPartEmpty');
 
 	return {
 		header: JSON.parse(decodeBase64Url(parts[0])),
@@ -66,7 +68,7 @@ export interface TimestampInfo {
 
 export function parseTimestamp(input: string): TimestampInfo {
 	const text = input.trim();
-	if (text === '') throw new Error('Isi timestamp atau tanggal dulu.');
+	if (text === '') throw new WorkspaceError(dict, 'dateEmpty');
 
 	let ms: number;
 	if (/^-?\d+$/.test(text)) {
@@ -76,7 +78,7 @@ export function parseTimestamp(input: string): TimestampInfo {
 		ms = Date.parse(text);
 	}
 
-	if (!Number.isFinite(ms)) throw new Error('Format tanggal tidak dikenali.');
+	if (!Number.isFinite(ms)) throw new WorkspaceError(dict, 'dateError');
 
 	const date = new Date(ms);
 	return {

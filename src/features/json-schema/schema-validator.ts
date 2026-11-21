@@ -1,5 +1,9 @@
 import { Validator, type Schema, type SchemaDraft } from '@cfworker/json-schema';
 import { parseJson } from '../../lib/json-tools';
+import { fill, type Lang } from '../../lib/i18n';
+import dict from './i18n';
+
+const say = (lang: Lang, key: keyof typeof dict.id, vars: Record<string, string | number> = {}) => fill(dict[lang][key], vars);
 
 export type SchemaDraftId = '2020-12' | '2019-09' | '7' | '4';
 
@@ -37,85 +41,83 @@ function numbers(error: string): [string, string] | null {
 	return match ? [match[1]!, match[2]!] : null;
 }
 
-export function friendlyMessage(keyword: string, error: string): string {
+export function friendlyMessage(keyword: string, error: string, lang: Lang = 'id'): string {
 	if (keyword === 'required') {
 		const name = quoted(error);
-		return name ? `Properti wajib "${name}" belum ada.` : 'Ada properti wajib yang belum diisi.';
+		return say(lang, name ? 'requiredNamed' : 'required', { name: name ?? '' });
 	}
 
 	if (keyword === 'type') {
 		const match = /Instance type "([^"]+)" is invalid\. Expected "([^"]+)"/.exec(error);
 		return match
-			? `Tipe harus ${match[2]}, bukan ${match[1]}.`
-			: 'Tipe nilai tidak sesuai schema.';
+			? say(lang, 'typeNamed', { expected: match[2]!, actual: match[1]! })
+			: say(lang, 'type');
 	}
 
 	if (keyword === 'minLength' || keyword === 'maxLength') {
 		const pair = numbers(error);
 		if (pair) {
-			return keyword === 'minLength'
-				? `Panjang minimal ${pair[1]} karakter, sekarang ${pair[0]}.`
-				: `Panjang maksimal ${pair[1]} karakter, sekarang ${pair[0]}.`;
+			return say(lang, keyword === 'minLength' ? 'minLengthNamed' : 'maxLengthNamed', { limit: pair[1], actual: pair[0] });
 		}
-		return keyword === 'minLength' ? 'Teks terlalu pendek.' : 'Teks terlalu panjang.';
+		return say(lang, keyword);
 	}
 
 	if (keyword === 'minimum' || keyword === 'maximum') {
 		const pair = numbers(error);
 		if (pair) {
-			return keyword === 'minimum'
-				? `Nilai minimal ${pair[1]}, sekarang ${pair[0]}.`
-				: `Nilai maksimal ${pair[1]}, sekarang ${pair[0]}.`;
+			return say(lang, keyword === 'minimum' ? 'minimumNamed' : 'maximumNamed', { limit: pair[1], actual: pair[0] });
 		}
-		return keyword === 'minimum' ? 'Nilai terlalu kecil.' : 'Nilai terlalu besar.';
+		return say(lang, keyword);
 	}
 
 	if (keyword === 'exclusiveMinimum' || keyword === 'exclusiveMaximum') {
 		const pair = numbers(error);
 		return pair
-			? `Nilai harus ${keyword === 'exclusiveMinimum' ? 'lebih besar' : 'lebih kecil'} dari ${pair[1]}.`
-			: 'Nilai di luar batas yang diizinkan.';
+			? say(lang, keyword, { limit: pair[1] })
+			: say(lang, 'outOfBounds');
 	}
 
 	if (keyword === 'minItems' || keyword === 'maxItems') {
 		const pair = numbers(error);
 		if (pair) {
-			return keyword === 'minItems'
-				? `Minimal ${pair[1]} item, sekarang ${pair[0]}.`
-				: `Maksimal ${pair[1]} item, sekarang ${pair[0]}.`;
+			return say(lang, keyword === 'minItems' ? 'minItemsNamed' : 'maxItemsNamed', { limit: pair[1], actual: pair[0] });
 		}
-		return 'Jumlah item tidak sesuai.';
+		return say(lang, 'items');
 	}
 
-	if (keyword === 'uniqueItems') return 'Item array harus unik.';
-	if (keyword === 'pattern') return 'Teks tidak cocok dengan pola yang diminta.';
-	if (keyword === 'format') return 'Format nilai tidak sesuai.';
+	if (keyword === 'uniqueItems' || keyword === 'pattern' || keyword === 'format') return say(lang, keyword);
 	if (keyword === 'enum' || keyword === 'const') {
-		return 'Nilai tidak termasuk pilihan yang diizinkan.';
+		return say(lang, 'enum');
 	}
 	if (keyword === 'additionalProperties') {
 		const name = quoted(error);
-		return name ? `Properti "${name}" tidak diizinkan.` : 'Ada properti yang tidak diizinkan.';
+		return say(lang, name ? 'additionalNamed' : 'additional', { name: name ?? '' });
 	}
 	if (keyword === 'minProperties' || keyword === 'maxProperties') {
 		const pair = numbers(error);
 		return pair
-			? `Jumlah properti harus ${keyword === 'minProperties' ? 'minimal' : 'maksimal'} ${pair[1]}.`
-			: 'Jumlah properti tidak sesuai.';
+			? say(lang, keyword, { limit: pair[1] })
+			: say(lang, 'properties');
 	}
-	if (keyword === 'dependentRequired') return 'Ada properti yang harus diisi bersama.';
+	if (keyword === 'dependentRequired') return say(lang, 'dependentRequired');
 	if (keyword === 'oneOf' || keyword === 'anyOf') {
-		return 'Data tidak cocok dengan salah satu bentuk yang diizinkan.';
+		return say(lang, 'union');
 	}
 
-	return 'Nilai tidak sesuai aturan schema.';
+	return say(lang, 'rule');
 }
 
-function parseError(kind: 'schema' | 'data', error: { line: number; column: number; message: string }) {
+function parseError(kind: 'schema' | 'data', error: { line: number; column: number; message: string }, source: string, lang: Lang) {
+	let detail = lang === 'id' ? error.message : dict.en.invalidJson;
+	if (lang === 'en') {
+		try { JSON.parse(source); } catch (error) {
+			if (error instanceof Error) detail = error.message;
+		}
+	}
 	return {
 		ok: false as const,
 		kind,
-		error: `${kind === 'schema' ? 'Schema' : 'Data'} JSON: baris ${error.line}, kolom ${error.column}: ${error.message}`,
+		error: say(lang, 'parse', { kind: kind === 'schema' ? 'Schema' : 'Data', line: error.line, column: error.column, detail }),
 	};
 }
 
@@ -123,16 +125,17 @@ export function validateJsonSchema(
 	schemaText: string,
 	dataText: string,
 	draft: SchemaDraftId = '2020-12',
+	lang: Lang = 'id',
 ): SchemaValidation {
 	const schemaParsed = parseJson(schemaText);
-	if (!schemaParsed.ok) return parseError('schema', schemaParsed.error);
+	if (!schemaParsed.ok) return parseError('schema', schemaParsed.error, schemaText, lang);
 
 	const dataParsed = parseJson(dataText);
-	if (!dataParsed.ok) return parseError('data', dataParsed.error);
+	if (!dataParsed.ok) return parseError('data', dataParsed.error, dataText, lang);
 
 	const schema = schemaParsed.data;
 	if (schema === null || (typeof schema !== 'object' && typeof schema !== 'boolean')) {
-		return { ok: false, kind: 'schema', error: 'Schema harus berupa objek JSON atau boolean.' };
+		return { ok: false, kind: 'schema', error: say(lang, 'schemaType') };
 	}
 
 	let result;
@@ -145,8 +148,8 @@ export function validateJsonSchema(
 			kind: 'validator',
 			error:
 				error instanceof Error
-					? `Schema tidak bisa diproses: ${error.message}`
-					: 'Schema tidak bisa diproses.',
+					? say(lang, 'schemaFailedDetail', { detail: error.message })
+					: say(lang, 'schemaFailed'),
 		};
 	}
 
@@ -157,7 +160,7 @@ export function validateJsonSchema(
 		if (IGNORED_KEYWORDS.has(entry.keyword)) continue;
 
 		const path = pathFromInstance(entry.instanceLocation);
-		const message = friendlyMessage(entry.keyword, entry.error);
+		const message = friendlyMessage(entry.keyword, entry.error, lang);
 		const key = `${path}|${message}`;
 		if (seen.has(key)) continue;
 		seen.add(key);

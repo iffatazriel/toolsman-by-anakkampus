@@ -1,26 +1,27 @@
 ---
+import dict from './i18n';
 ---
 
 <div class="tool-shell format-shell">
 	<div class="format-options">
-		<label class="field-label">Bahasa<select class="field-input" id="format-language"><option value="sql">SQL</option><option value="json">JSON</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="html">HTML</option><option value="css">CSS</option></select></label>
-		<label class="field-label" id="format-dialect-field">Dialek SQL<select class="field-input" id="format-dialect"><option value="sql">Standar</option><option value="mysql">MySQL</option><option value="postgresql">PostgreSQL</option><option value="sqlite">SQLite</option></select></label>
-		<label class="field-label">Indentasi<select class="field-input" id="format-indent"><option value="2">2 spasi</option><option value="4">4 spasi</option><option value="tab">Tab</option></select></label>
-		<label class="field-label" id="format-case-field">Kata kunci SQL<select class="field-input" id="format-case"><option value="upper">HURUF BESAR</option><option value="lower">huruf kecil</option><option value="preserve">Pertahankan</option></select></label>
+		<label class="field-label"><span data-i18n="workspace.format-kode.language">{dict.id.language}</span><select class="field-input" id="format-language"><option value="sql">SQL</option><option value="json">JSON</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="html">HTML</option><option value="css">CSS</option></select></label>
+		<label class="field-label" id="format-dialect-field"><span data-i18n="workspace.format-kode.dialect">{dict.id.dialect}</span><select class="field-input" id="format-dialect"><option value="sql" data-i18n="workspace.format-kode.standard">{dict.id.standard}</option><option value="mysql">MySQL</option><option value="postgresql">PostgreSQL</option><option value="sqlite">SQLite</option></select></label>
+		<label class="field-label"><span data-i18n="workspace.format-kode.indent">{dict.id.indent}</span><select class="field-input" id="format-indent"><option value="2" data-i18n="workspace.format-kode.spaces2">{dict.id.spaces2}</option><option value="4" data-i18n="workspace.format-kode.spaces4">{dict.id.spaces4}</option><option value="tab">Tab</option></select></label>
+		<label class="field-label" id="format-case-field"><span data-i18n="workspace.format-kode.keywordCase">{dict.id.keywordCase}</span><select class="field-input" id="format-case"><option value="upper" data-i18n="workspace.format-kode.upper">{dict.id.upper}</option><option value="lower" data-i18n="workspace.format-kode.lower">{dict.id.lower}</option><option value="preserve" data-i18n="workspace.format-kode.preserve">{dict.id.preserve}</option></select></label>
 	</div>
-	<p class="field-hint" id="format-hint">Maksimal 500.000 karakter. SQL dirapikan, bukan divalidasi penuh. Minify tersedia untuk JSON dan CSS.</p>
+	<p class="field-hint" id="format-hint" data-i18n="workspace.format-kode.hint">{dict.id.hint}</p>
 	<div class="pane-grid pane-grid--split">
 		<div class="pane">
-			<label class="field-label" for="format-input">Kode kamu</label>
-			<textarea class="code-area" id="format-input" spellcheck="false" maxlength="500000" aria-describedby="format-hint" placeholder="Tempel kode kamu di sini"></textarea>
-			<div class="pane-actions"><button class="btn btn--primary" type="button" id="format-run">Format</button><button class="btn btn--secondary" type="button" id="format-minify" disabled>Minify</button></div>
+			<label class="field-label" for="format-input" data-i18n="workspace.format-kode.input">{dict.id.input}</label>
+			<textarea class="code-area" id="format-input" spellcheck="false" maxlength="500000" aria-describedby="format-hint" data-i18n-placeholder="workspace.format-kode.inputPlaceholder" placeholder={dict.id.inputPlaceholder}></textarea>
+			<div class="pane-actions"><button class="btn btn--primary" type="button" id="format-run" data-i18n="workspace.format-kode.format">{dict.id.format}</button><button class="btn btn--secondary" type="button" id="format-minify" data-i18n="workspace.format-kode.minify" disabled>{dict.id.minify}</button></div>
 			<p class="field-hint" id="format-status" role="status"></p>
 			<p class="field-error" id="format-error" role="alert" hidden></p>
 		</div>
 		<div class="pane">
-			<label class="field-label" for="format-output">Hasil</label>
-			<textarea class="code-area" id="format-output" readonly spellcheck="false" placeholder="Hasil format muncul di sini"></textarea>
-			<div class="pane-actions"><button class="btn btn--secondary" type="button" id="format-copy" disabled>Salin</button><button class="btn btn--secondary" type="button" id="format-download" disabled>Unduh .sql</button></div>
+			<label class="field-label" for="format-output" data-i18n="workspace.format-kode.result">{dict.id.result}</label>
+			<textarea class="code-area" id="format-output" readonly spellcheck="false" data-i18n-placeholder="workspace.format-kode.outputPlaceholder" placeholder={dict.id.outputPlaceholder}></textarea>
+			<div class="pane-actions"><button class="btn btn--secondary" type="button" id="format-copy" disabled data-i18n="workspace.format-kode.copy">{dict.id.copy}</button><button class="btn btn--secondary" type="button" id="format-download" disabled>{dict.id.download.replace('{extension}', 'sql')}</button></div>
 		</div>
 	</div>
 </div>
@@ -29,7 +30,9 @@
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { toast } from '../../lib/toast';
-	import { canMinify, extensions, formatCode, type FormatOptions, type Language } from './formatter';
+	import { tr } from '../../lib/i18n';
+	import dict from './i18n';
+	import { canMinify, extensions, formatCode, FormatError, type FormatOptions, type Language } from './formatter';
 
 	const input = document.querySelector<HTMLTextAreaElement>('#format-input')!;
 	const output = document.querySelector<HTMLTextAreaElement>('#format-output')!;
@@ -45,17 +48,25 @@
 	const error = document.querySelector<HTMLElement>('#format-error')!;
 	let revision = 0;
 	let busy = false;
+	let statusKey: 'processing' | 'ready' | null = null;
+	let errorKey: 'empty' | 'errorFailed' | FormatError['code'] | null = null;
+	let errorDetail = '';
 	const sync = () => {
 		run.disabled = busy;
 		minify.disabled = busy || !canMinify(language.value as Language);
 		copy.disabled = download.disabled = output.value === '';
-		download.textContent = `Unduh .${extensions[language.value as Language]}`;
+		download.textContent = tr(dict, 'download', { extension: extensions[language.value as Language] });
+		status.textContent = statusKey ? tr(dict, statusKey) : '';
+		error.textContent = errorKey ? tr(dict, errorKey, { detail: errorDetail || tr(dict, 'errorUnknown') }) : '';
 		document.getElementById('format-dialect-field')!.hidden = language.value !== 'sql';
 		document.getElementById('format-case-field')!.hidden = language.value !== 'sql';
 	};
 	const reset = () => {
 		revision += 1;
 		output.value = '';
+		errorKey = null;
+		errorDetail = '';
+		statusKey = null;
 		error.hidden = true;
 		status.textContent = '';
 		sync();
@@ -65,14 +76,15 @@
 	const process = async (compact: boolean) => {
 		reset();
 		if (input.value.trim() === '') {
-			error.textContent = 'Tempel kode kamu dulu, lalu pilih Format atau Minify.';
+			errorKey = 'empty';
 			error.hidden = false;
+			sync();
 			input.focus();
 			return;
 		}
 		const current = revision;
 		busy = true;
-		status.textContent = 'Mengolah kode…';
+		statusKey = 'processing';
 		sync();
 		try {
 			const result = await formatCode(input.value, {
@@ -80,12 +92,13 @@
 			} as FormatOptions, compact);
 			if (current !== revision) return;
 			output.value = result;
-			status.textContent = 'Kode siap disalin atau diunduh.';
+			statusKey = 'ready';
 		} catch (problem) {
 			if (current !== revision) return;
-			error.textContent = problem instanceof Error ? problem.message : 'Kode gagal diolah. Coba lagi.';
+			errorKey = problem instanceof FormatError ? problem.code : 'errorFailed';
+			errorDetail = problem instanceof FormatError ? problem.detail : '';
 			error.hidden = false;
-			status.textContent = '';
+			statusKey = null;
 		} finally {
 			busy = false;
 			sync();
@@ -95,9 +108,10 @@
 	minify.addEventListener('click', () => void process(true));
 	copy.addEventListener('click', async () => {
 		const ok = await copyText(output.value);
-		toast(ok ? 'Hasil disalin.' : 'Gagal menyalin. Pilih hasilnya lalu tekan Ctrl+C.', { tone: ok ? 'success' : 'error' });
+		toast(() => tr(dict, ok ? 'copied' : 'copyFailed'), { tone: ok ? 'success' : 'error' });
 	});
 	download.addEventListener('click', () => downloadText(`kode.${extensions[language.value as Language]}`, output.value, 'text/plain;charset=utf-8'));
+	document.addEventListener('lang:change', sync);
 	sync();
 </script>
 

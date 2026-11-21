@@ -1,62 +1,64 @@
 ---
+import dict from './i18n';
 ---
 
 <div class="tool-shell teks-shell">
 	<div class="pane-grid pane-grid--split">
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Teks</h2>
+				<h2 class="pane__title" data-i18n="workspace.teks.text">{dict.id.text}</h2>
 			</div>
 
-			<label class="sr-only" for="teks-input">Teks sumber</label>
+			<label class="sr-only" for="teks-input" data-i18n="workspace.teks.source">{dict.id.source}</label>
 			<textarea
 				id="teks-input"
 				class="code-area"
 				spellcheck="false"
-				placeholder="Tempel atau tulis teks di sini"></textarea>
+				data-i18n-placeholder="workspace.teks.placeholder"
+				placeholder={dict.id.placeholder}></textarea>
 
 			<dl class="teks-stats" id="teks-stats">
 				<div>
-					<dt>Karakter</dt>
+					<dt data-i18n="workspace.teks.characters">{dict.id.characters}</dt>
 					<dd id="stat-chars">0</dd>
 				</div>
 				<div>
-					<dt>Tanpa spasi</dt>
+					<dt data-i18n="workspace.teks.noSpaces">{dict.id.noSpaces}</dt>
 					<dd id="stat-nospaces">0</dd>
 				</div>
 				<div>
-					<dt>Kata</dt>
+					<dt data-i18n="workspace.teks.words">{dict.id.words}</dt>
 					<dd id="stat-words">0</dd>
 				</div>
 				<div>
-					<dt>Baris</dt>
+					<dt data-i18n="workspace.teks.lines">{dict.id.lines}</dt>
 					<dd id="stat-lines">0</dd>
 				</div>
 				<div>
-					<dt>Kalimat</dt>
+					<dt data-i18n="workspace.teks.sentences">{dict.id.sentences}</dt>
 					<dd id="stat-sentences">0</dd>
 				</div>
 			</dl>
 
 			<div class="lorem-row">
-				<label class="field-label" for="teks-lorem">Jumlah kalimat lorem</label>
+				<label class="field-label" for="teks-lorem" data-i18n="workspace.teks.loremCount">{dict.id.loremCount}</label>
 				<input class="field-input" id="teks-lorem" type="number" min="1" max="10" value="3" />
-				<button type="button" class="btn btn--secondary" id="teks-lorem-fill">Isi lorem</button>
+				<button type="button" class="btn btn--secondary" id="teks-lorem-fill" data-i18n="workspace.teks.fillLorem">{dict.id.fillLorem}</button>
 			</div>
 		</div>
 
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Hasil</h2>
+				<h2 class="pane__title" data-i18n="workspace.teks.result">{dict.id.result}</h2>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--secondary" id="teks-copy" disabled>Salin</button>
-					<button type="button" class="btn btn--primary" id="teks-download" disabled>Unduh .txt</button>
+					<button type="button" class="btn btn--secondary" id="teks-copy" disabled data-i18n="workspace.teks.copy">{dict.id.copy}</button>
+					<button type="button" class="btn btn--primary" id="teks-download" disabled data-i18n="workspace.teks.download">{dict.id.download}</button>
 				</div>
 			</div>
 
-			<div class="teks-actions" role="group" aria-label="Ubah teks">
-				<button type="button" class="btn btn--secondary" data-teks-action="upper">HURUF BESAR</button>
-				<button type="button" class="btn btn--secondary" data-teks-action="lower">huruf kecil</button>
+			<div class="teks-actions" role="group" aria-label={dict.id.transform} data-i18n-aria="workspace.teks.transform">
+				<button type="button" class="btn btn--secondary" data-teks-action="upper" data-i18n="workspace.teks.upper">{dict.id.upper}</button>
+				<button type="button" class="btn btn--secondary" data-teks-action="lower" data-i18n="workspace.teks.lower">{dict.id.lower}</button>
 				<button type="button" class="btn btn--secondary" data-teks-action="title">Title Case</button>
 				<button type="button" class="btn btn--secondary" data-teks-action="sentence">Sentence case</button>
 				<button type="button" class="btn btn--secondary" data-teks-action="camel">camelCase</button>
@@ -66,7 +68,7 @@
 			</div>
 
 			<pre class="code-block" id="teks-output" hidden><code id="teks-code"></code></pre>
-			<p class="preview-empty" id="teks-empty">Pilih salah satu tombol ubah untuk melihat hasil.</p>
+			<p class="preview-empty" id="teks-empty" data-i18n="workspace.teks.empty">{dict.id.empty}</p>
 		</div>
 	</div>
 </div>
@@ -75,6 +77,8 @@
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { toast } from '../../lib/toast';
+	import { tr } from '../../lib/i18n';
+	import dict from './i18n';
 	import {
 		countText,
 		loremIpsum,
@@ -176,12 +180,12 @@
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(result);
-			toast(copied ? 'Hasil disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'copied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText('teks.txt', result, 'text/plain;charset=utf-8');
-			toast('Berkas teks diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'downloaded'), { tone: 'success' });
 		});
 
 		updateStats();

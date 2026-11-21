@@ -1,16 +1,14 @@
 ---
+import dict from './i18n';
 import { defaultGitignoreGroups, gitignoreGroups } from '../../lib/gitignore';
 ---
 
 <div class="pane-grid pane-grid--split">
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Pilih tumpukan</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.stack">{dict.id.stack}</h2>
 		</div>
-		<p class="field-hint">
-			Centang yang dipakai proyekmu. Aturan digabung dengan judul per kelompok, jadi
-			masih gampang dihapus manual.
-		</p>
+		<p class="field-hint" data-i18n="workspace.generator.stackHint">{dict.id.stackHint}</p>
 
 		<div class="check-grid">
 			{
@@ -22,7 +20,7 @@ import { defaultGitignoreGroups, gitignoreGroups } from '../../lib/gitignore';
 							checked={defaultGitignoreGroups.includes(group.id)}
 							data-gitignore-group
 						/>
-						{group.label}
+						<span data-i18n={group.id === 'env' ? 'workspace.generator.groupSecrets' : group.id === 'logs' ? 'workspace.generator.groupLogs' : group.id === 'coverage' ? 'workspace.generator.groupTests' : undefined}>{group.label}</span>
 					</label>
 				))
 			}
@@ -31,30 +29,26 @@ import { defaultGitignoreGroups, gitignoreGroups } from '../../lib/gitignore';
 
 	<div class="pane">
 		<div class="pane__head">
-			<h2 class="pane__title">Isi .gitignore</h2>
+			<h2 class="pane__title" data-i18n="workspace.generator.gitignoreOutput">{dict.id.gitignoreOutput}</h2>
 			<div class="pane-actions">
-				<button type="button" class="btn btn--secondary" id="gitignore-copy" disabled>
-					Salin
-				</button>
+				<button type="button" class="btn btn--secondary" id="gitignore-copy" disabled data-i18n="workspace.generator.copy">{dict.id.copy}</button>
 				<button
 					type="button"
 					class="btn btn--primary"
 					id="gitignore-download"
 					disabled
-				>
-					Unduh .gitignore
-				</button>
+				 data-i18n="workspace.generator.gitignoreDownload">{dict.id.gitignoreDownload}</button>
 			</div>
 		</div>
 
 		<pre class="code-block" id="gitignore-output" hidden><code id="gitignore-code"></code></pre>
-		<p class="preview-empty" id="gitignore-empty">
-			Pilih minimal satu kelompok, isinya muncul di sini.
-		</p>
+		<p class="preview-empty" id="gitignore-empty" data-i18n="workspace.generator.gitignoreEmpty">{dict.id.gitignoreEmpty}</p>
 	</div>
 </div>
 
 <script>
+	import { tr, currentLang } from '../../lib/i18n';
+	import dict from './i18n';
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { buildGitignore } from '../../lib/gitignore';
@@ -75,6 +69,7 @@ import { defaultGitignoreGroups, gitignoreGroups } from '../../lib/gitignore';
 		const update = () => {
 			text = buildGitignore(
 				boxes.filter((box) => box.checked).map((box) => box.value),
+				currentLang(),
 			);
 			const blank = text === '';
 			code.textContent = text;
@@ -84,16 +79,17 @@ import { defaultGitignoreGroups, gitignoreGroups } from '../../lib/gitignore';
 			download.disabled = blank;
 		};
 
+		document.addEventListener('lang:change', update);
 		boxes.forEach((box) => box.addEventListener('change', update));
 
 		copy.addEventListener('click', async () => {
 			const copied = await copyText(text);
-			toast(copied ? '.gitignore disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => tr(dict, copied ? 'gitignoreCopied' : 'copyFailed'), { tone: copied ? 'success' : 'error' });
 		});
 
 		download.addEventListener('click', () => {
 			downloadText('.gitignore', text, 'text/plain;charset=utf-8');
-			toast('Berkas .gitignore diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'gitignoreDownloaded'), { tone: 'success' });
 		});
 
 		update();

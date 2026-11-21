@@ -1,3 +1,5 @@
+import type { Lang } from './i18n';
+import dict from '../features/generator/i18n';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 export type ConvertResult = { ok: true; text: string } | { ok: false; error: string };
@@ -54,21 +56,21 @@ function parseCsv(text: string): string[][] {
 	return rows.filter((entry) => !(entry.length === 1 && entry[0] === ''));
 }
 
-export function jsonToCsv(input: string): ConvertResult {
+export function jsonToCsv(input: string, lang: Lang = 'id'): ConvertResult {
 	let data: unknown;
 	try {
 		data = JSON.parse(input);
 	} catch {
-		return { ok: false, error: 'JSON tidak valid.' };
+		return { ok: false, error: dict[lang].invalidJson };
 	}
 
-	if (!Array.isArray(data)) return { ok: false, error: 'JSON harus berupa array objek.' };
+	if (!Array.isArray(data)) return { ok: false, error: dict[lang].csvArray };
 	if (data.length === 0) return { ok: true, text: '' };
 
 	const headers: string[] = [];
 	for (const item of data) {
 		if (item === null || typeof item !== 'object' || Array.isArray(item)) {
-			return { ok: false, error: 'Tiap baris harus berupa objek.' };
+			return { ok: false, error: dict[lang].csvRow };
 		}
 		for (const key of Object.keys(item as Record<string, unknown>)) {
 			if (!headers.includes(key)) headers.push(key);
@@ -108,26 +110,26 @@ export function csvToJson(input: string): ConvertResult {
 	return { ok: true, text: JSON.stringify(out, null, 2) };
 }
 
-export function jsonToYaml(input: string): ConvertResult {
+export function jsonToYaml(input: string, lang: Lang = 'id'): ConvertResult {
 	let data: unknown;
 	try {
 		data = JSON.parse(input);
 	} catch {
-		return { ok: false, error: 'JSON tidak valid.' };
+		return { ok: false, error: dict[lang].invalidJson };
 	}
 
 	try {
 		return { ok: true, text: stringifyYaml(data, { indent: 2, lineWidth: 100 }) };
 	} catch {
-		return { ok: false, error: 'Tidak bisa mengubah JSON ke YAML.' };
+		return { ok: false, error: dict[lang].yamlConversion };
 	}
 }
 
-export function yamlToJson(input: string): ConvertResult {
+export function yamlToJson(input: string, lang: Lang = 'id'): ConvertResult {
 	try {
 		const data = parseYaml(input) ?? null;
 		return { ok: true, text: JSON.stringify(data, null, 2) };
 	} catch {
-		return { ok: false, error: 'YAML tidak valid.' };
+		return { ok: false, error: dict[lang].invalidYaml };
 	}
 }

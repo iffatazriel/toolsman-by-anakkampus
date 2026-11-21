@@ -1,10 +1,12 @@
+import dict from './i18n';
+
 export type HashAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
 export const hashAlgorithms: { id: HashAlgorithm; label: string }[] = [
 	{ id: 'SHA-256', label: 'SHA-256' },
 	{ id: 'SHA-512', label: 'SHA-512' },
 	{ id: 'SHA-384', label: 'SHA-384' },
-	{ id: 'SHA-1', label: 'SHA-1 (lama)' },
+	{ id: 'SHA-1', label: dict.id.legacy },
 ];
 
 export async function hashBuffer(

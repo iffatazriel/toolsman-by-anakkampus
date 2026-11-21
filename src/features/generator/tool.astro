@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 import Tabs from '../../components/ui/Tabs.astro';
 import ConvertPane from './ConvertPane.astro';
 import GitignorePane from './GitignorePane.astro';
@@ -11,14 +12,14 @@ const tabs = [
 	{ id: 'markdown', label: 'Markdown' },
 	{ id: 'readme', label: 'README' },
 	{ id: 'json', label: 'JSON' },
-	{ id: 'convert', label: 'Konversi' },
+	{ id: 'convert', label: dict.id.convertTab, labelKey: 'workspace.generator.convertTab' },
 	{ id: 'gitignore', label: '.gitignore' },
-	{ id: 'license', label: 'Lisensi' },
+	{ id: 'license', label: dict.id.license, labelKey: 'workspace.generator.license' },
 ];
 ---
 
 <div class="tool-shell">
-	<Tabs label="Pilihan Generator" items={tabs}>
+	<Tabs label={dict.id.tabs} labelKey="workspace.generator.tabs" items={tabs}>
 		<div data-panel="markdown" class="tool-panel">
 			<MarkdownPane />
 		</div>

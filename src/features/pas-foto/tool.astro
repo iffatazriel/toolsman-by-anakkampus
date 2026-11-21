@@ -1,15 +1,16 @@
 ---
+import dict from './i18n';
 import Dropzone from '../../components/ui/Dropzone.astro';
 import Progress from '../../components/ui/Progress.astro';
 ---
 
 <div class="tool-shell photo-shell">
-	<ol class="steps" aria-label="Langkah pas foto">
-		<li class="steps__item" data-step-item="1">1 Unggah</li>
-		<li class="steps__item" data-step-item="2">2 Latar</li>
-		<li class="steps__item" data-step-item="3">3 Ukuran &amp; posisi</li>
-		<li class="steps__item" data-step-item="4">4 Unduh</li>
-		<li class="steps__item" data-step-item="5">5 Lembar cetak</li>
+	<ol class="steps" aria-label={dict.id.steps} data-i18n-aria="workspace.pas-foto.steps">
+		<li class="steps__item" data-step-item="1" data-i18n="workspace.pas-foto.step1">{dict.id.step1}</li>
+		<li class="steps__item" data-step-item="2" data-i18n="workspace.pas-foto.step2">{dict.id.step2}</li>
+		<li class="steps__item" data-step-item="3" data-i18n="workspace.pas-foto.step3">{dict.id.step3}</li>
+		<li class="steps__item" data-step-item="4" data-i18n="workspace.pas-foto.step4">{dict.id.step4}</li>
+		<li class="steps__item" data-step-item="5" data-i18n="workspace.pas-foto.step5">{dict.id.step5}</li>
 	</ol>
 
 	<div class="upload-preview" data-photo-preview hidden>
@@ -23,12 +24,10 @@ import Progress from '../../components/ui/Progress.astro';
 	</div>
 
 	<div class="photo-step" data-step="1">
-		<Dropzone id="foto-input" label="Pilih foto wajah" accept="image/jpeg,image/png,image/webp" hint="JPG, PNG, atau WEBP, maks. 10 MB. Foto tidak dikirim ke server." />
+		<Dropzone id="foto-input" label={dict.id.choose} labelKey="workspace.pas-foto.choose" accept="image/jpeg,image/png,image/webp" hint={dict.id.limits} hintKey="workspace.pas-foto.limits" />
 		<div class="camera-actions">
-			<button type="button" class="btn btn--secondary" data-camera-open>Ambil dari kamera</button>
-			<p class="field-hint" data-camera-status role="status" aria-live="polite">
-				Kamera hanya dipakai di perangkat ini.
-			</p>
+			<button type="button" class="btn btn--secondary" data-camera-open data-i18n="workspace.pas-foto.camera">{dict.id.camera}</button>
+			<p class="field-hint" data-camera-status role="status" aria-live="polite" data-i18n="workspace.pas-foto.cameraLocal">{dict.id.cameraLocal}</p>
 		</div>
 		<div class="camera-panel" data-camera-panel hidden>
 			<video
@@ -39,11 +38,11 @@ import Progress from '../../components/ui/Progress.astro';
 				autoplay
 				playsinline
 				muted
-				aria-label="Pratinjau kamera"
+				aria-label={dict.id.cameraPreview} data-i18n-aria="workspace.pas-foto.cameraPreview"
 			></video>
 			<div class="pane-actions">
-				<button type="button" class="btn btn--primary" data-camera-capture>Ambil foto</button>
-				<button type="button" class="btn btn--secondary" data-camera-close>Batal</button>
+				<button type="button" class="btn btn--primary" data-camera-capture data-i18n="workspace.pas-foto.capture">{dict.id.capture}</button>
+				<button type="button" class="btn btn--secondary" data-camera-close data-i18n="workspace.pas-foto.cancel">{dict.id.cancel}</button>
 			</div>
 		</div>
 		<p class="field-hint" data-photo-error hidden role="alert"></p>
@@ -51,60 +50,58 @@ import Progress from '../../components/ui/Progress.astro';
 
 	<div class="photo-step" data-step="2" hidden>
 		<div class="progress-box" data-model-box hidden>
-			<Progress label="Menyiapkan penghapus latar (sekali saja)…" value={0} />
-			<p class="field-hint">Model disimpan di browser setelah selesai, jadi kunjungan berikutnya lebih cepat.</p>
+			<Progress label={dict.id.model} labelKey="workspace.pas-foto.model" value={0} />
+			<p class="field-hint" data-i18n="workspace.pas-foto.modelHint">{dict.id.modelHint}</p>
 		</div>
-		<div class="swatch-row" role="radiogroup" aria-label="Warna latar">
-			<button type="button" class="swatch" role="radio" aria-checked="true" data-color="#DB1F26" style="--swatch:#DB1F26" aria-label="Merah"></button>
-			<button type="button" class="swatch" role="radio" aria-checked="false" data-color="#0F5BD8" style="--swatch:#0F5BD8" aria-label="Biru"></button>
-			<button type="button" class="swatch" role="radio" aria-checked="false" data-color="#FFFFFF" style="--swatch:#FFFFFF" aria-label="Putih"></button>
-			<label class="swatch swatch--custom" aria-label="Warna kustom">
+		<div class="swatch-row" role="radiogroup" aria-label={dict.id.background} data-i18n-aria="workspace.pas-foto.background">
+			<button type="button" class="swatch" role="radio" aria-checked="true" data-color="#DB1F26" style="--swatch:#DB1F26" aria-label={dict.id.red} data-i18n-aria="workspace.pas-foto.red"></button>
+			<button type="button" class="swatch" role="radio" aria-checked="false" data-color="#0F5BD8" style="--swatch:#0F5BD8" aria-label={dict.id.blue} data-i18n-aria="workspace.pas-foto.blue"></button>
+			<button type="button" class="swatch" role="radio" aria-checked="false" data-color="#FFFFFF" style="--swatch:#FFFFFF" aria-label={dict.id.white} data-i18n-aria="workspace.pas-foto.white"></button>
+			<label class="swatch swatch--custom" aria-label={dict.id.custom} data-i18n-aria="workspace.pas-foto.custom">
 				<input type="color" id="foto-custom" value="#3B82F6" />
 			</label>
 		</div>
-		<p class="field-hint">Nilai bawaan bisa berbeda dengan standar instansi. Cek persyaratanmu.</p>
+		<p class="field-hint" data-i18n="workspace.pas-foto.defaultsHint">{dict.id.defaultsHint}</p>
 	</div>
 
 	<div class="photo-step photo-step--crop" data-step="3" hidden>
-		<div class="segmented" role="radiogroup" aria-label="Ukuran cetak">
+		<div class="segmented" role="radiogroup" aria-label={dict.id.printSize} data-i18n-aria="workspace.pas-foto.printSize">
 			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-size="2x3">2×3</button>
 			<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-size="3x4">3×4</button>
 			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-size="4x6">4×6</button>
 		</div>
 		<div class="crop-stage" data-stage>
-			<canvas id="foto-canvas" aria-label="Pratinjau pas foto"></canvas>
+			<canvas id="foto-canvas" aria-label={dict.id.photoPreview} data-i18n-aria="workspace.pas-foto.photoPreview"></canvas>
 			<label class="check-row">
-				<input type="checkbox" id="foto-guide" checked />
-				Tampilkan guide wajah
-			</label>
+				<input type="checkbox" id="foto-guide" checked /><span data-i18n="workspace.pas-foto.guide">{dict.id.guide}</span></label>
 		</div>
 		<div class="zoom-row">
 			<label class="field-label" for="foto-zoom">Zoom</label>
 			<input id="foto-zoom" type="range" min="1" max="2" step="0.05" value="1" />
 		</div>
 		<div class="zoom-row">
-			<label class="field-label" for="foto-brightness">Kecerahan</label>
+			<label class="field-label" for="foto-brightness" data-i18n="workspace.pas-foto.brightness">{dict.id.brightness}</label>
 			<input id="foto-brightness" type="range" min="-40" max="40" step="5" value="0" />
 			<p class="field-hint" id="foto-brightness-value">0%</p>
 		</div>
 		<div class="zoom-row">
-			<label class="field-label" for="foto-feather">Haluskan tepi</label>
+			<label class="field-label" for="foto-feather" data-i18n="workspace.pas-foto.feather">{dict.id.feather}</label>
 			<input id="foto-feather" type="range" min="0" max="12" step="1" value="0" />
 			<p class="field-hint" id="foto-feather-value">0 px</p>
 		</div>
-		<p class="field-hint">Aturan pas foto tiap instansi bisa berbeda. Cek persyaratanmu.</p>
+		<p class="field-hint" data-i18n="workspace.pas-foto.requirements">{dict.id.requirements}</p>
 	</div>
 
 	<div class="photo-step" data-step="4" hidden>
 		<div class="pane-actions">
-			<button type="button" class="btn btn--primary" id="foto-png">Unduh PNG 300 DPI</button>
-			<button type="button" class="btn btn--secondary" id="foto-jpg">Unduh JPG</button>
+			<button type="button" class="btn btn--primary" id="foto-png" data-i18n="workspace.pas-foto.png">{dict.id.png}</button>
+			<button type="button" class="btn btn--secondary" id="foto-jpg" data-i18n="workspace.pas-foto.jpg">{dict.id.jpg}</button>
 		</div>
 		<p class="field-hint" id="foto-dims"></p>
 	</div>
 
 	<div class="photo-step photo-step--sheet" data-step="5" hidden>
-		<div class="segmented" role="radiogroup" aria-label="Ukuran kertas">
+		<div class="segmented" role="radiogroup" aria-label={dict.id.paper} data-i18n-aria="workspace.pas-foto.paper">
 			<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-paper="4r">
 				4R
 			</button>
@@ -114,28 +111,25 @@ import Progress from '../../components/ui/Progress.astro';
 		</div>
 		<p class="field-hint" id="foto-sheet-hint"></p>
 		<div class="sheet-preview">
-			<canvas id="foto-sheet" aria-label="Pratinjau lembar cetak"></canvas>
+			<canvas id="foto-sheet" aria-label={dict.id.sheetPreview} data-i18n-aria="workspace.pas-foto.sheetPreview"></canvas>
 		</div>
 		<div class="pane-actions">
-			<button type="button" class="btn btn--secondary" id="sheet-png" disabled>
-				Unduh lembar PNG
-			</button>
-			<button type="button" class="btn btn--primary" id="sheet-jpg" disabled>
-				Unduh lembar JPG
-			</button>
+			<button type="button" class="btn btn--secondary" id="sheet-png" disabled data-i18n="workspace.pas-foto.sheetPng">{dict.id.sheetPng}</button>
+			<button type="button" class="btn btn--primary" id="sheet-jpg" disabled data-i18n="workspace.pas-foto.sheetJpg">{dict.id.sheetJpg}</button>
 		</div>
-		<p class="field-hint">
-			Foto disusun dengan jarak potong di latar putih. Cetak tanpa penskalaan pada 300 DPI.
-		</p>
+		<p class="field-hint" data-i18n="workspace.pas-foto.sheetHint">{dict.id.sheetHint}</p>
 	</div>
 
 	<div class="step-nav">
-		<button type="button" class="btn btn--secondary" id="foto-back" disabled>Kembali</button>
-		<button type="button" class="btn btn--primary" id="foto-next" disabled>Lanjut</button>
+		<button type="button" class="btn btn--secondary" id="foto-back" disabled data-i18n="workspace.pas-foto.back">{dict.id.back}</button>
+		<button type="button" class="btn btn--primary" id="foto-next" disabled data-i18n="workspace.pas-foto.next">{dict.id.next}</button>
 	</div>
 </div>
 
 <script>
+ import {tr} from "../../lib/i18n";
+ import {localizedText} from "../../lib/i18n-client";
+ import dict from "./i18n";
 	import { formatBytes } from '../../lib/page-range';
 	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
@@ -167,7 +161,7 @@ import Progress from '../../components/ui/Progress.astro';
 
 	const currentSize = () => photoSizes.find((item) => item.id === sizeId)!;
 
-	const setPhotoStatus = (message: string, state: 'loading' | 'ready' | 'failed') => {
+	const setPhotoStatus = (message: ()=>string, state: 'loading' | 'ready' | 'failed') => {
 		if (!photoPreviewStatus) return;
 		photoPreviewStatus.textContent = '';
 		photoPreviewStatus.classList.toggle('is-ready', state === 'ready');
@@ -178,7 +172,7 @@ import Progress from '../../components/ui/Progress.astro';
 			spinner.setAttribute('aria-hidden', 'true');
 			photoPreviewStatus.append(spinner);
 		}
-		photoPreviewStatus.append(document.createTextNode(message));
+		const label=document.createElement('span');localizedText(label,message);photoPreviewStatus.append(label);
 	};
 
 	const setStep = (value: number) => {
@@ -191,8 +185,7 @@ import Progress from '../../components/ui/Progress.astro';
 		});
 		back.disabled = value === 1;
 		next.disabled = value === 1 || value === 5;
-		next.textContent =
-			value === 3 ? 'Lanjut ke unduh' : value === 4 ? 'Lanjut ke lembar cetak' : 'Lanjut';
+		localizedText(next,()=>value === 3 ? tr(dict,'nextDownload') : value === 4 ? tr(dict,'nextSheet') : tr(dict,'next'));
 		if (value === 3) draw();
 		if (value === 5) drawSheet();
 	};
@@ -264,7 +257,6 @@ import Progress from '../../components/ui/Progress.astro';
 		const url = URL.createObjectURL(file);
 		const image = new Image();
 		image.src = url;
-		await image.decode();
 
 		cutout = null;
 		next.disabled = true;
@@ -276,7 +268,7 @@ import Progress from '../../components/ui/Progress.astro';
 			photoPreviewImg.src = previewUrl;
 			photoPreviewName.textContent = `${file.name} · ${formatBytes(file.size)}`;
 			photoPreview.hidden = false;
-			setPhotoStatus('Membaca foto…', 'loading');
+			setPhotoStatus(()=>tr(dict,'reading'), 'loading');
 		}
 
 		const modelBox = $<HTMLElement>('[data-model-box]')!;
@@ -287,13 +279,14 @@ import Progress from '../../components/ui/Progress.astro';
 		setDropzoneState(zone, 'processing');
 
 		try {
+			await image.decode();
 			const removeBackground = await loadPhotoModule((_key, current, total) => {
 				const percent = total > 0 ? Math.round((current / total) * 100) : 0;
 				bar.style.width = `${percent}%`;
 				if (label) label.textContent = `${percent}%`;
-				if (percent > 0) setPhotoStatus(`Menghapus latar… ${percent}%`, 'loading');
+				if (percent > 0) setPhotoStatus(()=>tr(dict,'removingPercent',{percent}), 'loading');
 			});
-			setPhotoStatus('Menghapus latar…', 'loading');
+			setPhotoStatus(()=>tr(dict,'removing'), 'loading');
 			const blob = await removeBackground(file);
 			const bitmap = await createImageBitmap(blob);
 			cutout = document.createElement('canvas');
@@ -304,15 +297,15 @@ import Progress from '../../components/ui/Progress.astro';
 			modelBox.hidden = true;
 			next.disabled = false;
 			setDropzoneState(zone, 'done');
-			setPhotoStatus('Latar dihapus. Foto siap diatur.', 'ready');
+			setPhotoStatus(()=>tr(dict,'ready'), 'ready');
 			setStep(2);
 		} catch (error) {
 			modelBox.hidden = true;
 			setDropzoneState(zone, 'empty');
-			const message = error instanceof Error ? error.message : 'Gagal memproses foto.';
-			setPhotoStatus(`Gagal: ${message}`, 'failed');
+			const message = ()=>tr(dict,'failed');
+			setPhotoStatus(()=>tr(dict,'failedMessage',{message:message()}), 'failed');
 			const errorBox = $<HTMLElement>('[data-photo-error]')!;
-			errorBox.textContent = message;
+			localizedText(errorBox,message);
 			errorBox.hidden = false;
 			toast(message, { tone: 'error' });
 		} finally {
@@ -326,7 +319,7 @@ import Progress from '../../components/ui/Progress.astro';
 		if (!file) return;
 		if (file.size > 10 * 1024 * 1024) {
 			const errorBox = $<HTMLElement>('[data-photo-error]')!;
-			errorBox.textContent = 'Foto lebih dari 10 MB. Kecilkan dulu, lalu coba lagi.';
+			localizedText(errorBox,()=>tr(dict,'tooLarge'));
 			errorBox.hidden = false;
 			return;
 		}
@@ -352,7 +345,7 @@ import Progress from '../../components/ui/Progress.astro';
 	if (cameraButton && !navigator.mediaDevices?.getUserMedia) {
 		cameraButton.hidden = true;
 		if (cameraStatus) {
-			cameraStatus.textContent = 'Kamera tidak didukung di peramban ini. Pakai unggah foto.';
+			localizedText(cameraStatus,()=>tr(dict,'cameraUnsupported'));
 		}
 	}
 
@@ -362,7 +355,7 @@ import Progress from '../../components/ui/Progress.astro';
 		if (!media?.getUserMedia) return;
 
 		cameraButton.disabled = true;
-		cameraStatus.textContent = 'Meminta izin kamera…';
+		localizedText(cameraStatus,()=>tr(dict,'requestingCamera'));
 
 		try {
 			cameraStream = await media.getUserMedia({
@@ -372,18 +365,17 @@ import Progress from '../../components/ui/Progress.astro';
 			cameraVideo.srcObject = cameraStream;
 			await cameraVideo.play();
 			cameraPanel.hidden = false;
-			cameraStatus.textContent = 'Posisikan wajah di dalam bingkai, lalu tekan Ambil foto.';
+			localizedText(cameraStatus,()=>tr(dict,'position'));
 		} catch {
 			cameraButton.disabled = false;
-			cameraStatus.textContent =
-				'Izin kamera ditolak atau kamera tidak tersedia. Pakai unggah foto di atas.';
+			localizedText(cameraStatus,()=>tr(dict,'cameraDenied'));
 		}
 	});
 
 	cameraCapture?.addEventListener('click', async () => {
 		if (!cameraVideo || !cameraStream || !cameraStatus) return;
 		if (cameraVideo.videoWidth === 0) {
-			cameraStatus.textContent = 'Kamera belum siap. Tunggu sebentar, lalu coba lagi.';
+			localizedText(cameraStatus,()=>tr(dict,'cameraNotReady'));
 			return;
 		}
 
@@ -398,19 +390,19 @@ import Progress from '../../components/ui/Progress.astro';
 			frame.toBlob(resolve, 'image/jpeg', 0.95);
 		});
 		if (!blob) {
-			cameraStatus.textContent = 'Gagal mengambil foto. Coba lagi.';
+			localizedText(cameraStatus,()=>tr(dict,'captureFailed'));
 			return;
 		}
 
 		const file = new File([blob], 'kamera.jpg', { type: 'image/jpeg' });
 		stopCamera();
-		cameraStatus.textContent = 'Foto diambil. Memproses…';
+		localizedText(cameraStatus,()=>tr(dict,'processing'));
 		await processPhoto(file);
 	});
 
 	cameraClose?.addEventListener('click', () => {
 		stopCamera();
-		if (cameraStatus) cameraStatus.textContent = 'Kamera ditutup. Pakai unggah foto kalau perlu.';
+		if (cameraStatus) localizedText(cameraStatus,()=>tr(dict,'cameraClosed'));
 	});
 
 	window.addEventListener('pagehide', stopCamera);
@@ -484,7 +476,7 @@ import Progress from '../../components/ui/Progress.astro';
 		exportCanvas.toBlob((blob) => {
 			if (!blob) return;
 			saveBlob(blob, `pas-foto-${sizeId}.${type}`);
-			toast('Pas foto diunduh.', { tone: 'success' });
+			toast(()=> tr(dict,'downloaded'), { tone: 'success' });
 		}, mime, 0.95);
 	};
 
@@ -509,10 +501,9 @@ import Progress from '../../components/ui/Progress.astro';
 		if (!tile) return;
 
 		const plan = planSheet(paper, tile.width, tile.height);
-		sheetHint.textContent =
-			plan.count > 0
-				? `${plan.count} foto ${currentSize().label} per lembar ${paper.label} (${paper.description}).`
-				: `Foto ${currentSize().label} tidak muat di kertas ${paper.label}.`;
+		localizedText(sheetHint,()=>plan.count > 0
+				? tr(dict,'sheetCount',{count:plan.count,size:currentSize().label,paper:paper.label,description:paper.description})
+				: tr(dict,'notFit',{size:currentSize().label,paper:paper.label}));
 		sheetPng.disabled = plan.count === 0;
 		sheetJpg.disabled = plan.count === 0;
 
@@ -559,7 +550,7 @@ import Progress from '../../components/ui/Progress.astro';
 			(blob) => {
 				if (!blob) return;
 				saveBlob(blob, `pas-foto-lembar-${paper.id}.${type}`);
-				toast('Lembar cetak diunduh.', { tone: 'success' });
+				toast(()=> tr(dict,'sheetDownloaded'), { tone: 'success' });
 			},
 			mime,
 			0.95,

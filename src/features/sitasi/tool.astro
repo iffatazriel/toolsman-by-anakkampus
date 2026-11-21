@@ -1,33 +1,34 @@
 ---
+import dict from './i18n';
 ---
 
 <div class="tool-shell sitasi-shell">
-	<label class="field-label" for="citation-style">Gaya sitasi</label>
+	<label class="field-label" for="citation-style" data-i18n="workspace.sitasi.style">{dict.id.style}</label>
 	<select class="field-input" id="citation-style"><option value="apa">APA 7</option><option value="ieee">IEEE</option></select>
-	<p class="field-hint">Periksa hasil sesuai pedoman kampus kamu. Nama tunggal: isi nama belakang saja. Untuk organisasi, isi nama organisasi pada nama belakang tanpa nama depan. APA: isi tanggal akses hanya jika isi halaman berubah.</p>
+	<p class="field-hint" data-i18n="workspace.sitasi.hint">{dict.id.hint}</p>
 	<div class="pane-grid pane-grid--split">
 		<form class="pane" id="citation-form">
-			<label class="field-label">Jenis sumber<select class="field-input" name="type"><option value="book">Buku</option><option value="journal">Artikel jurnal</option><option value="web">Halaman web</option></select></label>
-			<fieldset><legend class="field-label">Penulis (sesuai urutan sumber)</legend><div id="citation-authors"></div><button class="btn btn--secondary" type="button" id="citation-add-author">Tambah penulis</button></fieldset>
-			<label class="field-label">Tahun<input class="field-input" name="year" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Kosongkan jika tidak ada" /></label>
-			<label class="field-label">Judul<input class="field-input" name="title" required maxlength="2000" /></label>
-			<label class="field-label"><span id="citation-publisher-label">Penerbit</span><input class="field-input" name="publisher" maxlength="500" /></label>
+			<label class="field-label"><span data-i18n="workspace.sitasi.type">{dict.id.type}</span><select class="field-input" name="type"><option value="book" data-i18n="workspace.sitasi.book">{dict.id.book}</option><option value="journal" data-i18n="workspace.sitasi.journal">{dict.id.journal}</option><option value="web" data-i18n="workspace.sitasi.web">{dict.id.web}</option></select></label>
+			<fieldset><legend class="field-label" data-i18n="workspace.sitasi.authors">{dict.id.authors}</legend><div id="citation-authors"></div><button class="btn btn--secondary" type="button" id="citation-add-author" data-i18n="workspace.sitasi.addAuthor">{dict.id.addAuthor}</button></fieldset>
+			<label class="field-label"><span data-i18n="workspace.sitasi.year">{dict.id.year}</span><input class="field-input" name="year" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder={dict.id.yearPlaceholder} data-i18n-placeholder="workspace.sitasi.yearPlaceholder" /></label>
+			<label class="field-label"><span data-i18n="workspace.sitasi.title">{dict.id.title}</span><input class="field-input" name="title" required maxlength="2000" /></label>
+			<label class="field-label"><span id="citation-publisher-label" data-i18n="workspace.sitasi.publisher">{dict.id.publisher}</span><input class="field-input" name="publisher" maxlength="500" /></label>
 			<div id="citation-journal" hidden>
 				<label class="field-label">Volume<input class="field-input" name="volume" maxlength="50" /></label>
-				<label class="field-label">Nomor terbitan<input class="field-input" name="issue" maxlength="50" /></label>
-				<label class="field-label">Halaman<input class="field-input" name="pages" placeholder="12-24" maxlength="100" /></label>
+				<label class="field-label"><span data-i18n="workspace.sitasi.issue">{dict.id.issue}</span><input class="field-input" name="issue" maxlength="50" /></label>
+				<label class="field-label"><span data-i18n="workspace.sitasi.pages">{dict.id.pages}</span><input class="field-input" name="pages" placeholder="12-24" maxlength="100" /></label>
 			</div>
 			<label class="field-label">DOI<input class="field-input" name="doi" placeholder="10.1234/contoh" maxlength="1000" /></label>
 			<label class="field-label">URL<input class="field-input" name="url" type="url" placeholder="https://…" maxlength="2000" /></label>
-			<label class="field-label" id="citation-access-field" hidden>Tanggal akses<input class="field-input" name="accessed" type="date" /></label>
-			<button class="btn btn--primary" type="submit">Tambahkan ke daftar</button>
+			<label class="field-label" id="citation-access-field" hidden><span data-i18n="workspace.sitasi.accessed">{dict.id.accessed}</span><input class="field-input" name="accessed" type="date" /></label>
+			<button class="btn btn--primary" type="submit" data-i18n="workspace.sitasi.add">{dict.id.add}</button>
 		</form>
 		<div class="pane">
-			<h2 class="pane__title">Daftar pustaka</h2>
-			<p class="field-hint">APA diurutkan menurut penulis; IEEE mengikuti urutan penambahan. Maksimal 500 sumber. Karya penulis dan tahun yang sama belum diberi akhiran a/b otomatis.</p>
-			<p id="citation-empty">Belum ada sumber. Isi formulir untuk membuat sitasi.</p>
+			<h2 class="pane__title" data-i18n="workspace.sitasi.bibliography">{dict.id.bibliography}</h2>
+			<p class="field-hint" data-i18n="workspace.sitasi.listHint">{dict.id.listHint}</p>
+			<p id="citation-empty" data-i18n="workspace.sitasi.empty">{dict.id.empty}</p>
 			<div id="citation-list"></div>
-			<div class="pane-actions"><button class="btn btn--secondary" type="button" id="citation-copy-all" disabled>Salin semua</button><button class="btn btn--secondary" type="button" id="citation-download" disabled>Unduh .txt</button><button class="btn btn--secondary" type="button" id="citation-bibtex" disabled>Ekspor BibTeX</button></div>
+			<div class="pane-actions"><button class="btn btn--secondary" type="button" id="citation-copy-all" disabled data-i18n="workspace.sitasi.copyAll">{dict.id.copyAll}</button><button class="btn btn--secondary" type="button" id="citation-download" disabled data-i18n="workspace.sitasi.download">{dict.id.download}</button><button class="btn btn--secondary" type="button" id="citation-bibtex" disabled data-i18n="workspace.sitasi.bibtex">{dict.id.bibtex}</button></div>
 		</div>
 	</div>
 	<p id="citation-error" class="field-error" role="alert" hidden></p>
@@ -35,6 +36,9 @@
 </div>
 
 <script>
+	import { tr, WorkspaceError, workspaceErrorMessage } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import { copyText } from '../../lib/clipboard';
 	import { downloadText } from '../../lib/download';
 	import { citation, bibtex, orderedEntries, readEntries, validateEntry, type Entry, type Style } from './citation';
@@ -46,29 +50,29 @@
 	const status = document.querySelector<HTMLElement>('#citation-status')!;
 	const key = 'toolsman-sitasi-v1';
 	let entries: Entry[] = [];
-	const showError = (message: string) => { error.textContent = message; error.hidden = false; };
+	const showError = (message: () => string) => { localizedText(error, message); error.hidden = false; };
 	const addAuthor = () => {
-		if (authors.children.length >= 200) { showError('Maksimal 200 penulis per sumber.'); return; }
+		if (authors.children.length >= 200) { showError(() => tr(dict, 'maxAuthors')); return; }
 		const row = document.createElement('div');
 		row.className = 'citation-author';
-		for (const [field, text] of [['first', 'Nama depan'], ['last', 'Nama belakang']] as const) {
+		for (const [field, text] of [['first', 'firstName'], ['last', 'lastName']] as const) {
 			const label = document.createElement('label');
 			label.className = 'field-label';
-			label.textContent = text;
+			const span = document.createElement('span'); localizedText(span, () => tr(dict, text)); label.append(span);
 			const input = document.createElement('input');
 			input.className = 'field-input'; input.dataset.author = field; input.maxLength = 200;
 			label.append(input); row.append(label);
 		}
 		const remove = document.createElement('button');
-		remove.type = 'button'; remove.className = 'btn btn--ghost'; remove.textContent = 'Hapus penulis';
+		remove.type = 'button'; remove.className = 'btn btn--ghost'; localizedText(remove, () => tr(dict, 'removeAuthor'));
 		remove.addEventListener('click', () => { row.remove(); document.querySelector<HTMLButtonElement>('#citation-add-author')!.focus(); });
 		row.append(remove); authors.append(row);
 		row.querySelector('input')!.focus();
 	};
 	const sorted = () => orderedEntries(entries, style.value as Style);
 	const allText = () => sorted().map((e, i) => citation(e, style.value as Style, i + 1).text).join('\n\n');
-	const copy = async (text: string) => { status.textContent = await copyText(text) ? 'Sitasi disalin.' : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.'; };
-	const save = () => { try { localStorage.setItem(key, JSON.stringify(entries)); } catch { showError('Daftar belum tersimpan. Penyimpanan browser penuh atau diblokir; unduh cadangan kamu.'); } };
+	const copy = async (text: string, plainFallback = false) => { const copied = await copyText(text); localizedText(status, () => tr(dict, plainFallback ? (copied ? 'plainFallback' : 'plainFailed') : (copied ? 'copied' : 'copyFailed'))); };
+	const save = () => { try { localStorage.setItem(key, JSON.stringify(entries)); } catch { showError(() => tr(dict, 'saveFailed')); } };
 	const render = () => {
 		list.replaceChildren();
 		document.getElementById('citation-empty')!.hidden = entries.length > 0;
@@ -77,17 +81,17 @@
 			const result = citation(entry, style.value as Style, i + 1);
 			const item = document.createElement('section'); item.className = 'citation-entry';
 			const preview = document.createElement('p'); preview.innerHTML = result.html;
-			const inline = document.createElement('p'); inline.textContent = `Dalam teks: ${result.inText}`;
+			const inline = document.createElement('p'); inline.textContent = tr(dict, 'inText', { citation: result.inText });
 			item.append(preview, inline);
 			const button = (text: string, action: () => void) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn--secondary'; b.textContent = text; b.addEventListener('click', action); item.append(b); };
-			button('Salin teks', () => void copy(result.text));
-			button('Salin dengan format', () => { void (async () => {
+			button(tr(dict, 'copyText'), () => void copy(result.text));
+			button(tr(dict, 'copyRich'), () => { void (async () => {
 				try {
 					await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([result.html], { type: 'text/html' }), 'text/plain': new Blob([result.text], { type: 'text/plain' }) })]);
-					status.textContent = 'Sitasi berformat disalin.';
-				} catch { await copy(result.text); status.textContent += ' Jika format tidak didukung, teks biasa dipakai.'; }
+					localizedText(status, () => tr(dict, 'richCopied'));
+				} catch { await copy(result.text, true); }
 			})(); });
-			button('Hapus sumber', () => { entries = entries.filter((e) => e.id !== entry.id); save(); render(); style.focus(); });
+			button(tr(dict, 'removeSource'), () => { entries = entries.filter((e) => e.id !== entry.id); save(); render(); style.focus(); });
 			list.append(item);
 		});
 	};
@@ -96,24 +100,25 @@
 	type.addEventListener('change', () => {
 		document.getElementById('citation-journal')!.hidden = type.value !== 'journal';
 		document.getElementById('citation-access-field')!.hidden = type.value !== 'web';
-		document.getElementById('citation-publisher-label')!.textContent = type.value === 'journal' ? 'Nama jurnal' : type.value === 'web' ? 'Nama situs (kosongkan jika sama dengan penulis)' : 'Penerbit';
+		localizedText(document.getElementById('citation-publisher-label'), () => tr(dict, type.value === 'journal' ? 'journalName' : type.value === 'web' ? 'siteName' : 'publisher'));
 	});
 	form.addEventListener('submit', (event) => {
 		event.preventDefault(); error.hidden = true;
 		try {
-			if (entries.length >= 500) throw new Error('Daftar penuh. Unduh cadangan, lalu hapus sumber yang tidak diperlukan.');
+			if (entries.length >= 500) throw new WorkspaceError(dict, 'full');
 			const data = Object.fromEntries(new FormData(form)) as Record<string, string>;
 			const people = Array.from(authors.children).map((row) => ({ first: row.querySelector<HTMLInputElement>('[data-author="first"]')!.value.trim(), last: row.querySelector<HTMLInputElement>('[data-author="last"]')!.value.trim() }));
-			if (people.some((a) => a.first && !a.last)) throw new Error('Isi nama belakang penulis, atau pindahkan nama tunggal ke kolom nama belakang.');
+			if (people.some((a) => a.first && !a.last)) throw new WorkspaceError(dict, 'authorError');
 			const entry: Entry = { id: crypto.randomUUID(), type: type.value as Entry['type'], authors: people.filter((a) => a.last), year: data.year.trim(), title: data.title.trim(), publisher: data.publisher.trim(), volume: type.value === 'journal' ? data.volume.trim() : '', issue: type.value === 'journal' ? data.issue.trim() : '', pages: type.value === 'journal' ? data.pages.trim() : '', doi: data.doi.trim(), url: data.url.trim(), accessed: type.value === 'web' ? data.accessed : '' };
-			validateEntry(entry); entries.push(entry); save(); render(); status.textContent = 'Sumber ditambahkan. Kamu bisa menambah sumber berikutnya.';
-		} catch (problem) { showError(problem instanceof Error ? problem.message : 'Data belum bisa diolah. Periksa isian kamu.'); }
+			validateEntry(entry); entries.push(entry); save(); render(); localizedText(status, () => tr(dict, 'added'));
+		} catch (problem) { showError(() => workspaceErrorMessage(problem, tr(dict, 'fallback'))); }
 	});
 	style.addEventListener('change', render);
 	document.getElementById('citation-copy-all')!.addEventListener('click', () => void copy(allText()));
 	document.getElementById('citation-download')!.addEventListener('click', () => downloadText('daftar-pustaka.txt', allText(), 'text/plain;charset=utf-8'));
 	document.getElementById('citation-bibtex')!.addEventListener('click', () => downloadText('referensi.bib', sorted().map((e, i) => bibtex(e, i + 1)).join('\n\n'), 'text/plain;charset=utf-8'));
-	try { const raw = localStorage.getItem(key); if (raw) entries = readEntries(raw); } catch { showError('Daftar tersimpan tidak bisa dibaca. Data lama tidak dihapus; periksa penyimpanan browser kamu.'); }
+	try { const raw = localStorage.getItem(key); if (raw) entries = readEntries(raw); } catch { showError(() => tr(dict, 'loadFailed')); }
+	document.addEventListener('lang:change', render);
 	addAuthor(); render();
 </script>
 
