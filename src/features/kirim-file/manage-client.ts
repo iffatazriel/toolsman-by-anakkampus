@@ -16,7 +16,7 @@ const confirmButton = node('confirm-delete') as HTMLButtonElement;
 const dialog = node('confirm') as HTMLDialogElement;
 const notifyButton = node('notify') as HTMLButtonElement;
 let previous: ManageSnapshot | null = null;
-let optedIn = false, stopped = false, busy = false;
+let optedIn = false, stopped = false, suspended = false, busy = false;
 let pollTimer: ReturnType<typeof setTimeout>;
 let controller: AbortController | null = null;
 
@@ -56,7 +56,7 @@ async function call(method: 'POST' | 'DELETE') {
 }
 
 async function refresh() {
-	if (stopped || busy || document.hidden) return;
+	if (stopped || suspended || busy || document.hidden) return;
 	clearTimeout(pollTimer); busy = true; deleteButton.disabled = true;
 	try {
 		const response = await call('POST');
@@ -74,7 +74,7 @@ async function refresh() {
 	} finally {
 		busy = false; controller = null;
 		deleteButton.disabled = stopped || !previous || previous.status === 'deleted';
-		if (!stopped && !document.hidden) pollTimer = setTimeout(() => void refresh(), 20_000);
+		if (!stopped && !suspended && !document.hidden) pollTimer = setTimeout(() => void refresh(), 20_000);
 	}
 }
 
@@ -124,5 +124,19 @@ document.addEventListener('visibilitychange', () => {
 	clearTimeout(pollTimer);
 	if (document.hidden) { if (!dialog.open) controller?.abort(); } else void refresh();
 });
-const tickTimer = setInterval(countdown, 1000);
-window.addEventListener('pagehide', () => { stopped = true; clearTimeout(pollTimer); clearInterval(tickTimer); controller?.abort(); });
+let tickTimer: ReturnType<typeof setInterval> | null = setInterval(countdown, 1000);
+window.addEventListener('pagehide', () => {
+	suspended = true;
+	clearTimeout(pollTimer);
+	if (tickTimer !== null) clearInterval(tickTimer);
+	tickTimer = null;
+	controller?.abort();
+});
+window.addEventListener('pageshow', (event) => {
+	if (!event.persisted) return;
+	suspended = false;
+	if (stopped) return;
+	countdown();
+	if (tickTimer === null) tickTimer = setInterval(countdown, 1000);
+	void refresh();
+});
