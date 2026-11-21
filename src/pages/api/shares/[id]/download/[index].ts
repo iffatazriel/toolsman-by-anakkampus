@@ -122,6 +122,9 @@ export const POST: APIRoute = async ({ params, request }) => {
 				dispose(upstream);
 				return new Response('Batas unduhan berkas ini sudah habis.', { status: 410 });
 			}
+		} else {
+			await env.DB.prepare('UPDATE share_files SET downloads = downloads + 1 WHERE share_id = ? AND object_key = ?')
+				.bind(id, file.object_key).run();
 		}
 
 		// Kuota tiap berkas sudah dijaga di atas. Kalau pencatatan ringkasan

@@ -15,10 +15,15 @@ interface BatchResult {
 
 async function removeExpiredBatch(env: CleanupEnv, now: number): Promise<BatchResult> {
 	const { results } = await env.DB.prepare(
-		"SELECT id FROM shares WHERE status != 'deleted' AND expires_at <= ? LIMIT ?",
+		`SELECT id, expires_at FROM shares
+		 WHERE (status != 'deleted' AND expires_at <= ?)
+		    OR (status = 'deleted' AND EXISTS (
+		      SELECT 1 FROM share_files f WHERE f.share_id = shares.id
+		      AND (f.purged = 0 OR f.upload_id IS NOT NULL OR shares.expires_at <= ?)
+		    )) LIMIT ?`,
 	)
-		.bind(now, BATCH)
-		.all<{ id: string }>();
+		.bind(now, now, BATCH)
+		.all<{ id: string; expires_at: number }>();
 
 	let removed = 0;
 
@@ -53,6 +58,11 @@ async function removeExpiredBatch(env: CleanupEnv, now: number): Promise<BatchRe
 			await env.DB.prepare("UPDATE shares SET status = 'deleted' WHERE id = ?")
 				.bind(share.id)
 				.run();
+			if (share.expires_at > now) {
+				await env.DB.prepare('UPDATE share_files SET purged = 1, upload_id = NULL WHERE share_id = ?').bind(share.id).run();
+				removed += 1;
+				continue;
+			}
 			await env.DB.prepare('DELETE FROM upload_parts WHERE share_id = ?').bind(share.id).run();
 			await env.DB.prepare('DELETE FROM share_files WHERE share_id = ?').bind(share.id).run();
 			await env.DB.prepare('DELETE FROM reports WHERE share_id = ?').bind(share.id).run();

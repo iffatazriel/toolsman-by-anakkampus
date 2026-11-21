@@ -56,8 +56,6 @@ export const POST: APIRoute = async ({ params }) => {
 	if (!check.ok) {
 		try {
 			await env.DB.prepare("UPDATE shares SET status = 'deleted' WHERE id = ?").bind(id).run();
-			await env.DB.prepare('DELETE FROM share_files WHERE share_id = ?').bind(id).run();
-			await env.DB.prepare('DELETE FROM upload_parts WHERE share_id = ?').bind(id).run();
 		} catch {
 			/* cron akan membersihkan sisa baris kalau ini gagal */
 		}
@@ -65,14 +63,14 @@ export const POST: APIRoute = async ({ params }) => {
 		return Response.json(
 			{
 				error:
-					'Unggahan tidak lengkap atau ukurannya tidak cocok. Berkas sudah dihapus, silakan unggah ulang.',
+					'Unggahan tidak lengkap atau ukurannya tidak cocok. Link dinonaktifkan dan sisa berkas akan dibersihkan otomatis. Silakan unggah ulang.',
 			},
 			{ status: 409 },
 		);
 	}
 
 	try {
-		await env.DB.prepare('UPDATE shares SET status = ? WHERE id = ?').bind('ready', id).run();
+		await env.DB.prepare("UPDATE shares SET status = ? WHERE id = ? AND status != 'deleted' AND takedown_at IS NULL").bind('ready', id).run();
 	} catch {
 		return new Response('Gagal menyelesaikan unggahan.', { status: 500 });
 	}

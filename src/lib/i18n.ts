@@ -294,6 +294,7 @@ export const toolText: Record<string, Record<Lang, ToolText>> = {
 				'Pick files and choose an expiry.',
 				'Add a password or one-time download if needed.',
 				'Upload and share the link or QR code. Failed chunks resume from the last part.',
+				'Keep your private management link to check downloads or delete early. Saved links stay in this browser.',
 			],
 		},
 		id: {
@@ -305,6 +306,7 @@ export const toolText: Record<string, Record<Lang, ToolText>> = {
 				'Tekan Unggah dan buat link, lalu salin link atau tunjukkan QR-nya ke penerima.',
 				'Berkas dan link dihapus otomatis saat masa berlakunya habis.',
 				'Berkas di atas 8 MB diunggah per bagian. Kalau koneksi putus, tekan Ulangi unggahan dan proses lanjut dari bagian terakhir.',
+				'Simpan link kelola untuk melihat unduhan atau menghapus lebih awal. Daftar kiriman tersimpan di browser ini.',
 			],
 		},
 	},
