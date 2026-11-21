@@ -194,6 +194,10 @@ export interface ToolText {
 }
 
 export const toolText: Record<string, Record<Lang, ToolText>> = {
+	'curl-ke-kode': {
+		id: { name: 'cURL ke Kode', tagline: 'Ubah perintah cURL menjadi JavaScript Fetch atau Axios tanpa menjalankan request atau mengirim kredensial kamu.', usage: ['Tempel satu perintah cURL.', 'Pilih Fetch atau Axios, lalu baca peringatan hasil konversi.', 'Salin kode dan ganti placeholder sebelum menjalankannya.'] },
+		en: { name: 'cURL to Code', tagline: 'Convert cURL commands to JavaScript Fetch or Axios without executing requests or sending your credentials.', usage: ['Paste a single cURL command.', 'Choose Fetch or Axios and review conversion warnings.', 'Copy the code and replace placeholders before running it.'] },
+	},
 	'bilangan-subnet': {
 		id: { name: 'Bilangan & Subnet', tagline: 'Konversi bilangan besar antarbasis dengan BigInt, lihat komplemen dua, dan hitung atau bagi subnet IPv4.', usage: ['Pilih tab bilangan atau subnet IPv4.', 'Isi bilangan dan basis, atau IPv4 dengan CIDR atau mask.', 'Salin hasil konversi atau daftar subnet.'] },
 		en: { name: 'Numbers & Subnets', tagline: 'Convert large integers with BigInt, inspect two’s complement, and calculate or split IPv4 subnets.', usage: ['Choose number conversion or IPv4 subnets.', 'Enter a number and base, or IPv4 with CIDR or a subnet mask.', 'Copy conversions or the subnet list.'] },
