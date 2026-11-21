@@ -16,7 +16,7 @@ const algorithms = hashAlgorithms;
 						<span data-i18n="workspace.hash.text">{dict.id.text}</span>
 					</button>
 					<button type="button" class="segmented__btn" data-hash-mode="file" aria-pressed="false">
-							<span data-i18n="workspace.hash.file">{dict.id.file}</span>
+						<span data-i18n="workspace.hash.file">{dict.id.file}</span>
 					</button>
 				</div>
 			</div>
@@ -42,7 +42,7 @@ const algorithms = hashAlgorithms;
 				<div>
 					<label class="field-label" for="hash-algorithm" data-i18n="workspace.hash.algorithm">{dict.id.algorithm}</label>
 					<select class="field-input" id="hash-algorithm">
-						{algorithms.map((algorithm) => <option value={algorithm.id}>{algorithm.label}</option>)}
+						{algorithms.map((algorithm) => <option value={algorithm.id} data-i18n={algorithm.id === 'SHA-1' ? 'workspace.hash.legacy' : undefined}>{algorithm.label}</option>)}
 					</select>
 				</div>
 				<div>

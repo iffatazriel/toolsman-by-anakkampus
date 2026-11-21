@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { currentLang, defineWorkspaceDictionary, registerWorkspaceDictionary, setCurrentLang, t, tr, type WorkspaceDictionary } from './i18n';
+import { explainCron, previewCron } from '../features/cron/cron';
+import { stripJpegMetadata, stripPngMetadata, stripMetadata } from '../features/hapus-exif/strip';
 
 const dictionaries = import.meta.glob<{ default: WorkspaceDictionary }>('../features/*/i18n.ts', { eager: true });
 afterEach(() => { vi.unstubAllGlobals(); setCurrentLang('id'); });
@@ -12,6 +14,20 @@ describe('workspace dictionaries', () => {
 		const dict = defineWorkspaceDictionary({ value: 'Hasil {n}' }, { value: 'Result {n}' });
 		expect(tr(dict, 'value', { n: 2 })).toBe('Result 2');
 		setCurrentLang('id'); expect(tr(dict, 'value', { n: 2 })).toBe('Hasil 2');
+	});
+	it('localizes cron explanations and errors while keeping Indonesian as the pure helper default', () => {
+		expect(explainCron('0 9 * * 1-5', 'en')).toBe('Runs every weekday at 09:00.');
+		expect(explainCron('0 9 * * 0', 'en')).toBe('Runs every Sunday at 09:00.');
+		expect(explainCron('0 0 1 1 *', 'en')).toBe('Runs on day 1 of January at 00:00.');
+		expect(explainCron('0 9 * * *')).toBe('Jadwal berjalan setiap hari pukul 09.00.');
+		expect(previewCron('', 'UTC', 5, new Date('2026-01-01'), 'en')).toEqual({ ok: false, error: 'A cron expression must have 5 fields.' });
+		expect(previewCron('wrong * * * *', 'UTC', 5, new Date('2026-01-01'), 'en')).toEqual({ ok: false, error: 'Invalid expression or time zone. Check each field.' });
+	});
+	it('exposes stable translation keys for invalid and empty image inputs', () => {
+		const bytes = new Uint8Array();
+		expect(stripJpegMetadata(bytes).errorKey).toBe('notJpeg');
+		expect(stripPngMetadata(bytes).errorKey).toBe('notPng');
+		expect(stripMetadata(bytes).errorKey).toBe('unsupported');
 	});
 	it('requires identical ID/EN keys, nonempty values and matching interpolation variables for every dictionary', () => {
 		expect(Object.keys(dictionaries).length).toBeGreaterThanOrEqual(2);
@@ -39,8 +55,9 @@ describe('workspace dictionaries', () => {
 		// @ts-expect-error Dynamic messages must use a known dictionary key.
 		tr(dict, 'missing');
 	});
-	it('finds no remaining Indonesian copy candidates in the two migrated workspaces', () => {
-		const output = execFileSync(process.execPath, ['scripts/workspace-i18n-audit.mjs', '--check', 'teks', 'format-kode'], { encoding: 'utf8' });
-		expect(output).toContain('teks: 0'); expect(output).toContain('format-kode: 0');
+	it('finds no remaining Indonesian copy candidates in migrated workspaces', () => {
+		const slugs = Object.keys(dictionaries).map((path) => path.split('/').at(-2)!);
+		const output = execFileSync(process.execPath, ['scripts/workspace-i18n-audit.mjs', '--check', ...slugs], { encoding: 'utf8' });
+		for (const slug of slugs) expect(output).toContain(`${slug}: 0`);
 	});
 });

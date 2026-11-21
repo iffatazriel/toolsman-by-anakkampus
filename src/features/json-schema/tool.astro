@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 ---
 
 <div class="tool-shell schema-shell">
@@ -18,7 +19,7 @@
 			<div class="pane__head">
 				<h2 class="pane__title">Data</h2>
 			</div>
-			<label class="sr-only" for="schema-data">Data JSON</label>
+			<label class="sr-only" for="schema-data" data-i18n="workspace.json-schema.data">{dict.id.data}</label>
 			<textarea id="schema-data" class="code-area code-area--schema" spellcheck="false"></textarea>
 			<div class="alert" id="data-error" role="alert" hidden>
 				<p id="data-error-text"></p>
@@ -36,26 +37,24 @@
 				<option value="4">Draft 4</option>
 			</select>
 		</div>
-		<button type="button" class="btn btn--secondary" id="schema-example">Muat contoh</button>
-		<button type="button" class="btn btn--primary" id="schema-validate">Validasi</button>
+		<button type="button" class="btn btn--secondary" id="schema-example" data-i18n="workspace.json-schema.example">{dict.id.example}</button>
+		<button type="button" class="btn btn--primary" id="schema-validate" data-i18n="workspace.json-schema.validate">{dict.id.validate}</button>
 	</div>
 
 	<div class="pane schema-result">
 		<div class="pane__head">
-			<h2 class="pane__title">Hasil</h2>
+			<h2 class="pane__title" data-i18n="workspace.json-schema.result">{dict.id.result}</h2>
 			<span class="badge" id="schema-status" hidden></span>
 		</div>
-		<p class="field-hint" id="schema-summary" role="status" aria-live="polite">
-			Tekan Validasi untuk memeriksa data.
-		</p>
+		<p class="field-hint" id="schema-summary" role="status" aria-live="polite" data-i18n="workspace.json-schema.initial">{dict.id.initial}</p>
 		<ul class="schema-issues" id="schema-issues"></ul>
-		<p class="preview-empty" id="schema-empty" hidden>
-			Tidak ada masalah. Data sesuai schema.
-		</p>
+		<p class="preview-empty" id="schema-empty" hidden data-i18n="workspace.json-schema.empty">{dict.id.empty}</p>
 	</div>
 </div>
 
 <script>
+	import { currentLang, tr } from '../../lib/i18n';
+	import dict from './i18n';
 	import { validateJsonSchema, type SchemaDraftId } from './schema-validator';
 
 	const schemaInput = document.getElementById('schema-input') as HTMLTextAreaElement | null;
@@ -139,19 +138,21 @@
 		};
 
 		const validate = () => {
+			summary.removeAttribute('data-i18n');
 			clearErrors();
 			const result = validateJsonSchema(
 				schemaInput.value,
 				dataInput.value,
 				draft.value as SchemaDraftId,
+				currentLang(),
 			);
 
 			if (!result.ok) {
-				setStatus('fail', 'Gagal');
+				setStatus('fail', tr(dict, 'fail'));
 				showIssues([]);
 				empty.hidden = true;
 				summary.textContent =
-					result.kind === 'schema' ? 'Schema belum bisa dibaca.' : 'Data belum bisa dibaca.';
+					tr(dict, result.kind === 'schema' ? 'schemaUnreadable' : 'dataUnreadable');
 
 				if (result.kind === 'schema') {
 					schemaError.hidden = false;
@@ -171,17 +172,17 @@
 			dataInput.removeAttribute('aria-invalid');
 
 			if (result.valid) {
-				setStatus('pass', 'Valid');
+				setStatus('pass', tr(dict, 'valid'));
 				showIssues([]);
 				empty.hidden = false;
-				summary.textContent = 'Data sesuai schema.';
+				summary.textContent = tr(dict, 'matches');
 				return;
 			}
 
-			setStatus('fail', 'Tidak valid');
+			setStatus('fail', tr(dict, 'invalid'));
 			showIssues(result.issues);
 			empty.hidden = true;
-			summary.textContent = `${result.issues.length} masalah ditemukan.`;
+			summary.textContent = tr(dict, 'issues', { n: result.issues.length });
 		};
 
 		const schedule = () => {
@@ -202,6 +203,7 @@
 
 		schemaInput.value = exampleSchema;
 		dataInput.value = exampleData;
+		document.addEventListener('lang:change', validate);
 		validate();
 	}
 </script>

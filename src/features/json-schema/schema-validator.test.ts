@@ -29,6 +29,15 @@ describe('pathFromInstance', () => {
 });
 
 describe('friendlyMessage', () => {
+	it.each([
+		['required', 'Missing "nama"', 'Required property "nama" is missing.'],
+		['type', 'Instance type "number" is invalid. Expected "string".', 'Expected string, not number.'],
+		['minLength', 'String is too short (1 < 2).', 'At least 2 characters required; got 1.'],
+		['additionalProperties', 'Property "extra"', 'Property "extra" is not allowed.'],
+		['unknown', '', 'Value does not match the schema rule.'],
+	])('localizes %s without translating property names or technical types', (keyword, error, expected) => {
+		expect(friendlyMessage(keyword!, error!, 'en')).toBe(expected);
+	});
 	it('menerjemahkan pesan umum ke bahasa Indonesia', () => {
 		expect(friendlyMessage('required', 'Instance does not have required property "email".')).toBe(
 			'Properti wajib "email" belum ada.',
@@ -52,6 +61,14 @@ describe('friendlyMessage', () => {
 });
 
 describe('validateJsonSchema', () => {
+	it('supports English success, empty input, parse and schema compilation errors', () => {
+		expect(validateJsonSchema('{}', '{}', '2020-12', 'en')).toEqual({ ok: true, valid: true, issues: [] });
+		for (const [schemaText, dataText] of [['', '{}'], ['{}', '{'], ['1', '{}'], ['{"$ref":"https://example.invalid/schema"}', '{}']]) {
+			const result = validateJsonSchema(schemaText!, dataText!, '2020-12', 'en');
+			expect(result.ok).toBe(false);
+			if (!result.ok) expect(result.error).not.toMatch(/baris|kolom|harus|tidak|belum/);
+		}
+	});
 	it('menerima data yang sesuai schema', () => {
 		const result = validateJsonSchema(
 			JSON.stringify({ type: 'object', required: ['nama'], properties: { nama: { type: 'string' } } }),

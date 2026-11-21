@@ -1,5 +1,7 @@
 # Workspace translations
 
+For text already on screen, `localizedText(element, () => tr(dict, 'key', vars))` from `i18n-client` keeps a live binding without rerunning processing. Bind an empty-string callback when clearing a message. Bind only text-only elements; use a child span when preserving a spinner. Static image descriptions use `data-i18n-alt`. Dropzone accepts `labelKey` and `hintKey` alongside its Indonesian `label` and `hint` props.
+
 Each migrated feature has `src/features/<slug>/i18n.ts`. Export a default
 `defineWorkspaceDictionary(id, en)` from `src/lib/i18n.ts`; the ID object defines
 the keys and TypeScript requires exactly those keys in EN. Keep values flat.
