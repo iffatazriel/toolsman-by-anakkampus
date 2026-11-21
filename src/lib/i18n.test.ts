@@ -17,6 +17,7 @@ const slugs = [
 	'teks',
 	'format-kode',
 	'sitasi',
+	'kalkulator-ipk',
 	'hapus-exif',
 	'cron',
 	'code-to-image',

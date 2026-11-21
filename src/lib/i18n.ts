@@ -194,6 +194,10 @@ export interface ToolText {
 }
 
 export const toolText: Record<string, Record<Lang, ToolText>> = {
+	'kalkulator-ipk': {
+		id: { name: 'Kalkulator IPK', tagline: 'Hitung IPS per semester, IPK kumulatif, dan rata-rata nilai yang kamu perlukan untuk mengejar target IPK.', usage: ['Pilih skala nilai kampus kamu dan sesuaikan bobot jika perlu.', 'Tambahkan semester, mata kuliah, SKS, dan nilai.', 'Periksa IPS, IPK, dan target. Ekspor JSON untuk cadangan.'] },
+		en: { name: 'GPA Calculator', tagline: 'Calculate semester and cumulative GPA, and the average grade needed to reach your target.', usage: ['Choose your grading scale and adjust grade points if needed.', 'Add semesters, courses, credits, and grades.', 'Review GPA and your target. Export JSON for a backup.'] },
+	},
 	sitasi: {
 		id: { name: 'Generator Sitasi', tagline: 'Susun daftar pustaka APA 7 atau IEEE dari buku, jurnal, dan halaman web. Simpan di browser dan ekspor BibTeX.', usage: ['Pilih gaya, jenis sumber, dan isi data penulis.', 'Tambahkan sumber dan periksa sitasi serta contoh kutipan dalam teks.', 'Salin daftar, unduh teks, atau ekspor BibTeX.'] },
 		en: { name: 'Citation Generator', tagline: 'Build APA 7 or IEEE references for books, journal articles, and web pages. Save locally and export BibTeX.', usage: ['Choose a style and source type, then enter author details.', 'Add sources and review references and in-text examples.', 'Copy the list, download text, or export BibTeX.'] },
