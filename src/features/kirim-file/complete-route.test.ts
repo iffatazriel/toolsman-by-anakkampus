@@ -7,14 +7,22 @@ import { POST } from '../../pages/api/shares/[id]/complete';
 import { deleteObject, headObject } from './r2';
 
 const ID = 'a'.repeat(32);
-let status: string, statements: string[];
+let status: string, statements: string[], takedownAt: number | null, failUpdate: boolean;
+let files: { object_key: string; name: string; size: number }[];
 beforeEach(() => {
 	vi.resetAllMocks(); vi.spyOn(console, 'error').mockImplementation(() => undefined);
 	vi.mocked(headObject).mockResolvedValue(10); status = 'uploading'; statements = [];
+	takedownAt = null; failUpdate = false; files = [{ object_key: 'key', name: 'a', size: 10 }];
 	state.env = { DB: { prepare(sql: string) {
 		statements.push(sql);
-		const statement = { bind() { return statement; }, async first() { return { status, expires_at: Date.now() + 10000 }; }, async all() { return { results: [{ object_key: 'key', name: 'a', size: 10 }] }; }, async run() {
-			if (sql.startsWith('UPDATE shares SET status = ?') && (!sql.includes("status != 'deleted'") || status !== 'deleted')) status = 'ready';
+		const statement = { bind() { return statement; }, async first() {
+			if (sql.startsWith('UPDATE shares SET status = ?')) {
+				if (failUpdate) throw new Error('D1 unavailable');
+				if (status === 'deleted' || takedownAt !== null) return null;
+				status = 'ready'; return { id: ID };
+			}
+			return { status, expires_at: Date.now() + 10000, takedown_at: takedownAt };
+		}, async all() { return { results: files }; }, async run() {
 			if (sql.startsWith("UPDATE shares SET status = 'deleted'")) status = 'deleted';
 			return {};
 		} }; return statement;
@@ -26,7 +34,22 @@ describe('complete dan penghapusan pengirim', () => {
 	it('tetap menyelesaikan unggahan normal', async () => { expect((await POST({ params: { id: ID } } as never)).status).toBe(200); expect(status).toBe('ready'); });
 	it('tidak mengaktifkan kembali kiriman yang dihapus saat pengecekan R2', async () => {
 		vi.mocked(headObject).mockImplementation(async () => { status = 'deleted'; return 10; });
-		await POST({ params: { id: ID } } as never); expect(status).toBe('deleted');
+		const response = await POST({ params: { id: ID } } as never);
+		expect(response.status).toBe(410); expect(status).toBe('deleted');
+		await expect(response.json()).resolves.toEqual({ error: 'Kiriman sudah dihapus atau dinonaktifkan. Buat kiriman baru untuk mengunggah ulang.' });
+		expect(statements.some((sql) => sql.includes("status != 'deleted'") && sql.includes('takedown_at IS NULL RETURNING id'))).toBe(true);
+	});
+	it('menolak kiriman yang dinonaktifkan saat pengecekan R2', async () => {
+		vi.mocked(headObject).mockImplementation(async () => { takedownAt = Date.now(); return 10; });
+		expect((await POST({ params: { id: ID } } as never)).status).toBe(410); expect(status).toBe('uploading');
+	});
+	it('tidak menyelesaikan daftar berkas kosong', async () => {
+		files = [];
+		expect((await POST({ params: { id: ID } } as never)).status).toBe(409); expect(headObject).not.toHaveBeenCalled(); expect(status).toBe('uploading');
+	});
+	it('mengembalikan kegagalan server jika update D1 gagal', async () => {
+		failUpdate = true;
+		expect((await POST({ params: { id: ID } } as never)).status).toBe(500); expect(status).toBe('uploading');
 	});
 	it('verifikasi gagal dan R2 gagal hapus tidak membuang tracking', async () => {
 		vi.mocked(headObject).mockResolvedValue(null as never); vi.mocked(deleteObject).mockRejectedValue(new Error('R2 unavailable'));

@@ -695,17 +695,13 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				await uploadAll();
 				const active = session;
 				if (!active) throw new UploadError('Sesi unggah tidak siap.');
-				const completed = await fetch(`/api/shares/${active.id}/complete`, { method: 'POST' });
-				if (!completed.ok) {
-					throw new UploadError(
-						'Berkas sudah terkirim, tapi link belum selesai dibuat. Tekan Ulangi unggahan.',
-					);
-				}
+				await postJson(`/api/shares/${active.id}/complete`, {});
 				setStatus('');
 				retryable = false;
 				await showResult(active);
 				toast('Link siap dibagikan.', { tone: 'success' });
 			} catch (error) {
+				if (error instanceof UploadError && error.status === 410) resetSession();
 				retryable = session !== null;
 				states = states.map((state) => (state === 'uploading' ? 'idle' : state));
 				renderList();

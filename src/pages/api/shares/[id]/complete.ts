@@ -70,7 +70,10 @@ export const POST: APIRoute = async ({ params }) => {
 	}
 
 	try {
-		await env.DB.prepare("UPDATE shares SET status = ? WHERE id = ? AND status != 'deleted' AND takedown_at IS NULL").bind('ready', id).run();
+		const updated = await env.DB.prepare("UPDATE shares SET status = ? WHERE id = ? AND status != 'deleted' AND takedown_at IS NULL RETURNING id").bind('ready', id).first<{ id: string }>();
+		if (!updated) {
+			return Response.json({ error: 'Kiriman sudah dihapus atau dinonaktifkan. Buat kiriman baru untuk mengunggah ulang.' }, { status: 410 });
+		}
 	} catch {
 		return new Response('Gagal menyelesaikan unggahan.', { status: 500 });
 	}
