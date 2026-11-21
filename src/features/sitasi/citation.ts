@@ -1,3 +1,5 @@
+import { WorkspaceError } from '../../lib/i18n';
+import dict from './i18n';
 import { escapeHtml } from '../../lib/html';
 
 export interface Author { first: string; last: string }
@@ -22,11 +24,11 @@ const doiUrl = (s: string) => `https://doi.org/${s.trim().replace(/^(?:https?:\/
 const dateText = (s: string) => new Date(`${s}T00:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 
 export function validateEntry(e: Entry): void {
-	if (!e.title.trim()) throw new Error('Isi judul sumber kamu.');
-	if (e.year && !/^\d{4}$/.test(e.year)) throw new Error('Tahun harus berupa 4 angka atau dikosongkan.');
-	if (e.url && !/^https?:\/\/\S+$/i.test(e.url)) throw new Error('URL harus diawali https:// atau http://.');
-	if (e.doi && !/^10\.\d{4,9}\/\S+$/i.test(e.doi.trim().replace(/^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i, ''))) throw new Error('DOI harus seperti 10.1234/contoh.');
-	if (e.accessed && (!/^\d{4}-\d{2}-\d{2}$/.test(e.accessed) || Number.isNaN(Date.parse(e.accessed)) || new Date(e.accessed).toISOString().slice(0, 10) !== e.accessed)) throw new Error('Periksa tanggal akses kamu.');
+	if (!e.title.trim()) throw new WorkspaceError(dict, 'titleError');
+	if (e.year && !/^\d{4}$/.test(e.year)) throw new WorkspaceError(dict, 'yearError');
+	if (e.url && !/^https?:\/\/\S+$/i.test(e.url)) throw new WorkspaceError(dict, 'urlError');
+	if (e.doi && !/^10\.\d{4,9}\/\S+$/i.test(e.doi.trim().replace(/^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i, ''))) throw new WorkspaceError(dict, 'doiError');
+	if (e.accessed && (!/^\d{4}-\d{2}-\d{2}$/.test(e.accessed) || Number.isNaN(Date.parse(e.accessed)) || new Date(e.accessed).toISOString().slice(0, 10) !== e.accessed)) throw new WorkspaceError(dict, 'dateError');
 }
 
 export function citation(e: Entry, style: Style, number = 1): { html: string; text: string; inText: string } {
@@ -67,9 +69,9 @@ export function orderedEntries(entries: Entry[], style: Style): Entry[] {
 
 export function readEntries(raw: string): Entry[] {
 	const value: unknown = JSON.parse(raw);
-	if (!Array.isArray(value) || value.length > 500) throw new Error('Daftar sitasi tidak valid.');
+	if (!Array.isArray(value) || value.length > 500) throw new WorkspaceError(dict, 'listError');
 	for (const e of value) {
-		if (!e || !['book', 'journal', 'web'].includes(e.type) || !Array.isArray(e.authors) || e.authors.length > 200 || !e.authors.every((a: Author) => a && typeof a.first === 'string' && typeof a.last === 'string') || !['id', 'year', 'title', 'publisher', 'volume', 'issue', 'pages', 'doi', 'url', 'accessed'].every((key) => typeof e[key] === 'string')) throw new Error('Daftar sitasi tidak valid.');
+		if (!e || !['book', 'journal', 'web'].includes(e.type) || !Array.isArray(e.authors) || e.authors.length > 200 || !e.authors.every((a: Author) => a && typeof a.first === 'string' && typeof a.last === 'string') || !['id', 'year', 'title', 'publisher', 'volume', 'issue', 'pages', 'doi', 'url', 'accessed'].every((key) => typeof e[key] === 'string')) throw new WorkspaceError(dict, 'listError');
 		validateEntry(e);
 	}
 	return value;
