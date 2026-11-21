@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { allowRequest, clientIp } from '../../../../features/kirim-file/rate-limit';
 import { shareEnv } from '../../../../features/kirim-file/bindings';
 import { notifyAbuse } from '../../../../features/kirim-file/abuse-webhook';
+import { logEvent } from '../../../../lib/server-log';
 
 export const prerender = false;
 
@@ -22,7 +23,8 @@ export const POST: APIRoute = async ({ params, request }) => {
 	try {
 		const body = (await request.json()) as { reason?: unknown };
 		reason = typeof body.reason === 'string' ? body.reason.slice(0, 500) : '';
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.report_invalid_json', { request, shareId: id }, error);
 		reason = '';
 	}
 
@@ -32,7 +34,8 @@ export const POST: APIRoute = async ({ params, request }) => {
 			.bind(id)
 			.first<{ n: number }>();
 		fileCount = Number(row?.n ?? 0);
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.report_count_failed', { request, shareId: id }, error);
 		fileCount = 0;
 	}
 
@@ -42,7 +45,8 @@ export const POST: APIRoute = async ({ params, request }) => {
 		await env.DB.prepare('INSERT INTO reports (share_id, reason, created_at) VALUES (?, ?, ?)')
 			.bind(id, reason, now)
 			.run();
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.report_save_failed', { request, shareId: id }, error);
 		return Response.json({ error: 'Laporan gagal disimpan.' }, { status: 503 });
 	}
 
@@ -52,7 +56,7 @@ export const POST: APIRoute = async ({ params, request }) => {
 		fileCount,
 		reason,
 		reportedAt: now,
-	});
+	}, { request, shareId: id });
 
 	return Response.json({ ok: true });
 };
