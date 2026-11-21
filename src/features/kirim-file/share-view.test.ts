@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { viewShare } from './share-view';
+import { fileDownloadViews, viewShare } from './share-view';
 import { formatBytes, formatRemaining } from './format';
 
 describe('viewShare', () => {
@@ -26,6 +26,25 @@ describe('viewShare', () => {
 		expect(view.state).toBe('ok');
 		expect(view.remainingMs).toBe(90_000);
 	});
+});
+
+describe('fileDownloadViews', () => {
+	const id = 'a'.repeat(32);
+	const file = { name: 'tugas.pdf', size: 24, purged: 0, downloads: 0 };
+	it('routes ordinary unlimited downloads through the counted endpoint', () => {
+		expect(fileDownloadViews(id, [file, { ...file, name: 'catatan.txt' }], null)).toEqual([
+			{ name: 'tugas.pdf', size: 24, action: `/api/shares/${id}/download/0`, remaining: null },
+			{ name: 'catatan.txt', size: 24, action: `/api/shares/${id}/download/1`, remaining: null },
+		]);
+	});
+	it('uses the same endpoint and disables exhausted one-time files', () => {
+		expect(fileDownloadViews(id, [{ ...file, downloads: 1 }, { ...file, purged: 1 }, file], 1).map(({ action, remaining }) => ({ action, remaining }))).toEqual([
+			{ action: `/api/shares/${id}/download/0`, remaining: 0 },
+			{ action: `/api/shares/${id}/download/1`, remaining: 0 },
+			{ action: `/api/shares/${id}/download/2`, remaining: 1 },
+		]);
+	});
+	it('returns no download actions for an empty list', () => { expect(fileDownloadViews(id, [], null)).toEqual([]); });
 });
 
 describe('format', () => {

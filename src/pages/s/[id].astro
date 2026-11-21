@@ -2,9 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import Modal from '../../components/ui/Modal.astro';
 import type { ShareFileRow, ShareRow } from '../../features/kirim-file/db';
-import { presignDownload, hasR2Config } from '../../features/kirim-file/r2';
+import { hasR2Config } from '../../features/kirim-file/r2';
 import { shareAccess } from '../../features/kirim-file/share-access';
-import { viewShare } from '../../features/kirim-file/share-view';
+import { fileDownloadViews, viewShare } from '../../features/kirim-file/share-view';
 import { formatBytes, formatRemaining } from '../../features/kirim-file/format';
 import { shareEnv } from '../../features/kirim-file/bindings';
 import { verifyPassword } from '../../features/kirim-file/password';
@@ -79,33 +79,9 @@ if (env && row?.status === 'ready') {
 
 const access = shareAccess(row, fileRows, Date.now(), unlocked);
 
-interface FileView {
-	name: string;
-	size: number;
-	url: string | null;
-	downloadForm: boolean;
-	remaining: number | null;
-}
-
-const files: FileView[] =
+const files =
 	access === 'ok' && env && r2Ready
-		? await Promise.all(
-				fileRows.map(async (file) => {
-					const downloadForm = locked || maxDownloads !== null;
-					return {
-						name: file.name,
-						size: file.size,
-						downloadForm,
-						remaining:
-							maxDownloads === null
-								? null
-								: file.purged
-									? 0
-									: Math.max(0, maxDownloads - file.downloads),
-						url: downloadForm ? null : await presignDownload(env, file.object_key, file.name),
-					};
-				}),
-			)
+		? fileDownloadViews(id, fileRows, maxDownloads)
 		: [];
 
 if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
@@ -245,7 +221,7 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 						</p>
 					) : (
 						<ul class="share-page__list">
-							{files.map((file, index) => (
+							{files.map((file) => (
 								<li class="share-page__item">
 									<span>
 										{file.name}
@@ -255,15 +231,14 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 												` · ${file.remaining > 0 ? `sisa ${file.remaining} unduhan` : 'sudah diunduh'}`}
 										</span>
 									</span>
-									{file.downloadForm ? (
-										file.remaining === 0 ? (
+									{file.remaining === 0 ? (
 											<button type="button" class="btn btn--secondary" disabled>
 												Sudah diunduh
 											</button>
 										) : (
 											<form
 												method="post"
-												action={`/api/shares/${id}/download/${index}`}>
+												action={file.action}>
 												{password !== '' && (
 													<input type="hidden" name="password" value={password} />
 												)}
@@ -271,11 +246,6 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 													Unduh
 												</button>
 											</form>
-										)
-									) : (
-										<a class="btn btn--primary" href={file.url ?? '#'} rel="noreferrer">
-											Unduh
-										</a>
 									)}
 								</li>
 							))}
@@ -289,12 +259,6 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 									? 'Berkas ini hanya bisa diunduh sekali. Setelah diunduh, link hangus.'
 									: 'Tiap berkas hanya bisa diunduh sekali. Link hangus setelah semua berkas terunduh.'
 								: `Tiap berkas bisa diunduh sampai ${maxDownloads} kali.`}
-						</p>
-					)}
-
-					{files.length > 0 && !files[0]!.downloadForm && (
-						<p class="field-hint">
-							Tombol unduh berlaku 15 menit. Muat ulang halaman ini kalau sudah lewat.
 						</p>
 					)}
 
