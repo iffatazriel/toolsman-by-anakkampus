@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 import Tabs from '../../components/ui/Tabs.astro';
 
 const tabs = [
@@ -13,12 +14,12 @@ const tabs = [
 ---
 
 <div class="tool-shell">
-	<Tabs label="Pilihan utilitas" items={tabs}>
+	<Tabs label={dict.id.tabs} labelKey="workspace.utilitas.tabs" items={tabs}>
 		<div data-panel="base64" class="tool-panel">
 			<div class="pane-grid pane-grid--split">
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Masukan</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.input">{dict.id.input}</h2>
 						<div class="pane-actions">
 							<button type="button" class="btn btn--secondary" data-base64="encode">
 								Encode
@@ -28,28 +29,24 @@ const tabs = [
 							</button>
 						</div>
 					</div>
-					<label class="sr-only" for="base64-input">Teks atau Base64</label>
+					<label class="sr-only" for="base64-input" data-i18n="workspace.utilitas.textBase64">{dict.id.textBase64}</label>
 					<textarea
 						id="base64-input"
 						class="code-area"
 						spellcheck="false"
-						placeholder="Halo, dunia!"></textarea>
-					<p class="field-hint">
-						Decode menerima Base64 standar maupun URL-safe, dengan atau tanpa padding.
-					</p>
+						placeholder={dict.id.hello} data-i18n-placeholder="workspace.utilitas.hello"></textarea>
+					<p class="field-hint" data-i18n="workspace.utilitas.base64Hint">{dict.id.base64Hint}</p>
 					<div class="alert" id="base64-error" role="alert" hidden>
 						<p id="base64-error-text"></p>
 					</div>
 				</div>
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Hasil</h2>
-						<button type="button" class="btn btn--primary" id="base64-copy" disabled>
-							Salin
-						</button>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.output">{dict.id.output}</h2>
+						<button type="button" class="btn btn--primary" id="base64-copy" disabled data-i18n="workspace.utilitas.copy">{dict.id.copy}</button>
 					</div>
 					<pre class="code-block" id="base64-output" hidden><code id="base64-code"></code></pre>
-					<p class="preview-empty" id="base64-empty">Tekan Encode atau Decode.</p>
+					<p class="preview-empty" id="base64-empty" data-i18n="workspace.utilitas.binaryEmpty">{dict.id.binaryEmpty}</p>
 				</div>
 			</div>
 		</div>
@@ -58,7 +55,7 @@ const tabs = [
 			<div class="pane-grid pane-grid--split">
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Masukan</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.input">{dict.id.input}</h2>
 						<div class="pane-actions">
 							<button type="button" class="btn btn--secondary" data-url="encode">
 								Encode
@@ -68,28 +65,24 @@ const tabs = [
 							</button>
 						</div>
 					</div>
-					<label class="sr-only" for="url-input">Teks atau URL encoding</label>
+					<label class="sr-only" for="url-input" data-i18n="workspace.utilitas.textUrl">{dict.id.textUrl}</label>
 					<textarea
 						id="url-input"
 						class="code-area"
 						spellcheck="false"
 						placeholder="cari=pas foto &amp; ukuran=3x4"></textarea>
-					<p class="field-hint">
-						Encode mengubah seluruh karakter khusus. Untuk query utuh, encode tiap nilai saja.
-					</p>
+					<p class="field-hint" data-i18n="workspace.utilitas.urlHint">{dict.id.urlHint}</p>
 					<div class="alert" id="url-error" role="alert" hidden>
 						<p id="url-error-text"></p>
 					</div>
 				</div>
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Hasil</h2>
-						<button type="button" class="btn btn--primary" id="url-copy" disabled>
-							Salin
-						</button>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.output">{dict.id.output}</h2>
+						<button type="button" class="btn btn--primary" id="url-copy" disabled data-i18n="workspace.utilitas.copy">{dict.id.copy}</button>
 					</div>
 					<pre class="code-block" id="url-output" hidden><code id="url-code"></code></pre>
-					<p class="preview-empty" id="url-empty">Tekan Encode atau Decode.</p>
+					<p class="preview-empty" id="url-empty" data-i18n="workspace.utilitas.binaryEmpty">{dict.id.binaryEmpty}</p>
 				</div>
 			</div>
 		</div>
@@ -98,9 +91,9 @@ const tabs = [
 			<div class="pane-grid pane-grid--split">
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Token JWT</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.token">{dict.id.token}</h2>
 					</div>
-					<label class="sr-only" for="jwt-input">Token JWT</label>
+					<label class="sr-only" for="jwt-input" data-i18n="workspace.utilitas.token">{dict.id.token}</label>
 					<textarea
 						id="jwt-input"
 						class="code-area"
@@ -109,22 +102,18 @@ const tabs = [
 					<div class="alert" id="jwt-error" role="alert" hidden>
 						<p id="jwt-error-text"></p>
 					</div>
-					<p class="field-hint" id="jwt-expiry" role="status" aria-live="polite">
-						Header dan payload dibaca di browser. Tanda tangan tidak diverifikasi.
-					</p>
+					<p class="field-hint" id="jwt-expiry" role="status" aria-live="polite" data-i18n="workspace.utilitas.jwtNote">{dict.id.jwtNote}</p>
 				</div>
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Hasil</h2>
-						<button type="button" class="btn btn--primary" id="jwt-copy" disabled>
-							Salin JSON
-						</button>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.output">{dict.id.output}</h2>
+						<button type="button" class="btn btn--primary" id="jwt-copy" disabled data-i18n="workspace.utilitas.copyJson">{dict.id.copyJson}</button>
 					</div>
 					<h3 class="field-label">Header</h3>
 					<pre class="code-block code-block--short" id="jwt-header" hidden><code></code></pre>
 					<h3 class="field-label">Payload</h3>
 					<pre class="code-block code-block--short" id="jwt-payload" hidden><code></code></pre>
-					<p class="preview-empty" id="jwt-empty">Tempel token untuk membaca isinya.</p>
+					<p class="preview-empty" id="jwt-empty" data-i18n="workspace.utilitas.jwtEmpty">{dict.id.jwtEmpty}</p>
 				</div>
 			</div>
 		</div>
@@ -133,9 +122,9 @@ const tabs = [
 			<div class="pane-grid pane-grid--split">
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Jumlah</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.amount">{dict.id.amount}</h2>
 					</div>
-					<label class="field-label" for="uuid-count">Berapa UUID?</label>
+					<label class="field-label" for="uuid-count" data-i18n="workspace.utilitas.uuidCount">{dict.id.uuidCount}</label>
 					<input
 						class="field-input"
 						id="uuid-count"
@@ -145,23 +134,17 @@ const tabs = [
 						value="5"
 					/>
 					<div class="pane-actions">
-						<button type="button" class="btn btn--primary" id="uuid-generate">
-							Buat UUID
-						</button>
+						<button type="button" class="btn btn--primary" id="uuid-generate" data-i18n="workspace.utilitas.uuidGenerate">{dict.id.uuidGenerate}</button>
 					</div>
-					<p class="field-hint">
-						Dibuat dengan crypto.randomUUID, versi 4. Satu sampai 50 sekaligus.
-					</p>
+					<p class="field-hint" data-i18n="workspace.utilitas.uuidHint">{dict.id.uuidHint}</p>
 				</div>
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Hasil</h2>
-						<button type="button" class="btn btn--primary" id="uuid-copy" disabled>
-							Salin semua
-						</button>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.output">{dict.id.output}</h2>
+						<button type="button" class="btn btn--primary" id="uuid-copy" disabled data-i18n="workspace.utilitas.copyAll">{dict.id.copyAll}</button>
 					</div>
 					<pre class="code-block" id="uuid-output" hidden><code id="uuid-code"></code></pre>
-					<p class="preview-empty" id="uuid-empty">Belum ada UUID.</p>
+					<p class="preview-empty" id="uuid-empty" data-i18n="workspace.utilitas.uuidEmpty">{dict.id.uuidEmpty}</p>
 				</div>
 			</div>
 		</div>
@@ -170,39 +153,35 @@ const tabs = [
 			<div class="pane-grid pane-grid--split">
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Masukan</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.input">{dict.id.input}</h2>
 					</div>
-					<label class="field-label" for="ts-input">
-						Unix detik, milidetik, atau tanggal
-					</label>
+					<label class="field-label" for="ts-input" data-i18n="workspace.utilitas.timestamp">{dict.id.timestamp}</label>
 					<input
 						class="field-input"
 						id="ts-input"
 						type="text"
-						placeholder="1700000000 atau 2026-11-06T08:00:00Z"
+						placeholder={dict.id.timestampPlaceholder} data-i18n-placeholder="workspace.utilitas.timestampPlaceholder"
 					/>
 					<div class="pane-actions">
-						<button type="button" class="btn btn--secondary" id="ts-now">Sekarang</button>
-						<button type="button" class="btn btn--primary" id="ts-convert">Ubah</button>
+						<button type="button" class="btn btn--secondary" id="ts-now" data-i18n="workspace.utilitas.now">{dict.id.now}</button>
+						<button type="button" class="btn btn--primary" id="ts-convert" data-i18n="workspace.utilitas.convert">{dict.id.convert}</button>
 					</div>
-					<p class="field-hint">
-						Angka di bawah 13 digit dibaca sebagai detik. Teks lain dibaca sebagai tanggal.
-					</p>
+					<p class="field-hint" data-i18n="workspace.utilitas.timestampHint">{dict.id.timestampHint}</p>
 					<div class="alert" id="ts-error" role="alert" hidden>
 						<p id="ts-error-text"></p>
 					</div>
 				</div>
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Hasil</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.output">{dict.id.output}</h2>
 					</div>
 					<dl class="ts-list" id="ts-output" hidden>
 						<div class="ts-row">
-							<dt>Unix detik</dt>
+							<dt data-i18n="workspace.utilitas.seconds">{dict.id.seconds}</dt>
 							<dd><code id="ts-seconds"></code></dd>
 						</div>
 						<div class="ts-row">
-							<dt>Unix milidetik</dt>
+							<dt data-i18n="workspace.utilitas.millis">{dict.id.millis}</dt>
 							<dd><code id="ts-millis"></code></dd>
 						</div>
 						<div class="ts-row">
@@ -210,11 +189,11 @@ const tabs = [
 							<dd><code id="ts-iso"></code></dd>
 						</div>
 						<div class="ts-row">
-							<dt>Waktu lokal</dt>
+							<dt data-i18n="workspace.utilitas.local">{dict.id.local}</dt>
 							<dd><code id="ts-local"></code></dd>
 						</div>
 					</dl>
-					<p class="preview-empty" id="ts-empty">Isi masukan lalu tekan Ubah.</p>
+					<p class="preview-empty" id="ts-empty" data-i18n="workspace.utilitas.timestampEmpty">{dict.id.timestampEmpty}</p>
 				</div>
 			</div>
 		</div>
@@ -223,7 +202,7 @@ const tabs = [
 			<div class="pane-grid pane-grid--split">
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Pola dan teks uji</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.regexTitle">{dict.id.regexTitle}</h2>
 					</div>
 					<label class="field-label" for="regex-pattern">Pattern</label>
 					<input
@@ -235,31 +214,29 @@ const tabs = [
 					/>
 					<fieldset class="regex-flags">
 						<legend class="field-label">Flag</legend>
-						<label class="check-row"><input type="checkbox" value="i" data-flag /> i (abaikan besar-kecil)</label>
-						<label class="check-row"><input type="checkbox" value="m" data-flag /> m (multibaris)</label>
-						<label class="check-row"><input type="checkbox" value="s" data-flag /> s (titik termasuk baris baru)</label>
+						<label class="check-row"><input type="checkbox" value="i" data-flag /><span data-i18n="workspace.utilitas.caseFlag">{dict.id.caseFlag}</span></label>
+						<label class="check-row"><input type="checkbox" value="m" data-flag /><span data-i18n="workspace.utilitas.multilineFlag">{dict.id.multilineFlag}</span></label>
+						<label class="check-row"><input type="checkbox" value="s" data-flag /><span data-i18n="workspace.utilitas.dotFlag">{dict.id.dotFlag}</span></label>
 						<label class="check-row"><input type="checkbox" value="u" data-flag /> u (unicode)</label>
 					</fieldset>
-					<label class="field-label" for="regex-input">Teks uji</label>
+					<label class="field-label" for="regex-input" data-i18n="workspace.utilitas.testText">{dict.id.testText}</label>
 					<textarea
 						id="regex-input"
 						class="code-area code-area--short"
 						spellcheck="false"
-						placeholder="budi@contoh.com dan sari@contoh.id"></textarea>
-					<p class="field-hint" id="regex-status" role="status" aria-live="polite">
-						Pencarian selalu global. Hasil dibatasi 500 kecocokan.
-					</p>
+						placeholder={dict.id.testPlaceholder} data-i18n-placeholder="workspace.utilitas.testPlaceholder"></textarea>
+					<p class="field-hint" id="regex-status" role="status" aria-live="polite" data-i18n="workspace.utilitas.regexHint">{dict.id.regexHint}</p>
 					<div class="alert" id="regex-error" role="alert" hidden>
 						<p id="regex-error-text"></p>
 					</div>
 				</div>
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Hasil</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.output">{dict.id.output}</h2>
 						<p class="section-meta" id="regex-count"></p>
 					</div>
-					<pre class="regex-preview" id="regex-preview" aria-label="Teks dengan kecocokan ditandai"></pre>
-					<ol class="regex-list" id="regex-list" aria-label="Daftar kecocokan"></ol>
+					<pre class="regex-preview" id="regex-preview" aria-label={dict.id.regexAria} data-i18n-aria="workspace.utilitas.regexAria"></pre>
+					<ol class="regex-list" id="regex-list" aria-label={dict.id.matchesAria} data-i18n-aria="workspace.utilitas.matchesAria"></ol>
 				</div>
 			</div>
 		</div>
@@ -268,28 +245,26 @@ const tabs = [
 			<div class="diff-grid">
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Teks lama</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.oldText">{dict.id.oldText}</h2>
 					</div>
-					<label class="sr-only" for="diff-before">Teks lama</label>
+					<label class="sr-only" for="diff-before" data-i18n="workspace.utilitas.oldText">{dict.id.oldText}</label>
 					<textarea id="diff-before" class="code-area code-area--short" spellcheck="false"></textarea>
 				</div>
 				<div class="pane">
 					<div class="pane__head">
-						<h2 class="pane__title">Teks baru</h2>
+						<h2 class="pane__title" data-i18n="workspace.utilitas.newText">{dict.id.newText}</h2>
 					</div>
-					<label class="sr-only" for="diff-after">Teks baru</label>
+					<label class="sr-only" for="diff-after" data-i18n="workspace.utilitas.newText">{dict.id.newText}</label>
 					<textarea id="diff-after" class="code-area code-area--short" spellcheck="false"></textarea>
 				</div>
 			</div>
 			<div class="pane diff-result">
 				<div class="pane__head">
-					<h2 class="pane__title">Perbedaan</h2>
+					<h2 class="pane__title" data-i18n="workspace.utilitas.diff">{dict.id.diff}</h2>
 					<p class="section-meta" id="diff-stats"></p>
 				</div>
-				<p class="field-hint" id="diff-empty">
-					Isi kedua teks. Baris yang berubah ditandai hijau atau merah.
-				</p>
-				<ol class="diff-list" id="diff-list" aria-label="Daftar perbedaan baris"></ol>
+				<p class="field-hint" id="diff-empty" data-i18n="workspace.utilitas.diffEmpty">{dict.id.diffEmpty}</p>
+				<ol class="diff-list" id="diff-list" aria-label={dict.id.diffAria} data-i18n-aria="workspace.utilitas.diffAria"></ol>
 				<p class="field-hint" id="diff-note" hidden></p>
 			</div>
 		</div>
@@ -297,6 +272,9 @@ const tabs = [
 </div>
 
 <script>
+	import { currentLang, tr, workspaceErrorMessage } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import { copyText } from '../../lib/clipboard';
 	import { toast } from '../../lib/toast';
 	import { diffLines } from './diff';
@@ -312,9 +290,9 @@ const tabs = [
 		parseTimestamp,
 	} from './utils';
 
-	const copy = async (text: string, message = 'Disalin.') => {
+	const copy = async (text: string, message: keyof typeof dict.id = 'copied') => {
 		const copied = await copyText(text);
-		toast(copied ? message : 'Gagal menyalin. Pilih teksnya lalu tekan Ctrl+C.', {
+		toast(() => tr(dict, copied ? message : 'copyFailed'), {
 		tone: copied ? 'success' : 'error',
 	});
 	};
@@ -322,18 +300,18 @@ const tabs = [
 	const showError = (
 		box: HTMLElement | null,
 		text: HTMLElement | null,
-		message: string | null,
+		message: (() => string) | null,
 	) => {
 		if (!box || !text) return;
 		box.hidden = message === null;
-		text.textContent = message ?? '';
+		localizedText(text, message ?? (() => ''));
 	};
 
 	const setupBinary = (
 		prefix: string,
 		encode: (value: string) => string,
 		decode: (value: string) => string,
-		errorMessage: string,
+		errorMessage: () => string,
 	) => {
 		const input = document.getElementById(`${prefix}-input`) as HTMLTextAreaElement | null;
 		const output = document.getElementById(`${prefix}-output`);
@@ -379,8 +357,8 @@ const tabs = [
 		paint();
 	};
 
-	setupBinary('base64', encodeBase64, decodeBase64, 'Base64 tidak valid atau hasilnya bukan teks UTF-8.');
-	setupBinary('url', encodeUrl, decodeUrl, 'Persen encoding tidak valid.');
+	setupBinary('base64', encodeBase64, decodeBase64, () => tr(dict, 'base64Error'));
+	setupBinary('url', encodeUrl, decodeUrl, () => tr(dict, 'urlError'));
 
 	const jwtInput = document.getElementById('jwt-input') as HTMLTextAreaElement | null;
 	const jwtHeader = document.getElementById('jwt-header');
@@ -390,8 +368,7 @@ const tabs = [
 	const jwtErrorText = document.getElementById('jwt-error-text');
 	const jwtExpiryText = document.getElementById('jwt-expiry');
 	const jwtCopy = document.getElementById('jwt-copy') as HTMLButtonElement | null;
-	const jwtDefaultNote =
-		'Header dan payload dibaca di browser. Tanda tangan tidak diverifikasi.';
+	const jwtDefaultNote = () => tr(dict, 'jwtNote');
 
 	let jwtJson = '';
 
@@ -421,7 +398,7 @@ const tabs = [
 				paintJwt('');
 				jwtHeader.querySelector('code')!.textContent = '';
 				jwtPayload.querySelector('code')!.textContent = '';
-				jwtExpiryText.textContent = jwtDefaultNote;
+				localizedText(jwtExpiryText, jwtDefaultNote);
 				return;
 			}
 
@@ -435,27 +412,27 @@ const tabs = [
 
 				const expiry = jwtExpiry(parts.payload);
 				if (!expiry) {
-					jwtExpiryText.textContent = 'Payload tidak punya exp. Tanda tangan tetap tidak diverifikasi.';
+					localizedText(jwtExpiryText, () => tr(dict, 'jwtNoExpiry'));
 				} else if (expiry.expired) {
-					jwtExpiryText.textContent = `Kedaluwarsa ${expiry.at.toLocaleString('id-ID')}. Tanda tangan tidak diverifikasi.`;
+					localizedText(jwtExpiryText, () => tr(dict, 'jwtExpired', { date: expiry.at.toLocaleString(currentLang() === 'en' ? 'en-US' : 'id-ID') }));
 				} else {
-					jwtExpiryText.textContent = `Berlaku sampai ${expiry.at.toLocaleString('id-ID')}. Tanda tangan tidak diverifikasi.`;
+					localizedText(jwtExpiryText, () => tr(dict, 'jwtValid', { date: expiry.at.toLocaleString(currentLang() === 'en' ? 'en-US' : 'id-ID') }));
 				}
 			} catch {
 				paintJwt('');
 				jwtHeader.querySelector('code')!.textContent = '';
 				jwtPayload.querySelector('code')!.textContent = '';
-				jwtExpiryText.textContent = jwtDefaultNote;
+				localizedText(jwtExpiryText, jwtDefaultNote);
 				showError(
 					jwtError,
 					jwtErrorText,
-					'Token tidak bisa dibaca. Pastikan header dan payload berisi JSON yang valid.',
+					() => tr(dict, 'jwtError'),
 				);
 			}
 		};
 
 		jwtInput.addEventListener('input', readJwt);
-		jwtCopy.addEventListener('click', () => void copy(jwtJson, 'JWT disalin.'));
+		jwtCopy.addEventListener('click', () => void copy(jwtJson, 'jwtCopied'));
 		paintJwt('');
 	}
 
@@ -485,7 +462,7 @@ const tabs = [
 		};
 
 		uuidGenerate.addEventListener('click', generate);
-		uuidCopy.addEventListener('click', () => void copy(ids.join('\n'), 'UUID disalin.'));
+		uuidCopy.addEventListener('click', () => void copy(ids.join('\n'), 'uuidCopied'));
 		generate();
 	}
 
@@ -521,7 +498,7 @@ const tabs = [
 				tsSeconds.textContent = String(info.unixSeconds);
 				tsMillis.textContent = String(info.unixMillis);
 				tsIso.textContent = info.iso;
-				tsLocal.textContent = info.local;
+				localizedText(tsLocal, () => new Date(info.ms).toLocaleString(currentLang() === 'en' ? 'en-US' : 'id-ID'));
 				tsOutput.hidden = false;
 				tsEmpty.hidden = true;
 			} catch (error) {
@@ -530,7 +507,7 @@ const tabs = [
 				showError(
 					tsError,
 					tsErrorText,
-					error instanceof Error ? error.message : 'Masukan tidak bisa dibaca.',
+					() => workspaceErrorMessage(error, tr(dict, 'inputError')),
 				);
 			}
 		};
@@ -569,11 +546,11 @@ const tabs = [
 			showError(regexError, regexErrorText, null);
 			regexPreview.textContent = '';
 			regexList.innerHTML = '';
-			regexCount.textContent = '';
+			localizedText(regexCount, () => '');
 
 			const pattern = regexPattern.value;
 			if (pattern === '') {
-				regexStatus.textContent = 'Isi pattern untuk mulai mencari.';
+				localizedText(regexStatus, () => tr(dict, 'patternEmpty'));
 				return;
 			}
 
@@ -608,7 +585,7 @@ const tabs = [
 					position.textContent = `@${match.index}`;
 
 					const text = document.createElement('code');
-					text.textContent = match.text === '' ? '(kosong)' : match.text;
+					localizedText(text, () => match.text === '' ? tr(dict, 'emptyMatch') : match.text);
 
 					li.append(number, position, text);
 
@@ -624,15 +601,14 @@ const tabs = [
 					regexList.append(li);
 				});
 
-				regexCount.textContent = `${result.matches.length} cocok${result.truncated ? ' (dipotong)' : ''}`;
-				regexStatus.textContent =
-					result.matches.length === 0 ? 'Tidak ada yang cocok.' : '';
+				localizedText(regexCount, () => tr(dict, result.truncated ? 'matchesTruncated' : 'matches', { count: result.matches.length }));
+				localizedText(regexStatus, () => result.matches.length === 0 ? tr(dict, 'noMatches') : '');
 			} catch (error) {
-				regexStatus.textContent = '';
+				localizedText(regexStatus, () => '');
 				showError(
 					regexError,
 					regexErrorText,
-					error instanceof Error ? error.message : 'Pattern tidak valid.',
+					() => error instanceof SyntaxError ? tr(dict, 'patternDiagnostic', { detail: error.message }) : tr(dict, 'patternError'),
 				);
 			}
 		};
@@ -660,15 +636,14 @@ const tabs = [
 
 			if (diffBefore.value === '' && diffAfter.value === '') {
 				diffEmpty.hidden = false;
-				diffEmpty.textContent = 'Isi kedua teks. Baris yang berubah ditandai hijau atau merah.';
+				localizedText(diffEmpty, () => tr(dict, 'diffEmpty'));
 				diffStats.textContent = '';
 				return;
 			}
 
 			if (result.truncated) {
 				diffEmpty.hidden = false;
-				diffEmpty.textContent =
-					'Teks lebih dari 800 baris di salah satu sisi. Pendekkan dulu supaya bisa dibandingkan.';
+				localizedText(diffEmpty, () => tr(dict, 'diffTooLong'));
 				diffStats.textContent = '';
 				return;
 			}
@@ -703,7 +678,7 @@ const tabs = [
 
 			if (result.rows.length > visible.length) {
 				diffNote.hidden = false;
-				diffNote.textContent = `${result.rows.length - visible.length} baris lagi tidak ditampilkan.`;
+				localizedText(diffNote, () => tr(dict, 'diffMore', { count: result.rows.length - visible.length }));
 			}
 		};
 
