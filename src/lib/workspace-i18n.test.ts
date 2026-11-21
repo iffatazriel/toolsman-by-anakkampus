@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { currentLang, defineWorkspaceDictionary, registerWorkspaceDictionary, setCurrentLang, t, tr, type WorkspaceDictionary } from './i18n';
+import { currentLang, defineWorkspaceDictionary, registerWorkspaceDictionary, setCurrentLang, t, tr, WorkspaceError, workspaceErrorMessage, type WorkspaceDictionary } from './i18n';
 import { explainCron, previewCron } from '../features/cron/cron';
 import { stripJpegMetadata, stripPngMetadata, stripMetadata } from '../features/hapus-exif/strip';
 
@@ -22,6 +22,14 @@ describe('workspace dictionaries', () => {
 		expect(explainCron('0 9 * * *')).toBe('Jadwal berjalan setiap hari pukul 09.00.');
 		expect(previewCron('', 'UTC', 5, new Date('2026-01-01'), 'en')).toEqual({ ok: false, error: 'A cron expression must have 5 fields.' });
 		expect(previewCron('wrong * * * *', 'UTC', 5, new Date('2026-01-01'), 'en')).toEqual({ ok: false, error: 'Invalid expression or time zone. Check each field.' });
+	});
+	it('keeps typed logic errors Indonesian by default and translates them live with a safe fallback', () => {
+		const dictionary = defineWorkspaceDictionary({ invalid: 'Digit {value} salah.' }, { invalid: 'Invalid digit {value}.' });
+		const error = new WorkspaceError(dictionary, 'invalid', { value: '<x>' });
+		expect(error.message).toBe('Digit <x> salah.');
+		setCurrentLang('en'); expect(workspaceErrorMessage(error, 'Fallback')).toBe('Invalid digit <x>.');
+		setCurrentLang('id'); expect(workspaceErrorMessage(error, 'Fallback')).toBe('Digit <x> salah.');
+		expect(workspaceErrorMessage(new Error('unknown'), 'Fallback')).toBe('Fallback');
 	});
 	it('exposes stable translation keys for invalid and empty image inputs', () => {
 		const bytes = new Uint8Array();

@@ -4,6 +4,17 @@ export type Lang = 'id' | 'en';
 export const LANG_KEY = 'toolsman-lang';
 
 export type WorkspaceDictionary = Record<Lang, Record<string, string>>;
+
+export class WorkspaceError<D extends WorkspaceDictionary = WorkspaceDictionary> extends Error {
+	constructor(public dictionary: D, public key: keyof D['id'] & string, public values: Record<string, string | number> = {}) {
+		super(fill(dictionary.id[key] ?? key, values));
+		this.name = 'WorkspaceError';
+	}
+}
+
+export function workspaceErrorMessage(error: unknown, fallback: string): string {
+	return error instanceof WorkspaceError ? tr(error.dictionary, error.key, error.values) : fallback;
+}
 const workspaces: Record<string, WorkspaceDictionary> = {};
 let activeLang: Lang | undefined;
 

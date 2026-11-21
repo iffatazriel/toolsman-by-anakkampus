@@ -1,35 +1,36 @@
 ---
+import dict from './i18n';
 import Tabs from '../../components/ui/Tabs.astro';
 ---
 
 <div class="tool-shell bilangan-shell">
-	<Tabs label="Bilangan dan jaringan" items={[{ id: 'bilangan', label: 'Konverter bilangan' }, { id: 'subnet', label: 'Subnet IPv4' }]}>
+	<Tabs label={dict.id.tabs} labelKey="workspace.bilangan-subnet.tabs" items={[{ id: 'bilangan', label: dict.id.numberTab, labelKey: 'workspace.bilangan-subnet.numberTab' }, { id: 'subnet', label: dict.id.subnetTab, labelKey: 'workspace.bilangan-subnet.subnetTab' }]}>
 		<section data-panel="bilangan" class="pane">
-			<label class="field-label" for="number-input">Bilangan bulat (maksimal 4.096 digit)</label>
-			<textarea id="number-input" class="code-area" spellcheck="false" placeholder="Contoh: -255 atau FF"></textarea>
+			<label class="field-label" for="number-input" data-i18n="workspace.bilangan-subnet.integer">{dict.id.integer}</label>
+			<textarea id="number-input" class="code-area" spellcheck="false" placeholder={dict.id.placeholder} data-i18n-placeholder="workspace.bilangan-subnet.placeholder"></textarea>
 			<div class="option-row">
-				<label class="field-label">Basis input<select id="number-base" class="field-input"><option value="10">10 (desimal)</option><option value="2">2 (biner)</option><option value="8">8 (oktal)</option><option value="16">16 (heksadesimal)</option><option value="custom">Khusus</option></select></label>
-				<label class="field-label">Basis khusus (input/hasil)<input id="number-custom" class="field-input" type="number" min="2" max="36" step="1" value="36" /></label>
-				<label><input id="number-group" type="checkbox" /> Kelompokkan digit</label>
-				<label class="field-label">Komplemen dua<select id="number-bits" class="field-input"><option value="0">Tanpa tampilan bit</option>{[8,16,32,64].map((n) => <option value={n}>{n} bit signed</option>)}</select></label>
+				<label class="field-label"><span data-i18n="workspace.bilangan-subnet.inputBase">{dict.id.inputBase}</span><select id="number-base" class="field-input"><option value="10" data-i18n="workspace.bilangan-subnet.decimal">{dict.id.decimal}</option><option value="2" data-i18n="workspace.bilangan-subnet.binary">{dict.id.binary}</option><option value="8" data-i18n="workspace.bilangan-subnet.octal">{dict.id.octal}</option><option value="16" data-i18n="workspace.bilangan-subnet.hex">{dict.id.hex}</option><option value="custom" data-i18n="workspace.bilangan-subnet.custom">{dict.id.custom}</option></select></label>
+				<label class="field-label"><span data-i18n="workspace.bilangan-subnet.customBase">{dict.id.customBase}</span><input id="number-custom" class="field-input" type="number" min="2" max="36" step="1" value="36" /></label>
+				<label><input id="number-group" type="checkbox" /><span data-i18n="workspace.bilangan-subnet.group">{dict.id.group}</span></label>
+				<label class="field-label"><span data-i18n="workspace.bilangan-subnet.twos">{dict.id.twos}</span><select id="number-bits" class="field-input"><option value="0" data-i18n="workspace.bilangan-subnet.noBits">{dict.id.noBits}</option>{[8,16,32,64].map((n) => <option value={n}>{n} bit signed</option>)}</select></label>
 			</div>
-			<p class="field-hint">Tanda negatif didukung. Spasi dan garis bawah diabaikan. Prefiks 0b/0o/0x boleh dipakai pada basis yang cocok. Komplemen dua dibatasi rentang signed dari lebar bit pilihanmu.</p>
-			<button type="button" class="btn btn--primary" id="number-run">Konversi</button>
+			<p class="field-hint" data-i18n="workspace.bilangan-subnet.numberHint">{dict.id.numberHint}</p>
+			<button type="button" class="btn btn--primary" id="number-run" data-i18n="workspace.bilangan-subnet.convert">{dict.id.convert}</button>
 			<p class="field-error" role="alert" id="number-error" hidden></p>
-			<label class="field-label" for="number-output">Semua basis</label><textarea readonly class="code-area" id="number-output"></textarea>
-			<button type="button" class="btn btn--secondary" id="number-copy" disabled>Salin hasil</button>
+			<label class="field-label" for="number-output" data-i18n="workspace.bilangan-subnet.allBases">{dict.id.allBases}</label><textarea readonly class="code-area" id="number-output"></textarea>
+			<button type="button" class="btn btn--secondary" id="number-copy" disabled data-i18n="workspace.bilangan-subnet.copy">{dict.id.copy}</button>
 		</section>
 		<section data-panel="subnet" class="pane" hidden>
-			<div class="option-row"><label class="field-label">IP atau IP/CIDR<input class="field-input" id="subnet-ip" value="192.168.1.10/24" /></label><label class="field-label">CIDR atau mask (jika IP tanpa /)<input class="field-input" id="subnet-mask" placeholder="24 atau 255.255.255.0" /></label></div>
-			<button type="button" class="btn btn--primary" id="subnet-run">Hitung subnet</button>
+			<div class="option-row"><label class="field-label"><span data-i18n="workspace.bilangan-subnet.ip">{dict.id.ip}</span><input class="field-input" id="subnet-ip" value="192.168.1.10/24" /></label><label class="field-label"><span data-i18n="workspace.bilangan-subnet.mask">{dict.id.mask}</span><input class="field-input" id="subnet-mask" placeholder={dict.id.maskPlaceholder} data-i18n-placeholder="workspace.bilangan-subnet.maskPlaceholder" /></label></div>
+			<button type="button" class="btn btn--primary" id="subnet-run" data-i18n="workspace.bilangan-subnet.calculate">{dict.id.calculate}</button>
 			<p class="field-error" role="alert" id="subnet-error" hidden></p>
-			<label class="field-label" for="subnet-output">Hasil jaringan</label><textarea readonly class="code-area" id="subnet-output"></textarea>
-			<p class="field-hint">Kelas A–E adalah klasifikasi lama; perhitungan memakai CIDR. “Publik” bukan pemeriksaan routing atau daftar alamat khusus yang lengkap. /31 dihitung untuk point-to-point; broadcast menampilkan akhir blok.</p>
-			<div class="option-row"><label class="field-label">Bagi berdasarkan<select class="field-input" id="subnet-mode"><option value="count">Jumlah subnet (pangkat dua)</option><option value="hosts">Kebutuhan host tiap subnet</option></select></label><label class="field-label">Jumlah<input class="field-input" id="subnet-amount" type="number" min="1" step="1" value="4" /></label></div>
-			<p class="field-hint">Kebutuhan 1 host memakai /32; 2 host memakai /31 point-to-point. Untuk LAN biasa dengan network dan broadcast, gunakan kebutuhan minimal 3 host.</p>
-			<button type="button" class="btn btn--secondary" id="subnet-split">Bagi subnet</button>
-			<label class="field-label" for="subnet-list">Daftar subnet (maksimal 256)</label><textarea readonly class="code-area" id="subnet-list"></textarea>
-			<button type="button" class="btn btn--secondary" id="subnet-copy" disabled>Salin hasil jaringan dan pembagian</button>
+			<label class="field-label" for="subnet-output" data-i18n="workspace.bilangan-subnet.networkResult">{dict.id.networkResult}</label><textarea readonly class="code-area" id="subnet-output"></textarea>
+			<p class="field-hint" data-i18n="workspace.bilangan-subnet.networkHint">{dict.id.networkHint}</p>
+			<div class="option-row"><label class="field-label"><span data-i18n="workspace.bilangan-subnet.splitBy">{dict.id.splitBy}</span><select class="field-input" id="subnet-mode"><option value="count" data-i18n="workspace.bilangan-subnet.countMode">{dict.id.countMode}</option><option value="hosts" data-i18n="workspace.bilangan-subnet.hostsMode">{dict.id.hostsMode}</option></select></label><label class="field-label"><span data-i18n="workspace.bilangan-subnet.amount">{dict.id.amount}</span><input class="field-input" id="subnet-amount" type="number" min="1" step="1" value="4" /></label></div>
+			<p class="field-hint" data-i18n="workspace.bilangan-subnet.hostHint">{dict.id.hostHint}</p>
+			<button type="button" class="btn btn--secondary" id="subnet-split" data-i18n="workspace.bilangan-subnet.split">{dict.id.split}</button>
+			<label class="field-label" for="subnet-list" data-i18n="workspace.bilangan-subnet.list">{dict.id.list}</label><textarea readonly class="code-area" id="subnet-list"></textarea>
+			<button type="button" class="btn btn--secondary" id="subnet-copy" disabled data-i18n="workspace.bilangan-subnet.copyNetwork">{dict.id.copyNetwork}</button>
 		</section>
 	</Tabs>
 	<p class="field-hint" role="status" id="bilangan-status"></p>
@@ -37,6 +38,9 @@ import Tabs from '../../components/ui/Tabs.astro';
 
 <script>
 	import { copyText } from '../../lib/clipboard';
+	import { currentLang, tr, workspaceErrorMessage } from '../../lib/i18n';
+	import { localizedText, localizedValue } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import { convertInteger, grouped, parseInteger, splitSubnet, subnet, twosComplement } from './network';
 	const input = <T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(id: string) => document.getElementById(id) as T;
 	const numberOutput = input<HTMLTextAreaElement>('number-output');
@@ -46,43 +50,49 @@ import Tabs from '../../components/ui/Tabs.astro';
 	const copySubnet = document.querySelector<HTMLButtonElement>('#subnet-copy')!;
 	const numberError = document.getElementById('number-error')!;
 	const subnetError = document.getElementById('subnet-error')!;
-	const message = (node: HTMLElement, error: unknown) => { node.textContent = error instanceof Error ? error.message : 'Periksa isian kamu.'; node.hidden = false; };
+	const message = (node: HTMLElement, error: unknown) => { localizedText(node, () => workspaceErrorMessage(error, tr(dict, 'fallback'))); node.hidden = false; };
 	document.getElementById('number-run')!.addEventListener('click', () => {
-		numberError.hidden = true; numberOutput.value = ''; copyNumber.disabled = true;
+		numberError.hidden = true; localizedValue(numberOutput, () => ''); copyNumber.disabled = true;
 		try {
 			const source = input<HTMLTextAreaElement>('number-input').value;
 			const custom = input<HTMLInputElement>('number-custom').valueAsNumber;
 			const base = input<HTMLSelectElement>('number-base').value;
 			const radix = base === 'custom' ? custom : Number(base);
 			const group = input<HTMLInputElement>('number-group').checked;
-			numberOutput.value = convertInteger(source, radix, custom, group).map((item) => `Basis ${item.base}: ${item.value}`).join('\n\n');
+			const converted = convertInteger(source, radix, custom, group);
+			const describeNumber = () => converted.map((item) => tr(dict, 'baseResult', item)).join('\n\n');
+			localizedValue(numberOutput, describeNumber);
 			const bits = Number(input<HTMLSelectElement>('number-bits').value);
 			if (bits) {
 				try {
 					const result = twosComplement(parseInteger(source, radix), bits);
-					numberOutput.value += `\n\nKomplemen dua ${bits} bit:\n${group ? grouped(result.binary) : result.binary}\nHEX: ${group ? grouped(result.hex) : result.hex}`;
+					localizedValue(numberOutput, () => `${describeNumber()}\n\n${tr(dict, 'bitsResult', { bits, binary: group ? grouped(result.binary) : result.binary, hex: group ? grouped(result.hex) : result.hex })}`);
 				} catch (error) { message(numberError, error); }
 			}
 			copyNumber.disabled = false;
 		} catch (error) { message(numberError, error); }
 	});
 	const address = () => [input<HTMLInputElement>('subnet-ip').value, input<HTMLInputElement>('subnet-mask').value] as const;
-	const describe = (s: ReturnType<typeof subnet>) => `Network: ${s.network}/${s.prefix}\nBroadcast / akhir blok: ${s.broadcast}\nHost pertama: ${s.first}\nHost terakhir: ${s.last}\nJumlah host: ${s.hosts}\nMask: ${s.mask}\nMask biner: ${s.binary}\nWildcard: ${s.wildcard}\nKelas IP: ${s.ipClass}\nJenis IP: ${s.scope}`;
+	const describe = (s: ReturnType<typeof subnet>) => tr(dict, 'describe', s);
 	const calculate = (split: boolean) => {
-		subnetError.hidden = true; subnetOutput.value = ''; subnetList.value = ''; copySubnet.disabled = true;
+		subnetError.hidden = true; localizedValue(subnetOutput, () => ''); localizedValue(subnetList, () => ''); copySubnet.disabled = true;
 		try {
-			subnetOutput.value = describe(subnet(...address()));
-			if (split) subnetList.value = splitSubnet(...address(), input<HTMLSelectElement>('subnet-mode').value as 'count' | 'hosts', input<HTMLInputElement>('subnet-amount').valueAsNumber).map((s, i) => `${i + 1}. ${s.network}/${s.prefix} | ${s.first} – ${s.last} | ${s.hosts} host | akhir ${s.broadcast}`).join('\n');
+			const [source, mask] = address();
+			localizedValue(subnetOutput, () => describe(subnet(source, mask, currentLang())));
+			if (split) {
+				const parts = splitSubnet(source, mask, input<HTMLSelectElement>('subnet-mode').value as 'count' | 'hosts', input<HTMLInputElement>('subnet-amount').valueAsNumber);
+				localizedValue(subnetList, () => parts.map((s, i) => tr(dict, 'splitRow', { ...s, index: i + 1 })).join('\n'));
+			}
 			copySubnet.disabled = false;
 		} catch (error) { message(subnetError, error); }
 	};
 	document.getElementById('subnet-run')!.addEventListener('click', () => calculate(false));
 	document.getElementById('subnet-split')!.addEventListener('click', () => calculate(true));
-	const copy = async (value: string) => { document.getElementById('bilangan-status')!.textContent = await copyText(value) ? 'Hasil disalin.' : 'Gagal menyalin. Pilih hasilnya lalu tekan Ctrl+C.'; };
+	const copy = async (value: string) => { const copied = await copyText(value); localizedText(document.getElementById('bilangan-status'), () => tr(dict, copied ? 'copied' : 'copyFailed')); };
 	copyNumber.addEventListener('click', () => void copy(numberOutput.value));
 	copySubnet.addEventListener('click', () => void copy([subnetOutput.value, subnetList.value].filter(Boolean).join('\n\n')));
-	document.querySelector('[data-panel="bilangan"]')!.addEventListener('input', (event) => { if (event.target === numberOutput) return; numberOutput.value = ''; copyNumber.disabled = true; numberError.hidden = true; });
-	document.querySelector('[data-panel="subnet"]')!.addEventListener('input', (event) => { if (event.target === subnetOutput || event.target === subnetList) return; subnetOutput.value = ''; subnetList.value = ''; copySubnet.disabled = true; subnetError.hidden = true; });
+	document.querySelector('[data-panel="bilangan"]')!.addEventListener('input', (event) => { if (event.target === numberOutput) return; localizedValue(numberOutput, () => ''); copyNumber.disabled = true; numberError.hidden = true; });
+	document.querySelector('[data-panel="subnet"]')!.addEventListener('input', (event) => { if (event.target === subnetOutput || event.target === subnetList) return; localizedValue(subnetOutput, () => ''); localizedValue(subnetList, () => ''); copySubnet.disabled = true; subnetError.hidden = true; });
 </script>
 
 <style>

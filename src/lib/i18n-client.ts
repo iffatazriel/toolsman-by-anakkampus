@@ -15,6 +15,13 @@ import {
 
 const workspaceLoaders = import.meta.glob<{ default: WorkspaceDictionary }>('../features/*/i18n.ts');
 const liveText = new WeakMap<HTMLElement, () => string>();
+const liveValue = new WeakMap<HTMLInputElement | HTMLTextAreaElement, () => string>();
+
+export function localizedValue(element: HTMLInputElement | HTMLTextAreaElement, render: () => string): void {
+	liveValue.set(element, render);
+	element.dataset.i18nValue = '';
+	element.value = render();
+}
 
 export function localizedText(element: HTMLElement | null, render: () => string): void {
 	if (!element) return;
@@ -177,6 +184,10 @@ export function applyLanguage(lang: Lang): void {
 		if (render) element.textContent = render();
 	});
 
+	document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-i18n-value]').forEach((element) => {
+		const render = liveValue.get(element);
+		if (render) element.value = render();
+	});
 	document.dispatchEvent(new CustomEvent('lang:change', { detail: { lang } }));
 }
 
