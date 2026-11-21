@@ -1,13 +1,14 @@
 ---
+import dict from './i18n';
 import Dropzone from '../../components/ui/Dropzone.astro';
 ---
 
 <div class="tool-shell exif-shell">
 	<Dropzone
 		id="exif-input"
-		label="Pilih foto JPG atau PNG"
+		label={dict.id.choose} labelKey="workspace.hapus-exif.choose"
 		accept="image/jpeg,image/png"
-		hint="Maks. 25 MB. Metadata seperti EXIF, GPS, XMP, dan komentar akan dibuang."
+		hint={dict.id.hint} hintKey="workspace.hapus-exif.hint"
 	/>
 
 	<div class="upload-preview" data-exif-preview hidden>
@@ -23,19 +24,17 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	<div class="pane-grid pane-grid--split" data-exif-workspace hidden>
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Hasil</h2>
-				<span class="field-hint" id="exif-state">Menyiapkan…</span>
+				<h2 class="pane__title" data-i18n="workspace.hapus-exif.result">{dict.id.result}</h2>
+				<span class="field-hint" id="exif-state" data-i18n="workspace.hapus-exif.preparing">{dict.id.preparing}</span>
 			</div>
 
 			<div class="exif-result">
-				<img id="exif-preview" alt="Pratinjau foto tanpa metadata" hidden />
-				<p class="preview-empty" id="exif-empty">Hasil muncul di sini.</p>
+				<img id="exif-preview" alt={dict.id.alt} data-i18n-alt="workspace.hapus-exif.alt" hidden />
+				<p class="preview-empty" id="exif-empty" data-i18n="workspace.hapus-exif.empty">{dict.id.empty}</p>
 			</div>
 
 			<div class="pane-actions">
-				<button type="button" class="btn btn--primary" id="exif-download" disabled>
-					Unduh foto bersih
-				</button>
+				<button type="button" class="btn btn--primary" id="exif-download" disabled data-i18n="workspace.hapus-exif.download">{dict.id.download}</button>
 			</div>
 
 			<div class="alert" id="exif-error" role="alert" hidden>
@@ -45,28 +44,25 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 		<div class="pane">
 			<div class="pane__head">
-				<h2 class="pane__title">Rincian</h2>
+				<h2 class="pane__title" data-i18n="workspace.hapus-exif.details">{dict.id.details}</h2>
 			</div>
 
 			<dl class="exif-stats" id="exif-stats" hidden>
 				<div>
-					<dt>Ukuran</dt>
+					<dt data-i18n="workspace.hapus-exif.size">{dict.id.size}</dt>
 					<dd id="exif-size"></dd>
 				</div>
 				<div>
-					<dt>Metadata dibuang</dt>
+					<dt data-i18n="workspace.hapus-exif.metadataRemoved">{dict.id.metadataRemoved}</dt>
 					<dd id="exif-removed"></dd>
 				</div>
 				<div>
-					<dt>Catatan</dt>
-					<dd>Data gambar tidak diubah dan tidak dikompres ulang.</dd>
+					<dt data-i18n="workspace.hapus-exif.note">{dict.id.note}</dt>
+					<dd data-i18n="workspace.hapus-exif.unchanged">{dict.id.unchanged}</dd>
 				</div>
 			</dl>
 
-			<p class="field-hint">
-				Yang dibuang: EXIF dan GPS di JPEG, XMP, IPTC, komentar, serta chunk teks di
-				PNG. Profil warna dan data gambar tetap dipertahankan.
-			</p>
+			<p class="field-hint" data-i18n="workspace.hapus-exif.privacy">{dict.id.privacy}</p>
 		</div>
 	</div>
 </div>
@@ -75,6 +71,9 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	import { formatBytes } from '../../lib/page-range';
 	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
+	import { tr } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
 	import { stripMetadata } from './strip';
 
 	const input = document.getElementById('exif-input') as HTMLInputElement | null;
@@ -115,12 +114,13 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		let resultBlob: Blob | null = null;
 		let resultName = 'foto-tanpa-metadata.jpg';
 
-		const setError = (message: string | null) => {
+		const setError = (message: (() => string) | null) => {
 			errorBox.hidden = message === null;
-			errorText.textContent = message ?? '';
+			localizedText(errorText, message ?? (() => ''));
 		};
 
-		const setStatus = (message: string, loading: boolean) => {
+		const setStatus = (message: () => string, loading: boolean) => {
+			stateText.removeAttribute('data-i18n');
 			stateText.textContent = '';
 			if (loading) {
 				const spinner = document.createElement('span');
@@ -128,7 +128,9 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				spinner.setAttribute('aria-hidden', 'true');
 				stateText.append(spinner);
 			}
-			stateText.append(document.createTextNode(message));
+			const text = document.createElement('span');
+			localizedText(text, message);
+			stateText.append(text);
 		};
 
 		input.addEventListener('change', async (event) => {
@@ -140,11 +142,11 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			const isJpeg = file.type === 'image/jpeg' || /\.jpe?g$/i.test(file.name);
 			const isPng = file.type === 'image/png' || /\.png$/i.test(file.name);
 			if (!isJpeg && !isPng) {
-				setError('Format ini belum didukung. Pakai JPG atau PNG.');
+				setError(() => tr(dict, 'unsupported'));
 				return;
 			}
 			if (file.size > 25 * 1024 * 1024) {
-				setError('Foto lebih dari 25 MB. Pilih berkas lain.');
+				setError(() => tr(dict, 'tooLarge'));
 				return;
 			}
 
@@ -155,7 +157,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			empty.hidden = false;
 			stats.hidden = true;
 			workspace.hidden = false;
-			setStatus('Membaca metadata…', true);
+			setStatus(() => tr(dict, 'readingMetadata'), true);
 			setDropzoneState(zone, 'processing');
 
 			if (originalUrl) URL.revokeObjectURL(originalUrl);
@@ -164,13 +166,15 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			nameText.textContent = `${file.name} · ${formatBytes(file.size)}`;
 			preview.hidden = false;
 			statusText.classList.remove('is-ready', 'is-failed');
-			statusText.textContent = 'Membaca foto…';
+			localizedText(statusText, () => tr(dict, 'readingPhoto'));
+			let failureKey: keyof typeof dict.id = 'failed';
 
 			try {
 				const bytes = new Uint8Array(await file.arrayBuffer());
 				const result = stripMetadata(bytes, file.type);
 				if (!result.ok || !result.bytes) {
-					throw new Error(result.error ?? 'Metadata tidak bisa diproses.');
+					failureKey = result.errorKey ?? 'metadataFailed';
+					throw new Error();
 				}
 
 				const mime = isPng ? 'image/png' : 'image/jpeg';
@@ -188,25 +192,24 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 				sizeText.textContent = `${formatBytes(file.size)} → ${formatBytes(resultBlob.size)}`;
 				const removed = result.removedBytes ?? 0;
-				removedText.textContent =
-					removed > 0 ? `${formatBytes(removed)} dibuang` : 'Tidak ada metadata terdeteksi';
+				localizedText(removedText, () => tr(dict, removed > 0 ? 'removed' : 'noneDetected', { size: formatBytes(removed) }));
 
 				if (removed > 0) {
 					downloadButton.disabled = false;
-					setStatus('Metadata dibuang', false);
-					statusText.textContent = 'Foto bersih, siap diunduh.';
+					setStatus(() => tr(dict, 'metadataRemoved'), false);
+					localizedText(statusText, () => tr(dict, 'ready'));
 					statusText.classList.add('is-ready');
 				} else {
-					setStatus('Foto sudah tanpa metadata', false);
-					statusText.textContent = 'Tidak ada metadata yang perlu dibuang.';
+					setStatus(() => tr(dict, 'alreadyClean'), false);
+					localizedText(statusText, () => tr(dict, 'noneNeeded'));
 					statusText.classList.add('is-ready');
 				}
 				setDropzoneState(zone, 'done');
-			} catch (error) {
-				setStatus('Gagal memproses', false);
-				statusText.textContent = 'Gagal membaca foto.';
+			} catch {
+				setStatus(() => tr(dict, 'processingFailed'), false);
+				localizedText(statusText, () => tr(dict, 'readFailed'));
 				statusText.classList.add('is-failed');
-				setError(error instanceof Error ? error.message : 'Gagal memproses foto.');
+				setError(() => tr(dict, failureKey));
 				setDropzoneState(zone, 'empty');
 			}
 		});
@@ -221,7 +224,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			link.click();
 			link.remove();
 			setTimeout(() => URL.revokeObjectURL(url), 1000);
-			toast('Foto tanpa metadata diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'downloaded'), { tone: 'success' });
 		});
 	}
 </script>
