@@ -14,6 +14,14 @@ import {
 } from './i18n';
 
 const workspaceLoaders = import.meta.glob<{ default: WorkspaceDictionary }>('../features/*/i18n.ts');
+const liveText = new WeakMap<HTMLElement, () => string>();
+
+export function localizedText(element: HTMLElement | null, render: () => string): void {
+	if (!element) return;
+	liveText.set(element, render);
+	element.dataset.i18nLive = '';
+	element.textContent = render();
+}
 
 async function loadWorkspaceDictionaries(): Promise<void> {
 	const slugs = new Set<string>();
@@ -159,6 +167,10 @@ export function applyLanguage(lang: Lang): void {
 		element.textContent = lang.toUpperCase();
 		element.setAttribute('aria-label', t(lang, 'lang.label'));
 		element.setAttribute('title', t(lang, 'lang.label'));
+	});
+	document.querySelectorAll<HTMLElement>('[data-i18n-live]').forEach((element) => {
+		const render = liveText.get(element);
+		if (render) element.textContent = render();
 	});
 
 	document.dispatchEvent(new CustomEvent('lang:change', { detail: { lang } }));
