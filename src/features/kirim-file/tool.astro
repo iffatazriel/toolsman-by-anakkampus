@@ -1,34 +1,35 @@
 ---
+import dict from './i18n';
 import Dropzone from '../../components/ui/Dropzone.astro';
 ---
 
 <div class="tool-shell share-shell">
 	<Dropzone
 		id="kirim-input"
-		label="Pilih satu atau beberapa berkas"
+		label={dict.id.chooseFiles} labelKey="workspace.kirim-file.chooseFiles"
 		multiple
-		hint="Maks. 10 berkas, 100 MB per berkas. File ekstensi .exe, .bat, dan sejenisnya tidak diizinkan."
+		hint={dict.id.fileHint} hintKey="workspace.kirim-file.fileHint"
 	/>
 
-	<ul class="share-list" data-list aria-label="Daftar berkas"></ul>
+	<ul class="share-list" data-list aria-label={dict.id.fileList} data-i18n-aria="workspace.kirim-file.fileList"></ul>
 
 	<fieldset class="share-expiry">
-		<legend class="field-label">Masa berlaku link</legend>
+		<legend class="field-label" data-i18n="workspace.kirim-file.expiry">{dict.id.expiry}</legend>
 		<div class="segmented" role="radiogroup">
-			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-expiry="1h">1 jam</button>
-			<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-expiry="24h">24 jam</button>
-			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-expiry="7d">7 hari</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-expiry="1h" data-i18n="workspace.kirim-file.hour">{dict.id.hour}</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-expiry="24h" data-i18n="workspace.kirim-file.day">{dict.id.day}</button>
+			<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-expiry="7d" data-i18n="workspace.kirim-file.week">{dict.id.week}</button>
 		</div>
 	</fieldset>
 
 	<fieldset class="share-options">
-		<legend class="field-label">Opsi tambahan</legend>
+		<legend class="field-label" data-i18n="workspace.kirim-file.options">{dict.id.options}</legend>
 		<label class="check-row">
 			<input type="checkbox" data-password-toggle />
-			<span>Kunci dengan kata sandi</span>
+			<span data-i18n="workspace.kirim-file.lock">{dict.id.lock}</span>
 		</label>
 		<div data-password-field hidden>
-			<label class="field-label" for="share-password">Kata sandi</label>
+			<label class="field-label" for="share-password" data-i18n="workspace.kirim-file.password">{dict.id.password}</label>
 			<input
 				class="field-input"
 				id="share-password"
@@ -36,29 +37,29 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				autocomplete="off"
 				maxlength="64"
 			/>
-			<p class="field-hint">Minimal 4 karakter. Penerima harus mengetiknya sebelum melihat daftar berkas.</p>
+			<p class="field-hint" data-i18n="workspace.kirim-file.passwordHint">{dict.id.passwordHint}</p>
 		</div>
 		<label class="check-row">
 			<input type="checkbox" data-onetime-toggle />
-			<span>Sekali unduh (per berkas)</span>
+			<span data-i18n="workspace.kirim-file.oneTime">{dict.id.oneTime}</span>
 		</label>
-		<p class="field-hint check-hint">Tiap berkas hanya bisa diunduh sekali. Link hangus setelah semua berkas terunduh.</p>
+		<p class="field-hint check-hint" data-i18n="workspace.kirim-file.oneTimeHint">{dict.id.oneTimeHint}</p>
 	</fieldset>
 
 	<div class="share-turnstile" data-turnstile-wrap hidden>
-		<span class="field-label">Verifikasi keamanan</span>
+		<span class="field-label" data-i18n="workspace.kirim-file.security">{dict.id.security}</span>
 		<div data-turnstile></div>
 		<p class="field-hint" data-turnstile-status role="status"></p>
 	</div>
 
 	<div class="pane-actions">
-		<button type="button" class="btn btn--primary" id="kirim-start" disabled>Unggah dan buat link</button>
-		<button type="button" class="btn btn--secondary" data-cancel hidden>Batalkan</button>
-		<button type="button" class="btn btn--secondary" data-retry hidden>Ulangi unggahan</button>
+		<button type="button" class="btn btn--primary" id="kirim-start" disabled data-i18n="workspace.kirim-file.upload">{dict.id.upload}</button>
+		<button type="button" class="btn btn--secondary" data-cancel hidden data-i18n="workspace.kirim-file.cancel">{dict.id.cancel}</button>
+		<button type="button" class="btn btn--secondary" data-retry hidden data-i18n="workspace.kirim-file.retry">{dict.id.retry}</button>
 	</div>
 
 	<div class="share-overall" data-overall hidden>
-		<progress max="100" value="0" data-overall-bar aria-label="Kemajuan unggahan keseluruhan"></progress>
+		<progress max="100" value="0" data-overall-bar aria-label={dict.id.overallAria} data-i18n-aria="workspace.kirim-file.overallAria"></progress>
 		<p class="field-hint" data-overall-text></p>
 	</div>
 
@@ -67,38 +68,39 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		<p class="field-hint" data-status aria-live="polite"></p>
 	</div>
 
-	<p class="field-hint">
-		Berkas besar diunggah per bagian 8 MB. Kalau koneksi putus, tekan Ulangi unggahan
-		dan alat lanjut dari bagian terakhir yang berhasil, bukan dari awal.
-	</p>
+	<p class="field-hint" data-i18n="workspace.kirim-file.multipartHint">{dict.id.multipartHint}</p>
 
 	<section class="share-result" data-result hidden aria-labelledby="result-title">
-		<h2 id="result-title" class="pane__title">Link siap dibagikan</h2>
+		<h2 id="result-title" class="pane__title" data-i18n="workspace.kirim-file.linkReady">{dict.id.linkReady}</h2>
 		<div class="share-link-row">
-			<input class="field-input" id="share-url" aria-label="Link untuk penerima" readonly />
-			<button type="button" class="btn btn--secondary" id="share-copy">Salin link</button>
+			<input class="field-input" id="share-url" aria-label={dict.id.recipientLink} data-i18n-aria="workspace.kirim-file.recipientLink" readonly />
+			<button type="button" class="btn btn--secondary" id="share-copy" data-i18n="workspace.kirim-file.copyLink">{dict.id.copyLink}</button>
 		</div>
 		<div class="share-meta">
-			<img id="share-qr" alt="QR code untuk link" width="180" height="180" />
+			<img id="share-qr" alt={dict.id.qrAlt} data-i18n-alt="workspace.kirim-file.qrAlt" width="180" height="180" />
 			<p class="field-hint" data-countdown></p>
 		</div>
 		<p class="field-hint" data-result-note hidden></p>
-		<label class="field-label" for="share-manage-url">Link kelola (simpan, jangan dibagikan)</label>
+		<label class="field-label" for="share-manage-url" data-i18n="workspace.kirim-file.manageLink">{dict.id.manageLink}</label>
 		<div class="share-link-row">
 			<input class="field-input" id="share-manage-url" readonly />
-			<button type="button" class="btn btn--secondary" id="share-manage-copy">Salin link kelola</button>
+			<button type="button" class="btn btn--secondary" id="share-manage-copy" data-i18n="workspace.kirim-file.copyManage">{dict.id.copyManage}</button>
 		</div>
 		<p class="field-hint" id="share-manage-note"></p>
 	</section>
 	<section class="pane" aria-labelledby="saved-shares-title">
-		<h2 id="saved-shares-title" class="pane__title">Kiriman kamu</h2>
-		<p class="field-hint">Tersimpan di browser ini sampai kedaluwarsa (maksimal 50 kiriman). Link kelola bisa menghapus berkas: jangan dibagikan. Menghapus dari daftar tidak menghapus berkas di server.</p>
+		<h2 id="saved-shares-title" class="pane__title" data-i18n="workspace.kirim-file.yourShares">{dict.id.yourShares}</h2>
+		<p class="field-hint" data-i18n="workspace.kirim-file.savedHint">{dict.id.savedHint}</p>
 		<ul id="saved-shares"></ul>
-		<p class="field-hint" id="saved-shares-empty">Belum ada kiriman tersimpan.</p>
+		<p class="field-hint" id="saved-shares-empty" data-i18n="workspace.kirim-file.savedEmpty">{dict.id.savedEmpty}</p>
 	</section>
 </div>
 
 <script>
+	import { currentLang, tr, workspaceErrorMessage } from '../../lib/i18n';
+	import { localizedText } from '../../lib/i18n-client';
+	import dict from './i18n';
+	import { apiErrorKey } from './client-errors';
 	import { toast } from '../../lib/toast';
 	import { copyText } from '../../lib/clipboard';
 	import { dropzoneOf, setDropzoneState } from '../../lib/dropzone';
@@ -116,7 +118,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		partSize,
 		shouldUseMultipart,
 	} from './multipart';
-	import { validateFile, validatePassword } from './share-rules';
+	import { PASSWORD_MIN, PASSWORD_MAX, validateFile, validatePassword } from './share-rules';
 	import { qrDataUrl } from './qr';
 	import { loadSavedShares, managePath, removeSavedShare, saveShare, senderStorage } from './saved-shares';
 
@@ -173,10 +175,10 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			const link = document.createElement('a');
 			link.href = managePath(share.id, share.token); link.textContent = share.fileNames.join(', ');
 			link.rel = 'noreferrer';
-			const note = document.createElement('p'); note.className = 'field-hint'; note.textContent = `Berlaku ${formatRemaining(share.expiresAt - Date.now())}.`;
-			const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn--secondary'; remove.textContent = 'Hapus dari daftar';
-			remove.setAttribute('aria-label', `Hapus ${share.fileNames.join(', ')} dari daftar`);
-			remove.addEventListener('click', () => { if (!removeSavedShare(senderStorage(), share.id)) toast('Daftar belum bisa diperbarui. Periksa izin penyimpanan browser kamu.', { tone: 'error' }); renderSavedShares(); });
+			const note = document.createElement('p'); note.className = 'field-hint'; localizedText(note, () => tr(dict, 'validFor', { remaining: formatRemaining(share.expiresAt - Date.now()) }));
+			const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn--secondary'; localizedText(remove, () => (tr(dict, 'removeSaved')));
+			remove.setAttribute('aria-label', tr(dict, 'removeAria', { name: share.fileNames.join(', ') }));
+			remove.addEventListener('click', () => { if (!removeSavedShare(senderStorage(), share.id)) toast(() => (tr(dict, 'storageFailed')), { tone: 'error' }); renderSavedShares(); });
 			item.append(link, note, remove); savedList.append(item);
 		}
 		document.getElementById('saved-shares-empty')!.hidden = saved.length > 0;
@@ -184,9 +186,12 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 	renderSavedShares();
 	window.setInterval(renderSavedShares, 60_000);
 	window.addEventListener('storage', renderSavedShares);
+	document.addEventListener('lang:change', renderSavedShares);
 	document.getElementById('share-manage-copy')!.addEventListener('click', async () => {
 		const value = document.querySelector<HTMLInputElement>('#share-manage-url')!.value;
-		if (value) toast(await copyText(value) ? 'Link kelola disalin. Simpan untuk kamu sendiri.' : 'Gagal menyalin. Pilih link kelola lalu salin manual.');
+		if (!value) return;
+		const copied = await copyText(value);
+		toast(() => copied ? tr(dict, 'manageCopied') : tr(dict, 'manageCopyFailed'));
 	});
 
 	if (input && list && startButton && status && result && urlField && copyButton && qrImage && countdown) {
@@ -200,7 +205,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			if (window.turnstile && turnstileWidget) {
 				window.turnstile.reset(turnstileWidget);
 				if (turnstileStatus) {
-					turnstileStatus.textContent = 'Selesaikan verifikasi sebelum mengunggah.';
+					localizedText(turnstileStatus, () => (tr(dict, 'verifyFirst')));
 				}
 			}
 		};
@@ -212,40 +217,47 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			if (TURNSTILE_SITE_KEY === '' || !wrap || !box || !note) return;
 
 			wrap.hidden = false;
-			note.textContent = 'Memuat verifikasi keamanan…';
+			localizedText(note, () => (tr(dict, 'verifyLoading')));
 
 			const script = document.createElement('script');
 			script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 			script.async = true;
-			script.addEventListener('load', () => {
+			const renderVerification = () => {
 				if (!window.turnstile) {
-					note.textContent = 'Verifikasi tidak bisa dimuat. Muat ulang halaman.';
+					localizedText(note, () => (tr(dict, 'verifyLoadFailed')));
 					return;
 				}
 				try {
+					if (turnstileWidget) window.turnstile.remove(turnstileWidget);
+					turnstileToken = '';
 					turnstileWidget = window.turnstile.render(box, {
 						sitekey: TURNSTILE_SITE_KEY,
 						theme: 'auto',
+						language: currentLang(),
 						callback: (token: string) => {
 							turnstileToken = token;
-							note.textContent = 'Verifikasi selesai.';
+							localizedText(note, () => (tr(dict, 'verified')));
 						},
 						'expired-callback': () => {
 							turnstileToken = '';
-							note.textContent = 'Verifikasi kedaluwarsa. Selesaikan lagi.';
+							localizedText(note, () => (tr(dict, 'verifyExpired')));
 						},
 						'error-callback': () => {
 							turnstileToken = '';
-							note.textContent = 'Verifikasi gagal. Muat ulang halaman.';
+							localizedText(note, () => (tr(dict, 'verifyFailed')));
 						},
 					});
-					note.textContent = 'Selesaikan verifikasi sebelum mengunggah.';
+					localizedText(note, () => (tr(dict, 'verifyFirst')));
 				} catch {
-					note.textContent = 'Verifikasi tidak bisa dimulai. Muat ulang halaman.';
+					localizedText(note, () => (tr(dict, 'verifyStartFailed')));
 				}
+			};
+			script.addEventListener('load', renderVerification);
+			document.addEventListener('lang:change', () => {
+				if (turnstileWidget) renderVerification();
 			});
 			script.addEventListener('error', () => {
-				note.textContent = 'Verifikasi tidak bisa dimuat. Muat ulang halaman.';
+				localizedText(note, () => (tr(dict, 'verifyLoadFailed')));
 			});
 			document.head.append(script);
 		};
@@ -265,8 +277,8 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		const multipartStarted = new Set<number>();
 		const thumbUrls = new Map<File, string>();
 
-		const setStatus = (message: string, loading = false) => {
-			status.textContent = message;
+		const setStatus = (message: () => string, loading = false) => {
+			localizedText(status, message);
 			if (statusSpinner) statusSpinner.hidden = !loading;
 		};
 
@@ -283,7 +295,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			if (files.length === 0) {
 				overall.hidden = true;
 				overallBar.value = 0;
-				overallText.textContent = '';
+				localizedText(overallText, () => (''));
 				return;
 			}
 
@@ -296,7 +308,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 			overall.hidden = false;
 			overallBar.value = percent;
-			overallText.textContent = `${percent}% · ${formatBytes(loaded)} dari ${formatBytes(total)}`;
+			localizedText(overallText, () => tr(dict, 'overall', { percent, loaded: formatBytes(loaded), total: formatBytes(total) }));
 		};
 
 		const clearThumbs = () => {
@@ -319,13 +331,13 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		const stateLabel = (index: number) => {
 			const file = files[index];
 			if (!file) return '';
-			if (states[index] === 'done') return 'Selesai';
-			if (states[index] === 'failed') return 'Gagal';
+			if (states[index] === 'done') return tr(dict, 'done');
+			if (states[index] === 'failed') return tr(dict, 'failed');
 			if (states[index] === 'uploading') {
 				const percent = progress[index] ?? 0;
-				return shouldUseMultipart(file.size) ? `${percent}% · per bagian` : `${percent}%`;
+				return shouldUseMultipart(file.size) ? tr(dict, 'partProgress', { percent }) : `${percent}%`;
 			}
-			return 'Siap diunggah';
+			return tr(dict, 'idle');
 		};
 
 		const renderList = () => {
@@ -349,7 +361,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 					image.loading = 'lazy';
 					thumb.append(image);
 				} else {
-					const extension = file.name.split('.').pop() ?? 'file';
+					const extension = file.name.split(tr(dict, 'aboutSuffix')).pop() ?? 'file';
 					thumb.textContent = extension.slice(0, 4).toUpperCase();
 				}
 
@@ -368,7 +380,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 				const state = document.createElement('span');
 				state.className = 'share-item__state';
-				state.textContent = stateLabel(index);
+				localizedText(state, () => (stateLabel(index)));
 				if (states[index] === 'done') state.classList.add('is-done');
 				if (states[index] === 'failed') state.classList.add('is-failed');
 
@@ -380,7 +392,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				remove.className = 'icon-button share-item__remove';
 				remove.textContent = '×';
 				remove.disabled = running;
-				remove.setAttribute('aria-label', `Hapus ${file.name} dari daftar`);
+				remove.setAttribute('aria-label', tr(dict, 'removeAria', { name: file.name }));
 				remove.addEventListener('click', () => {
 					if (running) return;
 					const [removedFile] = files.splice(index, 1);
@@ -404,7 +416,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 					const bar = document.createElement('progress');
 					bar.max = 100;
 					bar.value = states[index] === 'done' ? 100 : (progress[index] ?? 0);
-					bar.setAttribute('aria-label', `Kemajuan ${file.name}`);
+					bar.setAttribute('aria-label', tr(dict, 'progressAria', { name: file.name }));
 					item.append(bar);
 				}
 
@@ -425,11 +437,11 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		input.addEventListener('change', () => {
 			if (running) return;
 			const picked = Array.from(input.files ?? []);
-			const problems = picked.map(validateFile).filter((item): item is string => item !== null);
+			const invalid = picked.find((file) => validateFile(file) !== null);
 			files = picked.filter((file) => validateFile(file) === null);
 			input.value = '';
 			clearThumbs();
-			setStatus(problems[0] ?? '');
+			setStatus(() => invalid ? validateFile(invalid, currentLang()) ?? '' : '');
 			result.hidden = true;
 			resetSession();
 			resetFiles();
@@ -456,26 +468,25 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			urlField.value = url;
 			document.querySelector<HTMLInputElement>('#share-manage-url')!.value = `${location.origin}${managePath(active.id, active.manageToken)}`;
 			const saved = saveShare(senderStorage(), { id: active.id, token: active.manageToken, expiresAt: active.expiresAt, fileNames: active.uploads.map((file) => file.name) });
-			document.getElementById('share-manage-note')!.textContent = saved ? 'Link kelola disimpan di Kiriman kamu pada browser ini. Simpan juga salinannya; token yang hilang tidak bisa dipulihkan.' : 'Browser tidak bisa menyimpan link kelola. Salin dan simpan sekarang; token yang hilang tidak bisa dipulihkan.';
+			localizedText(document.getElementById('share-manage-note')!, () => (saved ? tr(dict, 'manageSaved') : tr(dict, 'manageUnsaved')));
 			renderSavedShares();
 			result.hidden = false;
 			try { qrImage.src = await makeQr(url); qrImage.hidden = false; }
 			catch { qrImage.hidden = true; }
 
-			const notes: string[] = [];
-			if (active.protected) notes.push('Penerima perlu kata sandi untuk membuka link ini.');
-			if (active.oneTime) {
-				notes.push(
-					'Tiap berkas hanya bisa diunduh sekali. Link hangus setelah semua berkas terunduh.',
-				);
-			}
+			const notes = () => {
+				const messages: string[] = [];
+				if (active.protected) messages.push(tr(dict, 'needsPassword'));
+				if (active.oneTime) messages.push(tr(dict, 'oneTimeHint'));
+				return messages.join(' ');
+			};
 			if (resultNote) {
-				resultNote.textContent = notes.join(' ');
-				resultNote.hidden = notes.length === 0;
+				localizedText(resultNote, notes);
+				resultNote.hidden = !active.protected && !active.oneTime;
 			}
 
 			const tick = () => {
-				countdown.textContent = `Berlaku ${formatRemaining(active.expiresAt - Date.now())}.`;
+				localizedText(countdown, () => tr(dict, 'validFor', { remaining: formatRemaining(active.expiresAt - Date.now()) }));
 			};
 			tick();
 			window.clearInterval(timer);
@@ -486,8 +497,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			const wantsPassword = Boolean(passwordToggle?.checked);
 			const password = passwordInput?.value ?? '';
 			if (wantsPassword) {
-				const problem = validatePassword(password);
-				if (problem) throw new UploadError(problem);
+				if (validatePassword(password)) throw new UploadError(password.length < PASSWORD_MIN ? 'passwordMin' : 'passwordMax', undefined, { count: password.length < PASSWORD_MIN ? PASSWORD_MIN : PASSWORD_MAX });
 			}
 
 			const response = await fetch('/api/shares', {
@@ -513,7 +523,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				error?: string;
 			};
 			if (!response.ok || !data.id || !data.manageToken || !data.uploads || data.expiresAt === undefined) {
-				throw new UploadError(data.error ?? 'Gagal membuat link.');
+				throw new UploadError(response.ok ? 'incomplete' : apiErrorKey(response.status), response.status, { status: response.status });
 			}
 
 			return {
@@ -537,7 +547,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 			const total = partCount(file.size);
 			if (info.partCount !== total) {
-				throw new UploadError('Jumlah bagian tidak cocok dengan ukuran berkas.');
+				throw new UploadError("partsMismatch");
 			}
 
 			const done = new Set(info.completed);
@@ -548,7 +558,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 			for (let part = 1; part <= total; part += 1) {
 				if (done.has(part)) continue;
-				if (cancelled) throw new UploadError('Unggahan dibatalkan.');
+				if (cancelled) throw new UploadError("uploadCancelled");
 
 				const range = partRange(file.size, part);
 				const chunk = file.slice(range.start, range.end);
@@ -579,7 +589,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 						if (httpStatus !== undefined && httpStatus < 500) throw error;
 						retry += 1;
 						if (retry > 2) throw error;
-						setStatus(`Koneksi terputus di bagian ${part}. Mengulang ${retry}/2…`, true);
+						setStatus(() => tr(dict, 'retryPart', { part, retry }), true);
 						await delay(800 * retry);
 					}
 				}
@@ -592,12 +602,12 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		const uploadOne = async (index: number) => {
 			const active = session;
 			const file = files[index];
-			if (!active || !file) throw new UploadError('Respons server tidak lengkap.');
+			if (!active || !file) throw new UploadError("incomplete");
 
 			states[index] = 'uploading';
 			renderList();
 			setStatus(
-				`Mengunggah ${file.name}…${shouldUseMultipart(file.size) ? ' (per bagian 8 MB)' : ''}`,
+				() => tr(dict, 'uploadFile', { name: file.name, multipart: shouldUseMultipart(file.size) ? tr(dict, 'multipartSuffix') : '' }),
 				true,
 			);
 
@@ -606,7 +616,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 					await uploadMultipart(index, active, file);
 				} else {
 					const target = active.uploads[index];
-					if (!target) throw new UploadError('Respons server tidak lengkap.');
+					if (!target) throw new UploadError("incomplete");
 
 					const handle = putWithProgress(
 						target.uploadUrl,
@@ -632,7 +642,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		const uploadAll = async () => {
 			for (let index = 0; index < files.length; index += 1) {
 				if (states[index] === 'done') continue;
-				if (cancelled) throw new UploadError('Unggahan dibatalkan.');
+				if (cancelled) throw new UploadError("uploadCancelled");
 
 				for (;;) {
 					try {
@@ -644,7 +654,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 						if (httpStatus === undefined && (attempts[index] ?? 0) < 1) {
 							attempts[index] = (attempts[index] ?? 0) + 1;
 							setStatus(
-								`Koneksi terputus. Mengulang ${files[index]?.name ?? 'berkas'}…`,
+								() => tr(dict, 'retryFile', { name: files[index]?.name ?? tr(dict, 'fileFallback') }),
 								true,
 							);
 							await delay(1200);
@@ -664,7 +674,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			const stale = session !== null && Date.now() - createdAt > PRESIGN_WINDOW_MS;
 			const needsNewSession = !session || stale;
 			if (needsNewSession && TURNSTILE_SITE_KEY !== '' && turnstileToken === '') {
-				setStatus('Selesaikan verifikasi keamanan dulu.');
+				setStatus(() => (tr(dict, 'verifyRequired')));
 				return;
 			}
 
@@ -676,9 +686,9 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 			try {
 				if (needsNewSession) {
 					if (stale) {
-						setStatus('Sesi unggah sebelumnya sudah terlalu lama. Membuat link baru…', true);
+						setStatus(() => (tr(dict, 'staleSession')), true);
 					} else {
-						setStatus('Menyiapkan unggahan…', true);
+						setStatus(() => (tr(dict, 'preparing')), true);
 					}
 					resetSession();
 					states = files.map(() => 'idle');
@@ -694,12 +704,12 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 
 				await uploadAll();
 				const active = session;
-				if (!active) throw new UploadError('Sesi unggah tidak siap.');
+				if (!active) throw new UploadError("sessionMissing");
 				await postJson(`/api/shares/${active.id}/complete`, {});
-				setStatus('');
+				setStatus(() => (''));
 				retryable = false;
 				await showResult(active);
-				toast('Link siap dibagikan.', { tone: 'success' });
+				toast(() => (tr(dict, 'readyToast')), { tone: 'success' });
 			} catch (error) {
 				if (error instanceof UploadError && error.status === 410) resetSession();
 				retryable = session !== null;
@@ -719,11 +729,9 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				}
 
 				setStatus(
-					cancelled
-						? 'Unggahan dibatalkan. Berkas yang sudah selesai tidak diunggah ulang.'
-						: error instanceof Error
-							? error.message
-							: 'Terjadi kesalahan.',
+					() => (cancelled
+						? tr(dict, 'cancelledResume')
+						: workspaceErrorMessage(error, tr(dict, 'unexpected'))),
 				);
 			} finally {
 				current = null;
@@ -743,16 +751,17 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		cancelButton?.addEventListener('click', () => {
 			if (!running) return;
 			cancelled = true;
-			setStatus('Membatalkan unggahan…', true);
+			setStatus(() => (tr(dict, 'cancelling')), true);
 			current?.abort();
 		});
 
 		copyButton.addEventListener('click', async () => {
 			const copied = await copyText(urlField.value);
-			toast(copied ? 'Link disalin.' : 'Gagal menyalin. Pilih linknya lalu tekan Ctrl+C.', { tone: copied ? 'success' : 'error' });
+			toast(() => (copied ? tr(dict, 'copied') : tr(dict, 'copyFailed')), { tone: copied ? 'success' : 'error' });
 		});
 
 		setupTurnstile();
+		document.addEventListener('lang:change', renderList);
 	}
 </script>
 

@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const root = new URL('../src/features/', import.meta.url);
 const marker = /\b(?:kamu|salin|unduh|unggah|pilih|tempel|berkas|hasil|gagal|mengolah|periksa|kata|bahasa|jumlah|karakter|tanpa|spasi|ubah|kalimat|huruf|besar|kecil|hapus|simpan|batal|kosong|masukkan|tambah|semua|belum|sudah|tidak|hanya|untuk|dengan|atau|ukuran|baris|warna|gambar|mulai|berhenti|mengunduh|memuat|menyalin|maksimal|pertahankan|standar)\b/i;
@@ -14,9 +14,23 @@ function filesAt(directory) {
 	});
 }
 
+function workspaceFiles(directory) {
+	const available = new Set(filesAt(directory));
+	const reachable = new Set([...available].filter((file) => /\.(?:astro|tsx|jsx)$|-client\.[jt]s$/.test(file)));
+	for (const file of reachable) {
+		for (const match of readFileSync(file, 'utf8').matchAll(/['"](\.[^'"]+)['"]/g)) {
+			const path = resolve(dirname(file), match[1]);
+			for (const extension of ['', '.ts', '.tsx', '.js', '.jsx', '.astro']) {
+				if (available.has(path + extension)) reachable.add(path + extension);
+			}
+		}
+	}
+	return [...reachable];
+}
+
 for (const item of readdirSync(root, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
 	if (!item.isDirectory() || selected.size && !selected.has(item.name)) continue;
-	const files = filesAt(new URL(`${item.name}/`, root).pathname);
+	const files = workspaceFiles(new URL(`${item.name}/`, root).pathname);
 	const tokens = new Set(files.flatMap((file) => [...readFileSync(file, 'utf8').matchAll(/\b(?:data-[\w-]+|id|for|class)="([^"\s]+)"/g)].map((match) => match[1])));
 	const candidates = [];
 	for (const file of files) {

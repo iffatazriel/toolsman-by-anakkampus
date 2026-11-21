@@ -1,13 +1,18 @@
+import { currentLang, WorkspaceError } from '../../lib/i18n';
+import { apiErrorKey } from './client-errors';
+import dict from './i18n';
+import { formatRemaining as remaining } from './format';
+
 export interface UploadHandle {
 	promise: Promise<void>;
 	abort: () => void;
 }
 
-export class UploadError extends Error {
+export class UploadError extends WorkspaceError<typeof dict> {
 	status?: number;
 
-	constructor(message: string, status?: number) {
-		super(message);
+	constructor(key: keyof typeof dict.id, status?: number, values: Record<string, string | number> = {}) {
+		super(dict, key, values);
 		this.name = 'UploadError';
 		this.status = status;
 	}
@@ -31,11 +36,11 @@ function xhrUpload(
 		});
 		xhr.addEventListener('load', () => {
 			if (xhr.status >= 200 && xhr.status < 300) resolve();
-			else reject(new UploadError(`Unggah gagal (${xhr.status}).`, xhr.status));
+			else reject(new UploadError('uploadHttp', xhr.status, { status: xhr.status }));
 		});
-		xhr.addEventListener('error', () => reject(new UploadError('Koneksi terputus saat mengunggah.')));
-		xhr.addEventListener('timeout', () => reject(new UploadError('Unggahan melewati batas waktu.')));
-		xhr.addEventListener('abort', () => reject(new UploadError('Unggahan dibatalkan.')));
+		xhr.addEventListener('error', () => reject(new UploadError('network')));
+		xhr.addEventListener('timeout', () => reject(new UploadError('timeout')));
+		xhr.addEventListener('abort', () => reject(new UploadError('uploadCancelled')));
 		xhr.send(body);
 	});
 
@@ -70,9 +75,12 @@ export async function postJson<T>(
 	});
 	const data = (await response.json().catch(() => ({}))) as T & { error?: string };
 	if (!response.ok) {
-		throw new UploadError(data.error ?? `Permintaan gagal (${response.status}).`, response.status);
+		throw new UploadError(apiErrorKey(response.status), response.status, { status: response.status });
 	}
 	return data;
 }
 
-export { formatBytes, formatRemaining } from './format';
+export { formatBytes } from './format';
+export function formatRemaining(ms: number): string {
+	return remaining(ms, currentLang());
+}

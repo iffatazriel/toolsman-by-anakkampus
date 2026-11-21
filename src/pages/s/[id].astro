@@ -1,4 +1,5 @@
 ---
+import dict from '../../features/kirim-file/i18n';
 import Layout from '../../layouts/Layout.astro';
 import Modal from '../../components/ui/Modal.astro';
 import type { ShareFileRow, ShareRow } from '../../features/kirim-file/db';
@@ -36,7 +37,7 @@ const locked = Boolean(row?.password_hash);
 const maxDownloads = row?.max_downloads ?? null;
 
 let password = '';
-let passwordError: string | null = null;
+let passwordError: 'passwordRate' | 'passwordWrong' | null = null;
 
 if (Astro.request.method === 'POST' && locked && row && view.state === 'ok') {
 	const allowed = await allowPasswordAttempt(
@@ -46,7 +47,7 @@ if (Astro.request.method === 'POST' && locked && row && view.state === 'ok') {
 	);
 
 	if (!allowed) {
-		passwordError = 'Terlalu banyak percobaan. Tunggu sebentar, lalu coba lagi.';
+		passwordError = 'passwordRate';
 	} else {
 		try {
 			const form = await Astro.request.formData();
@@ -56,7 +57,7 @@ if (Astro.request.method === 'POST' && locked && row && view.state === 'ok') {
 		}
 		if (!(await verifyPassword(password, row.password_hash ?? ''))) {
 			password = '';
-			passwordError = 'Kata sandi salah. Coba lagi.';
+			passwordError = 'passwordWrong';
 		}
 	}
 }
@@ -92,23 +93,18 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 ---
 
 <Layout
-	title={access === 'ok' ? `Unduh berkas, Toolsman` : 'Link tidak tersedia, Toolsman'}
-	description="Halaman unduh berkas yang dibagikan lewat Toolsman. Link hilang sendiri sesuai masa berlakunya."
+	title={access === 'ok' ? dict.id.recipientTitle : dict.id.unavailableTitle}
+	description={dict.id.recipientDescription}
 	noindex
 >
-	<section class="container prose-page share-page" data-share-id={id}>
+	<section class="container prose-page share-page" data-share-id={id} data-available={access === 'ok'} data-expires-at={row?.expires_at}>
 		{
 			access === 'missing' && (
 				<>
-					<h1>Link tidak ditemukan</h1>
+					<h1 data-i18n="workspace.kirim-file.missingTitle">{dict.id.missingTitle}</h1>
+					<p data-i18n="workspace.kirim-file.missingBody">{dict.id.missingBody}</p>
 					<p>
-						Alamat ini salah, link-nya sudah dihapus, atau berkasnya belum selesai diunggah.
-						Minta pengirim membuat link baru.
-					</p>
-					<p>
-						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
-							Buat link sendiri
-						</a>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file" data-i18n="workspace.kirim-file.createOwn">{dict.id.createOwn}</a>
 					</p>
 				</>
 			)
@@ -117,15 +113,10 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 		{
 			access === 'expired' && (
 				<>
-					<h1>Link sudah kedaluwarsa</h1>
+					<h1 data-i18n="workspace.kirim-file.expiredTitle">{dict.id.expiredTitle}</h1>
+					<p data-i18n="workspace.kirim-file.expiredBody">{dict.id.expiredBody}</p>
 					<p>
-						Berkas dan link ini sudah dihapus otomatis. Kalau masih perlu, minta pengirim
-						mengunggah ulang dengan masa berlaku lebih lama.
-					</p>
-					<p>
-						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
-							Kirim berkas
-						</a>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file" data-i18n="workspace.kirim-file.sendFiles">{dict.id.sendFiles}</a>
 					</p>
 				</>
 			)
@@ -134,15 +125,10 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 		{
 			access === 'exhausted' && (
 				<>
-					<h1>Berkas sudah diunduh</h1>
+					<h1 data-i18n="workspace.kirim-file.usedTitle">{dict.id.usedTitle}</h1>
+					<p data-i18n="workspace.kirim-file.usedBody">{dict.id.usedBody}</p>
 					<p>
-						Link ini hanya berlaku sekali unduh, dan kuotanya sudah terpakai. Minta
-						pengirim membuat link baru kalau berkasnya masih dibutuhkan.
-					</p>
-					<p>
-						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
-							Kirim berkas
-						</a>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file" data-i18n="workspace.kirim-file.sendFiles">{dict.id.sendFiles}</a>
 					</p>
 				</>
 			)
@@ -151,19 +137,14 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 		{
 			access === 'taken-down' && (
 				<>
-					<h1>Link ini dinonaktifkan</h1>
+					<h1 data-i18n="workspace.kirim-file.disabledTitle">{dict.id.disabledTitle}</h1>
+					<p data-i18n="workspace.kirim-file.disabledBody">{dict.id.disabledBody}</p>
 					<p>
-						Link ini sudah dinonaktifkan karena melanggar ketentuan layanan. Berkasnya
-						sudah dihapus dan tidak bisa diunduh lagi.
+						<span data-i18n="workspace.kirim-file.ownerHelp">{dict.id.ownerHelp}</span>{' '}
+						<a href="/tentang" data-i18n="workspace.kirim-file.about">{dict.id.about}</a><span data-i18n="workspace.kirim-file.aboutSuffix">{dict.id.aboutSuffix}</span>
 					</p>
 					<p>
-						Kalau kamu pemilik berkas dan merasa ini keliru, hubungi pemilik situs lewat
-						halaman <a href="/tentang">Tentang</a>.
-					</p>
-					<p>
-						<a class="btn btn--primary mt-4" href="/tools/kirim-file">
-							Kirim berkas
-						</a>
+						<a class="btn btn--primary mt-4" href="/tools/kirim-file" data-i18n="workspace.kirim-file.sendFiles">{dict.id.sendFiles}</a>
 					</p>
 				</>
 			)
@@ -172,11 +153,8 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 		{
 			access === 'ok' && !r2Ready && (
 				<>
-					<h1>Layanan unduh belum siap</h1>
-					<p>
-						Link ini valid, tapi penyimpanan berkas di server belum diatur. Hubungi pemilik
-						situs, atau minta pengirim membuat link baru nanti.
-					</p>
+					<h1 data-i18n="workspace.kirim-file.storageTitle">{dict.id.storageTitle}</h1>
+					<p data-i18n="workspace.kirim-file.storageBody">{dict.id.storageBody}</p>
 				</>
 			)
 		}
@@ -184,10 +162,10 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 		{
 			access === 'locked' && r2Ready && (
 				<form method="post" class="share-lock">
-					<h1>Link ini dikunci</h1>
-					<p>Masukkan kata sandi dari pengirim untuk melihat daftar berkas.</p>
+					<h1 data-i18n="workspace.kirim-file.lockedTitle">{dict.id.lockedTitle}</h1>
+					<p data-i18n="workspace.kirim-file.lockedBody">{dict.id.lockedBody}</p>
 					<div>
-						<label class="field-label" for="share-password">Kata sandi</label>
+						<label class="field-label" for="share-password" data-i18n="workspace.kirim-file.password">{dict.id.password}</label>
 						<input
 							class="field-input"
 							id="share-password"
@@ -199,12 +177,12 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 							aria-describedby={passwordError ? 'share-password-error' : undefined}
 						/>
 						{passwordError && (
-							<p class="field-error" id="share-password-error" role="alert">
-								{passwordError}
+							<p class="field-error" id="share-password-error" role="alert" data-i18n={`workspace.kirim-file.${passwordError}`}>
+								{dict.id[passwordError]}
 							</p>
 						)}
 					</div>
-					<button class="btn btn--primary" type="submit">Buka link</button>
+					<button class="btn btn--primary" type="submit" data-i18n="workspace.kirim-file.unlock">{dict.id.unlock}</button>
 				</form>
 			)
 		}
@@ -212,13 +190,11 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 		{
 			access === 'ok' && r2Ready && (
 				<>
-					<h1>Berkas siap diunduh</h1>
+					<h1 data-i18n="workspace.kirim-file.readyTitle">{dict.id.readyTitle}</h1>
 					<p data-countdown>{formatRemaining(view.remainingMs)}.</p>
 
 					{files.length === 0 ? (
-						<p class="empty-state__body">
-							Daftar berkas belum bisa dibaca. Muat ulang halaman ini sebentar lagi.
-						</p>
+						<p class="empty-state__body" data-i18n="workspace.kirim-file.filesUnreadable">{dict.id.filesUnreadable}</p>
 					) : (
 						<ul class="share-page__list">
 							{files.map((file) => (
@@ -227,24 +203,21 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 										{file.name}
 										<span class="share-page__size">
 											{formatBytes(file.size)}
-											{file.remaining !== null &&
-												` · ${file.remaining > 0 ? `sisa ${file.remaining} unduhan` : 'sudah diunduh'}`}
+											{file.remaining !== null && <span data-download-remaining={file.remaining}> · {file.remaining > 0 ? dict.id.remainingDownloads.replace('{count}', String(file.remaining)) : dict.id.downloaded}</span>}
 										</span>
 									</span>
 									{file.remaining === 0 ? (
-											<button type="button" class="btn btn--secondary" disabled>
-												Sudah diunduh
-											</button>
+											<button type="button" class="btn btn--secondary" disabled data-i18n="workspace.kirim-file.downloaded">{dict.id.downloaded}</button>
 										) : (
 											<form
 												method="post"
+												data-download-form
+												data-file-name={file.name}
 												action={file.action}>
 												{password !== '' && (
 													<input type="hidden" name="password" value={password} />
 												)}
-												<button type="submit" class="btn btn--primary">
-													Unduh
-												</button>
+												<button type="submit" class="btn btn--primary" data-i18n="workspace.kirim-file.download">{dict.id.download}</button>
 											</form>
 									)}
 								</li>
@@ -252,27 +225,20 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 						</ul>
 					)}
 
-					{maxDownloads !== null && (
-						<p class="field-hint">
-							{maxDownloads === 1
-								? files.length === 1
-									? 'Berkas ini hanya bisa diunduh sekali. Setelah diunduh, link hangus.'
-									: 'Tiap berkas hanya bisa diunduh sekali. Link hangus setelah semua berkas terunduh.'
-								: `Tiap berkas bisa diunduh sampai ${maxDownloads} kali.`}
-						</p>
-					)}
+					<p class="field-hint" data-download-status role="status"></p>
+					{maxDownloads !== null && (maxDownloads === 1 ? (
+						<p class="field-hint" data-i18n={`workspace.kirim-file.${files.length === 1 ? 'onceSingle' : 'oneTimeHint'}`}>{files.length === 1 ? dict.id.onceSingle : dict.id.oneTimeHint}</p>
+					) : (
+						<p class="field-hint" data-download-limit={maxDownloads}>{dict.id.limitDownloads.replace('{count}', String(maxDownloads))}</p>
+					))}
 
-					<button type="button" class="btn btn--ghost" data-report-open>
-						Laporkan link ini
-					</button>
+					<button type="button" class="btn btn--ghost" data-report-open data-i18n="workspace.kirim-file.reportOpen">{dict.id.reportOpen}</button>
 
 					<Modal id="report-modal" labelledby="report-title">
-						<h2 id="report-title">Laporkan link</h2>
-						<p class="field-hint">
-							Tulis alasan singkat, misalnya isinya berbahaya atau bukan untuk dibagikan.
-						</p>
+						<h2 id="report-title" data-i18n="workspace.kirim-file.reportTitle">{dict.id.reportTitle}</h2>
+						<p class="field-hint" data-i18n="workspace.kirim-file.reportHint">{dict.id.reportHint}</p>
 						<form data-report-form class="share-page__report">
-							<label class="field-label" for="report-reason">Alasan</label>
+							<label class="field-label" for="report-reason" data-i18n="workspace.kirim-file.reason">{dict.id.reason}</label>
 							<textarea
 								id="report-reason"
 								class="field-input"
@@ -280,10 +246,8 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 								maxlength="500"
 								required></textarea>
 							<div class="pane-actions">
-								<button type="submit" class="btn btn--primary">Kirim laporan</button>
-								<button type="button" class="btn btn--secondary" data-report-close>
-									Batal
-								</button>
+								<button type="submit" class="btn btn--primary" data-i18n="workspace.kirim-file.reportSend">{dict.id.reportSend}</button>
+								<button type="button" class="btn btn--secondary" data-report-close data-i18n="workspace.kirim-file.dismiss">{dict.id.dismiss}</button>
 							</div>
 							<p class="field-hint" data-report-status aria-live="polite"></p>
 						</form>
@@ -295,35 +259,7 @@ if (access === 'expired' || access === 'exhausted' || access === 'taken-down') {
 </Layout>
 
 <script>
-	const page = document.querySelector<HTMLElement>('[data-share-id]');
-	const shareId = page?.dataset.shareId ?? '';
-	const openButton = document.querySelector<HTMLButtonElement>('[data-report-open]');
-	const dialog = document.getElementById('report-modal') as HTMLDialogElement | null;
-	const closeButton = document.querySelector<HTMLButtonElement>('[data-report-close]');
-	const form = document.querySelector<HTMLFormElement>('[data-report-form]');
-	const status = document.querySelector<HTMLElement>('[data-report-status]');
-
-	openButton?.addEventListener('click', () => dialog?.showModal());
-	closeButton?.addEventListener('click', () => dialog?.close());
-
-	form?.addEventListener('submit', async (event) => {
-		event.preventDefault();
-		if (!status || shareId === '') return;
-		status.textContent = 'Mengirim laporan…';
-		try {
-			const reason = (document.getElementById('report-reason') as HTMLTextAreaElement).value;
-			const response = await fetch(`/api/shares/${shareId}/report`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ reason }),
-			});
-			if (!response.ok) throw new Error('Gagal mengirim laporan.');
-			status.textContent = 'Laporan terkirim. Terima kasih.';
-			form.reset();
-		} catch {
-			status.textContent = 'Laporan gagal dikirim. Coba lagi nanti.';
-		}
-	});
+	import '../../features/kirim-file/recipient-client';
 </script>
 
 <style>

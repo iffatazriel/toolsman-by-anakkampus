@@ -1,3 +1,6 @@
+import { fill, type Lang } from '../../lib/i18n';
+import dict from './i18n';
+
 export const MAX_FILE_BYTES = 100 * 1024 * 1024;
 
 export const EXPIRY_OPTIONS = {
@@ -36,9 +39,9 @@ export function hasUnsafeNameChars(name: string): boolean {
 export const PASSWORD_MIN = 4;
 export const PASSWORD_MAX = 64;
 
-export function validatePassword(value: string): string | null {
-	if (value.length < PASSWORD_MIN) return `Kata sandi minimal ${PASSWORD_MIN} karakter.`;
-	if (value.length > PASSWORD_MAX) return `Kata sandi maksimal ${PASSWORD_MAX} karakter.`;
+export function validatePassword(value: string, lang: Lang = 'id'): string | null {
+	if (value.length < PASSWORD_MIN) return fill(dict[lang].passwordMin, { count: PASSWORD_MIN });
+	if (value.length > PASSWORD_MAX) return fill(dict[lang].passwordMax, { count: PASSWORD_MAX });
 	return null;
 }
 
@@ -55,23 +58,23 @@ export function isBlockedName(name: string): boolean {
 		.some((part) => BLOCKED_EXTENSIONS.includes(part.toLowerCase()));
 }
 
-export function validateFile(file: { name: string; size: number }): string | null {
-	if (file.name.trim() === '') return 'Nama berkas kosong.';
+export function validateFile(file: { name: string; size: number }, lang: Lang = 'id'): string | null {
+	if (file.name.trim() === '') return dict[lang].emptyName;
 	if (hasUnsafeNameChars(file.name)) {
-		return `Nama berkas ${JSON.stringify(file.name)} tidak valid. Ganti namanya, lalu coba lagi.`;
+		return fill(dict[lang].unsafeName, { name: JSON.stringify(file.name) });
 	}
 	if (isBlockedName(file.name)) {
-		return `Jenis berkas ${file.name} tidak diizinkan. Kompres dulu sebagai .zip.`;
+		return fill(dict[lang].blockedFile, { name: file.name });
 	}
-	if (file.size <= 0) return `${file.name} kosong.`;
-	if (file.size > MAX_FILE_BYTES) return `${file.name} lebih dari 100 MB.`;
+	if (file.size <= 0) return fill(dict[lang].emptyFile, { name: file.name });
+	if (file.size > MAX_FILE_BYTES) return fill(dict[lang].largeFile, { name: file.name });
 	return null;
 }
 
 export function sanitizeFileName(name: string): string {
 	const base = (name.split(/[\\/]/).pop() ?? '').trim();
 	const cleaned = base.replace(/[^\w.\- ()]+/g, '_').replace(/^\.+/, '').slice(0, 120);
-	return cleaned === '' ? 'berkas' : cleaned;
+	return cleaned === '' ? dict.id.fileFallback : cleaned;
 }
 
 export function randomToken(bytes = 16): string {
