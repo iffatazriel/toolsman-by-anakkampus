@@ -525,6 +525,9 @@ const tabs = [
 	const regexPattern = document.getElementById('regex-pattern') as HTMLInputElement | null;
 	const regexInput = document.getElementById('regex-input') as HTMLTextAreaElement | null;
 	const regexPreview = document.getElementById('regex-preview');
+	const localizeRegexEmpty = () => regexPreview?.setAttribute('data-empty-label', tr(dict, 'resultEmpty'));
+	localizeRegexEmpty();
+	document.addEventListener('lang:change', localizeRegexEmpty);
 	const regexList = document.getElementById('regex-list') as HTMLOListElement | null;
 	const regexCount = document.getElementById('regex-count');
 	const regexStatus = document.getElementById('regex-status');
@@ -770,7 +773,7 @@ const tabs = [
 	}
 
 	.regex-preview:empty::before {
-		content: 'Hasil akan muncul di sini.';
+		content: attr(data-empty-label);
 		color: var(--text-muted);
 	}
 

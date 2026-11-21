@@ -1,3 +1,5 @@
+import { fill, type Lang } from './i18n';
+import dict from '../features/generator/i18n';
 import { escapeHtml } from './html';
 
 export interface JsonPosition {
@@ -35,12 +37,12 @@ class JsonReader {
 	text: string;
 	index = 0;
 
-	constructor(text: string) {
+	constructor(text: string, public lang: Lang) {
 		this.text = text;
 	}
 
-	fail(message: string): never {
-		throw new JsonSyntaxError(message, this.index);
+	fail(key: keyof typeof dict.id, values: Record<string, string | number> = {}): never {
+		throw new JsonSyntaxError(fill(dict[this.lang][key], values), this.index);
 	}
 
 	skipWhitespace(): void {
@@ -57,12 +59,12 @@ class JsonReader {
 	parseDocument(): unknown {
 		this.skipWhitespace();
 		if (this.index >= this.text.length) {
-			this.fail('Dokumen masih kosong.');
+			this.fail('jsonEmptyError');
 		}
 		const value = this.parseValue();
 		this.skipWhitespace();
 		if (this.index < this.text.length) {
-			this.fail(`Karakter "${this.text[this.index]}" tidak terduga setelah nilai.`);
+			this.fail('jsonAfterValue', { char: this.text[this.index]! });
 		}
 		return value;
 	}
@@ -71,7 +73,7 @@ class JsonReader {
 		this.skipWhitespace();
 		const char = this.text[this.index];
 		if (char === undefined) {
-			this.fail('Nilai belum selesai.');
+			this.fail('jsonUnfinished');
 		}
 		if (char === '{') return this.parseObject();
 		if (char === '[') return this.parseArray();
@@ -89,7 +91,7 @@ class JsonReader {
 			this.index += 4;
 			return null;
 		}
-		this.fail(`Karakter "${char}" bukan awal nilai JSON yang sah.`);
+		this.fail('jsonValue', { char });
 	}
 
 	parseObject(): Record<string, unknown> {
@@ -104,15 +106,15 @@ class JsonReader {
 		while (true) {
 			this.skipWhitespace();
 			if (this.text[this.index] === '}') {
-				this.fail('Koma berlebih sebelum }.');
+				this.fail('jsonObjectComma');
 			}
 			if (this.text[this.index] !== '"') {
-				this.fail('Nama properti harus diapit tanda kutip.');
+				this.fail('jsonProperty');
 			}
 			const key = this.parseString();
 			this.skipWhitespace();
 			if (this.text[this.index] !== ':') {
-				this.fail('Tanda titik dua : belum ada setelah nama properti.');
+				this.fail('jsonColon');
 			}
 			this.index += 1;
 			result[key] = this.parseValue();
@@ -127,9 +129,9 @@ class JsonReader {
 				return result;
 			}
 			if (char === undefined) {
-				this.fail('Kurung kurawal } belum ditutup.');
+				this.fail('jsonObjectEnd');
 			}
-			this.fail(`Koma atau } dibutuhkan, bukan "${char}".`);
+			this.fail('jsonObjectSeparator', { char });
 		}
 	}
 
@@ -145,7 +147,7 @@ class JsonReader {
 		while (true) {
 			this.skipWhitespace();
 			if (this.text[this.index] === ']') {
-				this.fail('Koma berlebih sebelum ].');
+				this.fail('jsonArrayComma');
 			}
 			result.push(this.parseValue());
 			this.skipWhitespace();
@@ -159,9 +161,9 @@ class JsonReader {
 				return result;
 			}
 			if (char === undefined) {
-				this.fail('Kurung siku ] belum ditutup.');
+				this.fail('jsonArrayEnd');
 			}
-			this.fail(`Koma atau ] dibutuhkan, bukan "${char}".`);
+			this.fail('jsonArraySeparator', { char });
 		}
 	}
 
@@ -172,7 +174,7 @@ class JsonReader {
 		while (true) {
 			const char = this.text[this.index];
 			if (char === undefined) {
-				this.fail('Tanda kutip penutup belum ada.');
+				this.fail('jsonQuote');
 			}
 			if (char === '"') {
 				this.index += 1;
@@ -182,7 +184,7 @@ class JsonReader {
 				this.index += 1;
 				const escape = this.text[this.index];
 				if (escape === undefined) {
-					this.fail('Escape belum selesai.');
+					this.fail('jsonEscapeEnd');
 				}
 				if (escape === '"' || escape === '\\' || escape === '/') {
 					result += escape;
@@ -205,18 +207,18 @@ class JsonReader {
 					const hex = this.text.slice(this.index + 1, this.index + 5);
 					if (hex.length !== 4 || /[^0-9a-fA-F]/.test(hex)) {
 						this.index += 1;
-						this.fail('Kode \\u harus diikuti empat digit heksadesimal.');
+						this.fail('jsonUnicode');
 					}
 					result += String.fromCharCode(parseInt(hex, 16));
 					this.index += 5;
 					continue;
 				}
 				this.index += 1;
-				this.fail(`Escape \\${escape} tidak dikenal.`);
+				this.fail('jsonEscape', { escape });
 			}
 			const code = char.charCodeAt(0);
 			if (code < 0x20) {
-				this.fail('Karakter kontrol tidak boleh langsung di dalam string.');
+				this.fail('jsonControl');
 			}
 			result += char;
 			this.index += 1;
@@ -235,13 +237,13 @@ class JsonReader {
 			this.index += 1;
 			while (isDigit(text[this.index])) this.index += 1;
 		} else {
-			this.fail('Angka tidak valid.');
+			this.fail('jsonNumber');
 		}
 
 		if (text[this.index] === '.') {
 			this.index += 1;
 			if (!isDigit(text[this.index])) {
-				this.fail('Angka desimal butuh digit setelah titik.');
+				this.fail('jsonDecimal');
 			}
 			while (isDigit(text[this.index])) this.index += 1;
 		}
@@ -252,7 +254,7 @@ class JsonReader {
 			const sign = text[this.index];
 			if (sign === '+' || sign === '-') this.index += 1;
 			if (!isDigit(text[this.index])) {
-				this.fail('Eksponen butuh digit.');
+				this.fail('jsonExponent');
 			}
 			while (isDigit(text[this.index])) this.index += 1;
 		}
@@ -269,9 +271,9 @@ export function lineColumnAt(input: string, index: number): { line: number; colu
 	return { line, column: safe - lastBreak };
 }
 
-export function parseJson(input: string): JsonParseResult {
+export function parseJson(input: string, lang: Lang = 'id'): JsonParseResult {
 	try {
-		return { ok: true, data: new JsonReader(input).parseDocument() };
+		return { ok: true, data: new JsonReader(input, lang).parseDocument() };
 	} catch (error) {
 		if (error instanceof JsonSyntaxError) {
 			return {
@@ -287,7 +289,7 @@ export function parseJson(input: string): JsonParseResult {
 			return {
 				ok: false,
 				error: {
-					message: 'Struktur JSON terlalu dalam untuk dibaca.',
+					message: dict[lang].jsonDeep,
 					index: 0,
 					...lineColumnAt(input, 0),
 				},
@@ -297,14 +299,14 @@ export function parseJson(input: string): JsonParseResult {
 	}
 }
 
-export function formatJson(input: string): JsonTextResult {
-	const parsed = parseJson(input);
+export function formatJson(input: string, lang: Lang = 'id'): JsonTextResult {
+	const parsed = parseJson(input, lang);
 	if (!parsed.ok) return parsed;
 	return { ok: true, text: JSON.stringify(parsed.data, null, 2), data: parsed.data };
 }
 
-export function minifyJson(input: string): JsonTextResult {
-	const parsed = parseJson(input);
+export function minifyJson(input: string, lang: Lang = 'id'): JsonTextResult {
+	const parsed = parseJson(input, lang);
 	if (!parsed.ok) return parsed;
 	return { ok: true, text: JSON.stringify(parsed.data), data: parsed.data };
 }
@@ -367,16 +369,18 @@ export function highlightJson(text: string): string {
 
 export interface JsonTreeOptions {
 	openDepth?: number;
+	lang?: Lang;
 }
 
 function isContainer(value: unknown): value is Record<string, unknown> | unknown[] {
 	return value !== null && typeof value === 'object';
 }
 
-function containerLabel(value: unknown): string {
-	return Array.isArray(value)
-		? `${value.length} item`
-		: `${Object.keys(value as Record<string, unknown>).length} properti`;
+function containerLabel(value: unknown, lang: Lang): string {
+	const array = Array.isArray(value);
+	const count = array ? value.length : Object.keys(value as Record<string, unknown>).length;
+	const key = array ? (count === 1 ? 'jsonItem' : 'jsonItems') : (count === 1 ? 'jsonPropertyCount' : 'jsonProperties');
+	return fill(dict[lang][key], { count });
 }
 
 function renderPrimitive(value: unknown): string {
@@ -397,6 +401,7 @@ function renderNode(
 	key: string | null,
 	depth: number,
 	openDepth: number,
+	lang: Lang,
 ): string {
 	const keyPart =
 		key === null
@@ -417,14 +422,14 @@ function renderNode(
 	}
 
 	const children = entries
-		.map(([childKey, child]) => renderNode(child, childKey, depth + 1, openDepth))
+		.map(([childKey, child]) => renderNode(child, childKey, depth + 1, openDepth, lang))
 		.join('');
 	const open = depth < openDepth ? ' open' : '';
 
-	return `<li><details${open}><summary>${keyPart}<span class="json-tree__count">${containerLabel(value)}</span></summary><ul>${children}</ul></details></li>`;
+	return `<li><details${open}><summary>${keyPart}<span class="json-tree__count">${containerLabel(value, lang)}</span></summary><ul>${children}</ul></details></li>`;
 }
 
 export function renderJsonTree(data: unknown, options: JsonTreeOptions = {}): string {
 	const openDepth = options.openDepth ?? 1;
-	return `<ul class="json-tree">${renderNode(data, null, 0, openDepth)}</ul>`;
+	return `<ul class="json-tree">${renderNode(data, null, 0, openDepth, options.lang ?? 'id')}</ul>`;
 }

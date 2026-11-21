@@ -2,6 +2,8 @@
 
 For text already on screen, `localizedText(element, () => tr(dict, 'key', vars))` from `i18n-client` keeps a live binding without rerunning processing. Bind an empty-string callback when clearing a message. Bind only text-only elements; use a child span when preserving a spinner. Static image descriptions use `data-i18n-alt`. Dropzone accepts `labelKey` and `hintKey` alongside its Indonesian `label` and `hint` props.
 
+Use `localizedValue(textarea, render)` for readonly reports containing translated labels; clear it with an empty callback too. Never bind editable user input. Tabs accepts a `labelKey` and per-item `labelKey`. Pure helpers can throw `WorkspaceError(dict, key, vars)`: its source message stays Indonesian, while `workspaceErrorMessage(error, fallback)` renders it in the current language. Shared generator helpers accept an optional language (default `id`) for diagnostics and built-in scaffolding; user text, JSON values, commands, rules and official license text stay unchanged.
+
 Each migrated feature has `src/features/<slug>/i18n.ts`. Export a default
 `defineWorkspaceDictionary(id, en)` from `src/lib/i18n.ts`; the ID object defines
 the keys and TypeScript requires exactly those keys in EN. Keep values flat.

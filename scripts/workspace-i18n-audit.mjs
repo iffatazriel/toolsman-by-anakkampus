@@ -22,8 +22,9 @@ for (const item of readdirSync(root, { withFileTypes: true }).sort((a, b) => a.n
 		const source = readFileSync(file, 'utf8');
 		for (const match of source.matchAll(/(['"`])((?:\\[\s\S]|(?!\1)[^\\])*?)\1|>([^<>{}\n]+)</g)) {
 			const prefix = source.slice(Math.max(0, match.index - 200), match.index);
-			if (/\b(?:class|id|for)=\s*$/.test(prefix) || /\b(?:\w*[Ff]ile[Nn]ame|resultName)\s*=\s*$/.test(prefix) || /\boutputFileName\([^}]*$/.test(prefix)) continue;
+			if (/\b(?:class|id|for)=\s*$/.test(prefix) || /\b(?:\w*[Ff]ile[Nn]ame|resultName)\s*=\s*$/.test(prefix) || /\boutputFileName\([^}]*$/.test(prefix) || /\bdownloadText\(\s*$/.test(prefix)) continue;
 			const value = match[2] ?? match[3] ?? '';
+			if (/\bplaceholder\s*=\s*(?:{\s*)?$/.test(prefix) && (/^curl\s/.test(value) || /^[\w.-]+=[\s\S]*[&?](?:amp;)?\s*[\w.-]+=/.test(value) || /^[\w-]+:[\w.-]+$/.test(value))) continue;
 			if (marker.test(value) && !/^(?:workspace\.|[.\/]|https?:)/.test(value)) candidates.push(value.trim());
 		}
 	}

@@ -1,3 +1,5 @@
+import type { Lang } from './i18n';
+import dict from '../features/generator/i18n';
 export type ReadmeLicense = 'MIT' | 'Apache-2.0' | 'GPL-3.0';
 
 export interface ReadmeInput {
@@ -36,7 +38,7 @@ function toBullets(text: string): string[] {
 	return toLines(text).map((line) => `- ${line.replace(/^[-*+]\s+/, '')}`);
 }
 
-export function generateReadme(input: ReadmeInput): string {
+export function generateReadme(input: ReadmeInput, lang: Lang = 'id'): string {
 	const name = input.name.trim();
 	if (name === '') return '';
 
@@ -47,23 +49,23 @@ export function generateReadme(input: ReadmeInput): string {
 
 	if (input.showLicenseBadge && input.license !== '') {
 		const badge = badges[input.license];
-		parts.push(`[![Lisensi: ${input.license}](${badge.image})](${badge.link})`);
+		parts.push(`[![${dict[lang].license}: ${input.license}](${badge.image})](${badge.link})`);
 	}
 
 	const features = toBullets(input.features);
 	if (features.length > 0) {
-		parts.push(['## Fitur', '', ...features].join('\n'));
+		parts.push([`## ${dict[lang].features}`, '', ...features].join('\n'));
 	}
 
 	const install = toLines(input.install);
 	if (install.length > 0) {
-		parts.push(['## Instalasi', '', '```bash', ...install, '```'].join('\n'));
+		parts.push([`## ${dict[lang].readmeInstallHeading}`, '', '```bash', ...install, '```'].join('\n'));
 	}
 
 	const usage = input.usage.trim();
-	if (usage !== '') parts.push(['## Cara pakai', '', usage].join('\n'));
+	if (usage !== '') parts.push([`## ${dict[lang].usage}`, '', usage].join('\n'));
 
-	if (input.license !== '') parts.push(['## Lisensi', '', input.license].join('\n'));
+	if (input.license !== '') parts.push([`## ${dict[lang].license}`, '', input.license].join('\n'));
 
 	return parts.join('\n\n') + '\n';
 }

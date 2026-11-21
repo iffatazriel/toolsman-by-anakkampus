@@ -77,7 +77,7 @@ export default defineWorkspaceDictionary({
 	previewHint: "The preview shows text, not compiled LaTeX or rendered Markdown. Forward conversion preserves inline formatting as text. Reverse conversion extracts text only from textbf/textit/emph.",
 	preview: "Table preview",
 	previewAria: "Table preview, scroll to see all columns",
-	updated: "{rows} data rows, {columns} columns. Output updated.",
+	updated: "Data rows: {rows}; columns: {columns}. Output updated.",
 	fallback: "Check your table format.",
 	copied: "Result copied.",
 	copyFailed: "Could not copy. Select the result and press Ctrl+C.",

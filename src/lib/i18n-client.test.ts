@@ -35,6 +35,9 @@ describe('workspace attribute hooks', () => {
 		localizedText(live as never, () => '');
 		applyLanguage('en'); expect(live.textContent).toBe('');
 		expect(value.value).toBe('');
+		expect(() => localizedValue(value as never, () => { throw new Error('invalid'); })).toThrow('invalid');
+		expect(() => applyLanguage('id')).not.toThrow();
+		expect(value.value).toBe('');
 		localizedText(null, () => { throw new Error('must not render without an element'); });
 	});
 });

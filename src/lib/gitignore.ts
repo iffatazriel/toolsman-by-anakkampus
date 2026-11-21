@@ -1,3 +1,5 @@
+import type { Lang } from './i18n';
+import dict from '../features/generator/i18n';
 export interface GitignoreGroup {
 	id: string;
 	label: string;
@@ -61,17 +63,17 @@ export const gitignoreGroups: GitignoreGroup[] = [
 	},
 	{
 		id: 'env',
-		label: 'Rahasia dan env',
+		label: dict.id.groupSecrets,
 		rules: ['.env', '.env.*', '!.env.example'],
 	},
 	{
 		id: 'logs',
-		label: 'Log dan cache',
+		label: dict.id.groupLogs,
 		rules: ['*.log', '.cache/'],
 	},
 	{
 		id: 'coverage',
-		label: 'Hasil uji',
+		label: dict.id.groupTests,
 		rules: ['coverage/', '.nyc_output/'],
 	},
 	{
@@ -98,11 +100,15 @@ export const gitignoreGroups: GitignoreGroup[] = [
 
 export const defaultGitignoreGroups = ['node', 'env', 'logs', 'macos', 'windows', 'vscode'];
 
-export function buildGitignore(selectedIds: string[]): string {
+export function buildGitignore(selectedIds: string[], lang: Lang = 'id'): string {
 	const selected = new Set(selectedIds);
 	const blocks = gitignoreGroups
 		.filter((group) => selected.has(group.id))
-		.map((group) => [`# ${group.label}`, ...group.rules].join('\n'));
+		.map((group) => [`# ${gitignoreLabel(group, lang)}`, ...group.rules].join('\n'));
 
 	return blocks.length === 0 ? '' : `${blocks.join('\n\n')}\n`;
+}
+
+export function gitignoreLabel(group: GitignoreGroup, lang: Lang = 'id'): string {
+	return group.id === 'env' ? dict[lang].groupSecrets : group.id === 'logs' ? dict[lang].groupLogs : group.id === 'coverage' ? dict[lang].groupTests : group.label;
 }

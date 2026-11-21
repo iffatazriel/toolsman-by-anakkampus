@@ -18,9 +18,10 @@ const liveText = new WeakMap<HTMLElement, () => string>();
 const liveValue = new WeakMap<HTMLInputElement | HTMLTextAreaElement, () => string>();
 
 export function localizedValue(element: HTMLInputElement | HTMLTextAreaElement, render: () => string): void {
+	const value = render();
 	liveValue.set(element, render);
 	element.dataset.i18nValue = '';
-	element.value = render();
+	element.value = value;
 }
 
 export function localizedText(element: HTMLElement | null, render: () => string): void {
