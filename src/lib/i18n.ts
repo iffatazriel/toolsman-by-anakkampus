@@ -194,6 +194,10 @@ export interface ToolText {
 }
 
 export const toolText: Record<string, Record<Lang, ToolText>> = {
+	'tabel-latex': {
+		id: { name: 'Tabel Markdown ke LaTeX', tagline: 'Ubah tabel Markdown, CSV, atau TSV dari spreadsheet menjadi LaTeX dengan pratinjau, perataan, dan escape otomatis.', usage: ['Tempel tabel Markdown, CSV, atau TSV; baris pertama menjadi header.', 'Atur garis, caption, label, dan tipe kolom sambil memeriksa pratinjau.', 'Salin atau unduh hasil. Arah balik mendukung tabular sederhana.'] },
+		en: { name: 'Markdown Table to LaTeX', tagline: 'Convert Markdown, CSV, or spreadsheet TSV tables to LaTeX with a preview, alignment, and automatic escaping.', usage: ['Paste Markdown, CSV, or TSV; the first row becomes the header.', 'Adjust rules, caption, label, and column types while checking the preview.', 'Copy or download the result. Reverse conversion supports simple tabular environments.'] },
+	},
 	'curl-ke-kode': {
 		id: { name: 'cURL ke Kode', tagline: 'Ubah perintah cURL menjadi JavaScript Fetch atau Axios tanpa menjalankan request atau mengirim kredensial kamu.', usage: ['Tempel satu perintah cURL.', 'Pilih Fetch atau Axios, lalu baca peringatan hasil konversi.', 'Salin kode dan ganti placeholder sebelum menjalankannya.'] },
 		en: { name: 'cURL to Code', tagline: 'Convert cURL commands to JavaScript Fetch or Axios without executing requests or sending your credentials.', usage: ['Paste a single cURL command.', 'Choose Fetch or Axios and review conversion warnings.', 'Copy the code and replace placeholders before running it.'] },

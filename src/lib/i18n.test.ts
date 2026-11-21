@@ -20,6 +20,7 @@ const slugs = [
 	'kalkulator-ipk',
 	'bilangan-subnet',
 	'curl-ke-kode',
+	'tabel-latex',
 	'hapus-exif',
 	'cron',
 	'code-to-image',
