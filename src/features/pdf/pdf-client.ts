@@ -1,3 +1,5 @@
+import { WorkspaceError } from '../../lib/i18n';
+import dict from './i18n';
 import type { OutputImage, PreviewImage, WorkerRequest, WorkerResponse } from './pdf.worker';
 
 type Distribute<T> = T extends { id: number } ? Omit<T, 'id'> : never;
@@ -34,7 +36,7 @@ function getWorker(): Worker {
 		}
 		pending.delete(message.id);
 		if (message.type === 'error') {
-			task.reject(new Error(message.message));
+			task.reject(new WorkspaceError(dict,'processFailed'));
 		} else {
 			task.resolve({
 				bytes: message.bytes,
@@ -45,7 +47,7 @@ function getWorker(): Worker {
 		}
 	};
 	worker.onerror = () => {
-		pending.forEach((task) => task.reject(new Error('Worker PDF berhenti tiba-tiba.')));
+		pending.forEach((task) => task.reject(new WorkspaceError(dict,'workerStopped')));
 		pending.clear();
 		worker?.terminate();
 		worker = null;
@@ -72,7 +74,7 @@ export function runPdfTask(
 			if (pending.delete(id)) {
 				worker?.terminate();
 				worker = null;
-				pending.forEach((task) => task.reject(new Error('Dibatalkan.')));
+				pending.forEach((task) => task.reject(new WorkspaceError(dict,'cancelled')));
 				pending.clear();
 			}
 		},

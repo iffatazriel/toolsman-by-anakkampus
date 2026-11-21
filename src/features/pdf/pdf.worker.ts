@@ -1,3 +1,5 @@
+import { WorkspaceError } from '../../lib/i18n';
+import dict from './i18n';
 import * as pdfjs from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import {
@@ -18,10 +20,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 class WorkerCanvasFactory {
 	create(width: number, height: number) {
-		if (width <= 0 || height <= 0) throw new Error('Ukuran kanvas tidak valid.');
+		if (width <= 0 || height <= 0) throw new WorkspaceError(dict,'canvasSize');
 		const canvas = new OffscreenCanvas(width, height);
 		const context = canvas.getContext('2d', { willReadFrequently: true });
-		if (!context) throw new Error('Kanvas tidak tersedia di worker.');
+		if (!context) throw new WorkspaceError(dict,'canvasUnavailable');
 		return { canvas, context };
 	}
 
@@ -104,7 +106,7 @@ async function renderPages(bytes: ArrayBuffer, level: CompressLevel, id: number)
 		const viewport = page.getViewport({ scale });
 		const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
 		const context = canvas.getContext('2d');
-		if (!context) throw new Error('Kanvas tidak tersedia di worker.');
+		if (!context) throw new WorkspaceError(dict,'canvasUnavailable');
 
 		await page.render({
 			canvasContext: context as unknown as CanvasRenderingContext2D,
@@ -144,7 +146,7 @@ async function renderPageImages(
 		const viewport = page.getViewport({ scale });
 		const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
 		const context = canvas.getContext('2d');
-		if (!context) throw new Error('Kanvas tidak tersedia di worker.');
+		if (!context) throw new WorkspaceError(dict,'canvasUnavailable');
 
 		if (format === 'jpeg') {
 			context.fillStyle = '#ffffff';
@@ -189,7 +191,7 @@ async function previewPdf(
 	const viewport = page.getViewport({ scale });
 	const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
 	const context = canvas.getContext('2d');
-	if (!context) throw new Error('Kanvas tidak tersedia di worker.');
+	if (!context) throw new WorkspaceError(dict,'canvasUnavailable');
 
 	context.fillStyle = '#ffffff';
 	context.fillRect(0, 0, canvas.width, canvas.height);
@@ -252,7 +254,7 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
 		if (preview) transfer.push(preview.bytes.buffer as ArrayBuffer);
 		postMessage(response, { transfer });
 	} catch (error) {
-		const message = error instanceof Error ? error.message : 'Gagal memproses PDF.';
+		const message = error instanceof Error ? error.message : dict.id.processFailed;
 		postMessage({ id: request.id, type: 'error', message } satisfies WorkerResponse);
 	}
 };

@@ -1,152 +1,153 @@
 ---
+import dict from './i18n';
 import Tabs from '../../components/ui/Tabs.astro';
 import Dropzone from '../../components/ui/Dropzone.astro';
 import Progress from '../../components/ui/Progress.astro';
 
 const tabs = [
-	{ id: 'gabung', label: 'Gabung' },
-	{ id: 'pisah', label: 'Pisah' },
-	{ id: 'kompres', label: 'Kompres' },
-	{ id: 'gambar', label: 'Gambar → PDF' },
-	{ id: 'ke-gambar', label: 'PDF → Gambar' },
-	{ id: 'halaman', label: 'Putar & hapus' },
+	{ id: 'gabung', label: dict.id.merge, labelKey: 'workspace.pdf.merge' },
+	{ id: 'pisah', label: dict.id.split, labelKey: 'workspace.pdf.split' },
+	{ id: 'kompres', label: dict.id.compress, labelKey: 'workspace.pdf.compress' },
+	{ id: 'gambar', label: dict.id.imagesPdf, labelKey: 'workspace.pdf.imagesPdf' },
+	{ id: 'ke-gambar', label: dict.id.pdfImages, labelKey: 'workspace.pdf.pdfImages' },
+	{ id: 'halaman', label: dict.id.edit, labelKey: 'workspace.pdf.edit' },
 ];
 ---
 
 <div class="tool-shell">
-	<Tabs label="Pilihan alat PDF" items={tabs}>
+	<Tabs label={dict.id.tabs} labelKey="workspace.pdf.tabs" items={tabs}>
 		<div data-panel="gabung" class="tool-panel">
 			<div class="pdf-panel">
-				<Dropzone id="gabung-input" label="Seret beberapa PDF ke sini" accept="application/pdf" multiple hint="Maks. 100 MB per berkas · diproses di browser" />
-				<ol class="file-list" data-list="gabung" aria-label="Urutan berkas"></ol>
-				<p class="field-hint">Seret kartu untuk mengubah urutan, atau pakai tombol ▲ ▼. Urutan ini juga urutan halaman di hasil.</p>
+				<Dropzone id="gabung-input" label={dict.id.dropMany} labelKey="workspace.pdf.dropMany" accept="application/pdf" multiple hint={dict.id.limits} hintKey="workspace.pdf.limits" />
+				<ol class="file-list" data-list="gabung" aria-label={dict.id.fileOrder} data-i18n-aria="workspace.pdf.fileOrder"></ol>
+				<p class="field-hint" data-i18n="workspace.pdf.orderHint">{dict.id.orderHint}</p>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--primary" data-run="gabung" disabled>Gabung dan unduh</button>
+					<button type="button" class="btn btn--primary" data-run="gabung" disabled data-i18n="workspace.pdf.mergeDownload">{dict.id.mergeDownload}</button>
 				</div>
-				<div data-progress="gabung" hidden><Progress label="Menggabungkan" value={0} /></div>
+				<div data-progress="gabung" hidden><Progress label={dict.id.merging} labelKey="workspace.pdf.merging" value={0} /></div>
 				<p class="alert" data-error="gabung" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="pisah" class="tool-panel" hidden>
 			<div class="pdf-panel">
-				<Dropzone id="pisah-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<Dropzone id="pisah-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="pisah" hidden></div>
-				<label class="field-label" for="pisah-range">Halaman yang diambil</label>
-				<input id="pisah-range" class="field-input" type="text" inputmode="numeric" placeholder="mis. 1-3,5" aria-describedby="pisah-range-hint" />
-				<p class="field-hint" id="pisah-range-hint">Pisahkan dengan koma. Rentang pakai tanda hubung.</p>
+				<label class="field-label" for="pisah-range" data-i18n="workspace.pdf.pagesTaken">{dict.id.pagesTaken}</label>
+				<input id="pisah-range" class="field-input" type="text" inputmode="numeric" placeholder={dict.id.rangePlaceholder} data-i18n-placeholder="workspace.pdf.rangePlaceholder" aria-describedby="pisah-range-hint" />
+				<p class="field-hint" id="pisah-range-hint" data-i18n="workspace.pdf.rangeHint">{dict.id.rangeHint}</p>
 				<p class="field-error" data-range-error="pisah" hidden role="alert"></p>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--primary" data-run="pisah" disabled>Ambil halaman dan unduh</button>
+					<button type="button" class="btn btn--primary" data-run="pisah" disabled data-i18n="workspace.pdf.splitDownload">{dict.id.splitDownload}</button>
 				</div>
-				<div data-progress="pisah" hidden><Progress label="Memisahkan" value={0} /></div>
+				<div data-progress="pisah" hidden><Progress label={dict.id.splitting} labelKey="workspace.pdf.splitting" value={0} /></div>
 				<p class="alert" data-error="pisah" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="kompres" class="tool-panel" hidden>
 			<div class="pdf-panel">
-				<Dropzone id="kompres-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<Dropzone id="kompres-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="kompres" hidden></div>
 				<fieldset class="fieldset">
-					<legend class="field-label">Tingkat kompresi</legend>
-					<div class="segmented" role="radiogroup" aria-label="Tingkat kompresi">
-						<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-level="ringan">Ringan</button>
-						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="sedang">Sedang</button>
-						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="maksimal">Maksimal</button>
+					<legend class="field-label" data-i18n="workspace.pdf.level">{dict.id.level}</legend>
+					<div class="segmented" role="radiogroup" aria-label={dict.id.level} data-i18n-aria="workspace.pdf.level">
+						<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-level="ringan" data-i18n="workspace.pdf.light">{dict.id.light}</button>
+						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="sedang" data-i18n="workspace.pdf.medium">{dict.id.medium}</button>
+						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="maksimal" data-i18n="workspace.pdf.maximum">{dict.id.maximum}</button>
 					</div>
-					<p class="field-hint">Ringan menjaga teks dan gambar paling tajam. Maksimal paling kecil, tapi gambar bisa buram.</p>
+					<p class="field-hint" data-i18n="workspace.pdf.compressHint">{dict.id.compressHint}</p>
 				</fieldset>
 				<div class="compare" data-compare="kompres" hidden aria-live="polite">
 					<p class="compare__line"><span data-before></span> → <span data-after></span></p>
 					<p class="compare__delta" data-delta></p>
-					<p class="alert" data-warn="kompres" hidden><span>Hasil tidak lebih kecil dari berkas asli. Berkasnya tetap bisa diunduh, tapi kompres tidak membantu di sini.</span></p>
+					<p class="alert" data-warn="kompres" hidden><span data-i18n="workspace.pdf.notSmaller">{dict.id.notSmaller}</span></p>
 				</div>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--primary" data-run="kompres" disabled>Kompres dan unduh</button>
+					<button type="button" class="btn btn--primary" data-run="kompres" disabled data-i18n="workspace.pdf.compressDownload">{dict.id.compressDownload}</button>
 				</div>
-				<div data-progress="kompres" hidden><Progress label="Mengompres" value={0} /></div>
+				<div data-progress="kompres" hidden><Progress label={dict.id.compressing} labelKey="workspace.pdf.compressing" value={0} /></div>
 				<p class="alert" data-error="kompres" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="gambar" class="tool-panel" hidden>
 			<div class="pdf-panel">
-				<Dropzone id="gambar-input" label="Pilih JPG atau PNG" accept="image/jpeg,image/png" multiple hint="Maks. 100 MB per berkas · diproses di browser" />
-				<ol class="file-list" data-list="gambar" aria-label="Urutan gambar"></ol>
+				<Dropzone id="gambar-input" label={dict.id.dropImages} labelKey="workspace.pdf.dropImages" accept="image/jpeg,image/png" multiple hint={dict.id.limits} hintKey="workspace.pdf.limits" />
+				<ol class="file-list" data-list="gambar" aria-label={dict.id.imageOrder} data-i18n-aria="workspace.pdf.imageOrder"></ol>
 				<div class="form-grid">
 					<div>
-						<span class="field-label">Orientasi</span>
-						<div class="segmented" role="radiogroup" aria-label="Orientasi halaman">
-							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-orientation="auto">Ikuti gambar</button>
-							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-orientation="portrait">Tegak</button>
-							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-orientation="landscape">Mendatar</button>
+						<span class="field-label" data-i18n="workspace.pdf.orientation">{dict.id.orientation}</span>
+						<div class="segmented" role="radiogroup" aria-label={dict.id.pageOrientation} data-i18n-aria="workspace.pdf.pageOrientation">
+							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-orientation="auto" data-i18n="workspace.pdf.auto">{dict.id.auto}</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-orientation="portrait" data-i18n="workspace.pdf.portrait">{dict.id.portrait}</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-orientation="landscape" data-i18n="workspace.pdf.landscape">{dict.id.landscape}</button>
 						</div>
 					</div>
 					<div>
 						<span class="field-label">Margin</span>
-						<div class="segmented" role="radiogroup" aria-label="Margin halaman">
-							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-margin="none">Tanpa</button>
-							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-margin="small">Kecil</button>
-							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-margin="large">Besar</button>
+						<div class="segmented" role="radiogroup" aria-label={dict.id.pageMargin} data-i18n-aria="workspace.pdf.pageMargin">
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-margin="none" data-i18n="workspace.pdf.none">{dict.id.none}</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-margin="small" data-i18n="workspace.pdf.small">{dict.id.small}</button>
+							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-margin="large" data-i18n="workspace.pdf.large">{dict.id.large}</button>
 						</div>
 					</div>
 				</div>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--primary" data-run="gambar" disabled>Buat PDF dan unduh</button>
+					<button type="button" class="btn btn--primary" data-run="gambar" disabled data-i18n="workspace.pdf.createDownload">{dict.id.createDownload}</button>
 				</div>
-				<div data-progress="gambar" hidden><Progress label="Membuat PDF" value={0} /></div>
+				<div data-progress="gambar" hidden><Progress label={dict.id.creatingPdf} labelKey="workspace.pdf.creatingPdf" value={0} /></div>
 				<p class="alert" data-error="gambar" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="ke-gambar" class="tool-panel" hidden>
 			<div class="pdf-panel">
-				<Dropzone id="ke-gambar-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<Dropzone id="ke-gambar-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="ke-gambar" hidden></div>
 				<div class="form-grid">
 					<div>
-						<span class="field-label">Format gambar</span>
-						<div class="segmented" role="radiogroup" aria-label="Format gambar">
+						<span class="field-label" data-i18n="workspace.pdf.imageFormat">{dict.id.imageFormat}</span>
+						<div class="segmented" role="radiogroup" aria-label={dict.id.imageFormat} data-i18n-aria="workspace.pdf.imageFormat">
 							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-image-format="png">PNG</button>
 							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-image-format="jpeg">JPG</button>
 						</div>
 					</div>
 					<div>
-						<span class="field-label">Resolusi</span>
-						<div class="segmented" role="radiogroup" aria-label="Resolusi gambar">
+						<span class="field-label" data-i18n="workspace.pdf.resolution">{dict.id.resolution}</span>
+						<div class="segmented" role="radiogroup" aria-label={dict.id.imageResolution} data-i18n-aria="workspace.pdf.imageResolution">
 							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-dpi="96">96 DPI</button>
 							<button type="button" class="segmented__btn" role="radio" aria-checked="true" data-dpi="150">150 DPI</button>
 							<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-dpi="300">300 DPI</button>
 						</div>
 					</div>
 				</div>
-				<p class="field-hint">300 DPI paling tajam, tapi butuh memori lebih besar untuk PDF dengan banyak halaman.</p>
+				<p class="field-hint" data-i18n="workspace.pdf.dpiHint">{dict.id.dpiHint}</p>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--primary" data-run="ke-gambar" disabled>Ubah jadi gambar</button>
+					<button type="button" class="btn btn--primary" data-run="ke-gambar" disabled data-i18n="workspace.pdf.toImages">{dict.id.toImages}</button>
 				</div>
-				<div data-progress="ke-gambar" hidden><Progress label="Membuat gambar" value={0} /></div>
+				<div data-progress="ke-gambar" hidden><Progress label={dict.id.creatingImages} labelKey="workspace.pdf.creatingImages" value={0} /></div>
 				<p class="alert" data-error="ke-gambar" role="alert" hidden><span></span></p>
 				<div data-image-result="ke-gambar" hidden>
 					<div class="pane-actions">
-						<button type="button" class="btn btn--secondary" data-download-all="ke-gambar">Unduh semua</button>
+						<button type="button" class="btn btn--secondary" data-download-all="ke-gambar" data-i18n="workspace.pdf.downloadAll">{dict.id.downloadAll}</button>
 					</div>
-					<p class="field-hint">Peramban bisa memblokir unduhan beruntun. Kalau itu terjadi, pakai tombol Unduh di tiap halaman.</p>
-					<ol class="file-list" data-image-list aria-label="Hasil gambar per halaman"></ol>
+					<p class="field-hint" data-i18n="workspace.pdf.downloadsHint">{dict.id.downloadsHint}</p>
+					<ol class="file-list" data-image-list aria-label={dict.id.imageResults} data-i18n-aria="workspace.pdf.imageResults"></ol>
 				</div>
 			</div>
 		</div>
 
 		<div data-panel="halaman" class="tool-panel" hidden>
 			<div class="pdf-panel">
-				<Dropzone id="halaman-input" label="Pilih satu PDF" accept="application/pdf" hint="Maks. 100 MB per berkas · diproses di browser" />
+				<Dropzone id="halaman-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="halaman" hidden></div>
-				<p class="field-hint">Tombol ↻ memutar halaman 90°. Tombol Hapus membuang halaman dari hasil. Perubahan baru tersimpan setelah kamu menekan Simpan.</p>
-				<ol class="page-list" data-page-list aria-label="Halaman PDF"></ol>
+				<p class="field-hint" data-i18n="workspace.pdf.editHint">{dict.id.editHint}</p>
+				<ol class="page-list" data-page-list aria-label={dict.id.pdfPages} data-i18n-aria="workspace.pdf.pdfPages"></ol>
 				<div class="pane-actions">
-					<button type="button" class="btn btn--primary" data-run="halaman" disabled>Simpan PDF dan unduh</button>
+					<button type="button" class="btn btn--primary" data-run="halaman" disabled data-i18n="workspace.pdf.saveDownload">{dict.id.saveDownload}</button>
 				</div>
-				<div data-progress="halaman" hidden><Progress label="Menyimpan" value={0} /></div>
+				<div data-progress="halaman" hidden><Progress label={dict.id.saving} labelKey="workspace.pdf.saving" value={0} /></div>
 				<p class="alert" data-error="halaman" role="alert" hidden><span></span></p>
 			</div>
 		</div>
@@ -154,6 +155,9 @@ const tabs = [
 </div>
 
 <script>
+ import {tr, currentLang, workspaceErrorMessage} from "../../lib/i18n";
+ import {localizedText} from "../../lib/i18n-client";
+ import dict from "./i18n";
 	import { formatBytes, parsePageRange, reductionPercent } from '../../lib/page-range';
 	import { setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
@@ -169,21 +173,21 @@ const tabs = [
 		pages?: number;
 		previewUrl?: string;
 		thumbUrl?: string;
-		error?: string;
+		error?: boolean;
 	};
 
 	const $ = <T extends HTMLElement>(selector: string, root: ParentNode = document) =>
 		root.querySelector<T>(selector);
 
-	const setError = (name: string, message: string | null) => {
+	const setError = (name: string, message: (()=>string) | null) => {
 		const box = $<HTMLElement>(`[data-error="${name}"]`);
 		if (!box) return;
 		box.hidden = message === null;
 		const span = box.querySelector('span');
-		if (span) span.textContent = message ?? '';
+		localizedText(span, message ?? (()=>''));
 	};
 
-	const setProgress = (name: string, done: number, total: number, label: string) => {
+	const setProgress = (name: string, done: number, total: number, label: ()=>string) => {
 		const wrap = $<HTMLElement>(`[data-progress="${name}"]`);
 		if (!wrap) return;
 		wrap.hidden = false;
@@ -193,7 +197,7 @@ const tabs = [
 		const fill = wrap.querySelector<HTMLElement>('.progress__bar');
 		if (fill) fill.style.width = `${percent}%`;
 		const hint = wrap.querySelector<HTMLElement>('.text-ink-muted');
-		if (hint) hint.textContent = total > 0 ? `${done} / ${total} halaman` : label;
+		if (hint) localizedText(hint, () => total > 0 ? tr(dict,'progress',{done,total}) : label());
 	};
 
 	const hideProgress = (name: string) => {
@@ -269,7 +273,7 @@ const tabs = [
 					items.splice(index, 0, moved);
 					renderList(name, items, onChange);
 					onChange();
-					toast('Urutan berkas diubah.', { tone: 'success' });
+					toast(() => tr(dict, 'orderChanged'), { tone: 'success' });
 				});
 			}
 
@@ -301,15 +305,15 @@ const tabs = [
 			const meta = document.createElement('span');
 			meta.className = 'file-card__meta';
 			if (item.status === 'reading') {
-				meta.textContent = 'Membaca PDF…';
+				localizedText(meta, () => tr(dict, 'reading'));
 			} else if (item.status === 'failed') {
-				meta.textContent = item.error ?? 'Tidak bisa dibaca';
+				localizedText(meta, () => tr(dict, 'unreadableShort'));
 				meta.classList.add('is-failed');
 			} else if (item.pages !== undefined) {
-				meta.textContent = `Siap · ${item.pages} halaman · ${formatBytes(item.file.size)}`;
+				localizedText(meta, () => tr(dict, 'readyPages', {pages:item.pages!, size:formatBytes(item.file.size)}));
 				meta.classList.add('is-ready');
 			} else {
-				meta.textContent = `Siap · ${formatBytes(item.file.size)}`;
+				localizedText(meta, () => tr(dict, 'readySize', {size:formatBytes(item.file.size)}));
 				meta.classList.add('is-ready');
 			}
 
@@ -318,7 +322,7 @@ const tabs = [
 			const up = document.createElement('button');
 			up.type = 'button';
 			up.className = 'icon-button';
-			up.setAttribute('aria-label', `Naikkan ${item.file.name}`);
+			up.setAttribute('aria-label', tr(dict,'moveUp',{name:item.file.name}));
 			up.textContent = '▲';
 			up.disabled = index === 0;
 			up.addEventListener('click', () => {
@@ -330,7 +334,7 @@ const tabs = [
 			const down = document.createElement('button');
 			down.type = 'button';
 			down.className = 'icon-button';
-			down.setAttribute('aria-label', `Turunkan ${item.file.name}`);
+			down.setAttribute('aria-label', tr(dict,'moveDown',{name:item.file.name}));
 			down.textContent = '▼';
 			down.disabled = index === items.length - 1;
 			down.addEventListener('click', () => {
@@ -342,7 +346,7 @@ const tabs = [
 			const remove = document.createElement('button');
 			remove.type = 'button';
 			remove.className = 'icon-button';
-			remove.setAttribute('aria-label', `Hapus ${item.file.name}`);
+			remove.setAttribute('aria-label', tr(dict,'removeFile',{name:item.file.name}));
 			remove.textContent = '×';
 			remove.addEventListener('click', () => {
 				const [removed] = items.splice(index, 1);
@@ -418,9 +422,9 @@ const tabs = [
 			return;
 		}
 		const value = input.value.trim();
-		const result = parsePageRange(value, splitPageCount);
+		const result = parsePageRange(value, splitPageCount, currentLang());
 		err.hidden = value === '' || result.ok;
-		if (!result.ok) err.textContent = result.message;
+		localizedText(err,()=>{const result=parsePageRange(value,splitPageCount,currentLang());return result.ok?'':result.message;});
 		runButton('pisah')!.disabled = !result.ok;
 	};
 
@@ -433,7 +437,7 @@ const tabs = [
 				item.status = 'ready';
 			} catch {
 				item.status = 'failed';
-				item.error = 'PDF tidak bisa dibaca';
+				item.error = true;
 			}
 			done();
 		}
@@ -472,7 +476,7 @@ const tabs = [
 	const renderMetaCard = (
 		name: string,
 		file: File,
-		options: { loading?: boolean; pages?: number; previewUrl?: string; error?: string },
+		options: { loading?: boolean; pages?: number; previewUrl?: string; error?: boolean },
 	) => {
 		const meta = $<HTMLElement>(`[data-meta="${name}"]`);
 		if (!meta) return;
@@ -508,12 +512,12 @@ const tabs = [
 		const sub = document.createElement('span');
 		sub.className = 'file-card__meta';
 		if (options.loading) {
-			sub.textContent = 'Membaca PDF…';
+			localizedText(sub, () => tr(dict, 'reading'));
 		} else if (options.error) {
-			sub.textContent = options.error;
+			localizedText(sub, () => tr(dict, 'unreadableLong'));
 			sub.classList.add('is-failed');
 		} else {
-			sub.textContent = `Siap · ${options.pages ?? 0} halaman · ${formatBytes(file.size)}`;
+			localizedText(sub, () => tr(dict,'readyPages',{pages:options.pages??0,size:formatBytes(file.size)}));
 			sub.classList.add('is-ready');
 		}
 
@@ -540,7 +544,7 @@ const tabs = [
 
 			const name = document.createElement('span');
 			name.className = 'page-card__name';
-			name.textContent = `Halaman ${index + 1}`;
+			localizedText(name, () => tr(dict,'page',{page:index+1}));
 
 			const angle = document.createElement('span');
 			angle.className = 'page-card__angle';
@@ -549,7 +553,7 @@ const tabs = [
 			const rotate = document.createElement('button');
 			rotate.type = 'button';
 			rotate.className = 'icon-button';
-			rotate.setAttribute('aria-label', `Putar halaman ${index + 1} 90 derajat`);
+			rotate.setAttribute('aria-label', tr(dict,'rotatePage',{page:index+1}));
 			rotate.textContent = '↻';
 			rotate.addEventListener('click', () => {
 				pageRotations[index] = ((pageRotations[index] ?? 0) + 90) % 360;
@@ -561,8 +565,8 @@ const tabs = [
 			remove.type = 'button';
 			remove.className = 'icon-button';
 			remove.setAttribute('aria-pressed', pageRemoved[index] ? 'true' : 'false');
-			remove.textContent = pageRemoved[index] ? 'Batalkan' : 'Hapus';
-			remove.setAttribute('aria-label', `Hapus halaman ${index + 1}`);
+			localizedText(remove, () => pageRemoved[index] ? tr(dict, 'cancel') : tr(dict, 'remove'));
+			remove.setAttribute('aria-label', tr(dict,'removePage',{page:index+1}));
 			remove.addEventListener('click', () => {
 				pageRemoved[index] = !pageRemoved[index];
 				renderPageList();
@@ -596,8 +600,8 @@ const tabs = [
 			const save = document.createElement('button');
 			save.type = 'button';
 			save.className = 'btn btn--secondary';
-			save.textContent = 'Unduh';
-			save.setAttribute('aria-label', `Unduh ${image.name}`);
+			localizedText(save, () => tr(dict, 'download'));
+			save.setAttribute('aria-label', tr(dict,'downloadFile',{name:image.name}));
 			save.addEventListener('click', () => download(image.name, image.bytes, image.mime));
 
 			li.append(name, size, save);
@@ -640,7 +644,7 @@ const tabs = [
 			splitFile = null;
 			splitPageCount = 0;
 			renderMetaCard('pisah', file, {
-				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+				error: true,
 			});
 			updateSplit();
 		}
@@ -673,7 +677,7 @@ const tabs = [
 			compressFile = null;
 			runButton('kompres')!.disabled = true;
 			renderMetaCard('kompres', file, {
-				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+				error: true,
 			});
 		}
 	});
@@ -702,7 +706,7 @@ const tabs = [
 			toImagePreviewUrl = undefined;
 			toImageFile = null;
 			renderMetaCard('ke-gambar', file, {
-				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+				error: true,
 			});
 			updateToImage();
 		}
@@ -742,7 +746,7 @@ const tabs = [
 			pageRemoved = [];
 			renderPageList();
 			renderMetaCard('halaman', file, {
-				error: 'PDF ini tidak bisa dibaca. Mungkin rusak atau terkunci sandi.',
+				error: true,
 			});
 			updatePageEdit();
 		}
@@ -781,12 +785,11 @@ const tabs = [
 		$<HTMLElement>('[data-before]')!.textContent = formatBytes(before);
 		$<HTMLElement>('[data-after]')!.textContent = formatBytes(after);
 		const saved = reductionPercent(before, after);
-		$<HTMLElement>('[data-delta]')!.textContent =
-			saved > 0
-				? `Hemat ${saved}%`
+		localizedText($<HTMLElement>('[data-delta]')!, () => saved > 0
+				? tr(dict,'saved',{saved})
 				: saved === 0
-					? 'Ukurannya sama'
-					: `${Math.abs(saved)}% lebih besar dari aslinya`;
+					? tr(dict, 'sameSize')
+					: tr(dict,'larger',{saved:Math.abs(saved)}));
 		const warn = $<HTMLElement>('[data-warn="kompres"]');
 		if (warn) warn.hidden = after < before;
 	};
@@ -834,17 +837,17 @@ const tabs = [
 		const zoneInput = zone?.querySelector<HTMLInputElement>('[data-dropzone-input]');
 		setDropzoneState(zone, 'processing');
 		setError(name, null);
-		setProgress(name, 0, 0, 'Menyiapkan…');
+		setProgress(name, 0, 0, ()=>tr(dict, 'preparing'));
 
-		const task = runPdfTask(request, (done, total) => setProgress(name, done, total, ''));
+		const task = runPdfTask(request, (done, total) => setProgress(name, done, total, ()=>''));
 		try {
 			const result = await task.promise;
 			download(filename, result.bytes);
-			toast('PDF siap diunduh.', { tone: 'success' });
+			toast(() => tr(dict, 'ready'), { tone: 'success' });
 			return result;
 		} catch (error) {
-			setError(name, error instanceof Error ? error.message : 'Gagal memproses PDF.');
-			toast('Gagal memproses PDF.', { tone: 'error' });
+			setError(name, ()=>workspaceErrorMessage(error,tr(dict,'processFailed')));
+			toast(() => tr(dict, 'processFailed'), { tone: 'error' });
 			return null;
 		} finally {
 			hideProgress(name);
@@ -902,7 +905,7 @@ const tabs = [
 		const button = runButton('ke-gambar');
 		if (button) button.disabled = true;
 		setError('ke-gambar', null);
-		setProgress('ke-gambar', 0, 0, 'Menyiapkan…');
+		setProgress('ke-gambar', 0, 0, ()=>tr(dict, 'preparing'));
 
 		const file = toImageFile;
 		const task = runPdfTask(
@@ -912,22 +915,21 @@ const tabs = [
 				format: imageFormat,
 				scale: imageDpi / 72,
 			},
-			(done, total) => setProgress('ke-gambar', done, total, ''),
+			(done, total) => setProgress('ke-gambar', done, total, ()=>''),
 		);
 		try {
 			const result = await task.promise;
 			renderedImages = result.images ?? [];
 			renderImageResults();
-			toast(
-				renderedImages.length > 1
-					? `${renderedImages.length} gambar siap diunduh.`
-					: 'Gambar siap diunduh.',
+			toast(() => renderedImages.length > 1
+					? tr(dict,'imagesReady',{count:renderedImages.length})
+					: tr(dict, 'imageReady'),
 				{ tone: 'success' },
 			);
 		} catch (error) {
 			setError(
 				'ke-gambar',
-				error instanceof Error ? error.message : 'Gagal membuat gambar.',
+				()=>workspaceErrorMessage(error,tr(dict,'imagesFailed')),
 			);
 		} finally {
 			hideProgress('ke-gambar');
@@ -961,6 +963,7 @@ const tabs = [
 			`${file.name.replace(/\.pdf$/i, '')}-diubah.pdf`,
 		);
 	});
+document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,updateGabung);renderList('gambar',imageItems,updateGambar);renderPageList();renderImageResults();});
 </script>
 
 <style>

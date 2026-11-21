@@ -17,6 +17,7 @@ function filesAt(directory) {
 for (const item of readdirSync(root, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
 	if (!item.isDirectory() || selected.size && !selected.has(item.name)) continue;
 	const files = filesAt(new URL(`${item.name}/`, root).pathname);
+	const tokens = new Set(files.flatMap((file) => [...readFileSync(file, 'utf8').matchAll(/\b(?:data-[\w-]+|id|for|class)="([^"\s]+)"/g)].map((match) => match[1])));
 	const candidates = [];
 	for (const file of files) {
 		const source = readFileSync(file, 'utf8');
@@ -24,6 +25,8 @@ for (const item of readdirSync(root, { withFileTypes: true }).sort((a, b) => a.n
 			const prefix = source.slice(Math.max(0, match.index - 200), match.index);
 			if (/\b(?:class|id|for)=\s*$/.test(prefix) || /\b(?:\w*[Ff]ile[Nn]ame|resultName)\s*=\s*$/.test(prefix) || /\boutputFileName\([^}]*$/.test(prefix) || /\bdownloadText\(\s*$/.test(prefix)) continue;
 			const value = match[2] ?? match[3] ?? '';
+			if (tokens.has(value) && !/>\s*$/.test(prefix)) continue;
+			if (/^(?:#|\[)/.test(value) || /^[^\s]+\.(?:pdf|png|jpe?g|webp|svg|drawio|excalidraw)$/.test(value)) continue;
 			if (/\bplaceholder\s*=\s*(?:{\s*)?$/.test(prefix) && (/^curl\s/.test(value) || /^[\w.-]+=[\s\S]*[&?](?:amp;)?\s*[\w.-]+=/.test(value) || /^[\w-]+:[\w.-]+$/.test(value))) continue;
 			if (marker.test(value) && !/^(?:workspace\.|[.\/]|https?:)/.test(value)) candidates.push(value.trim());
 		}

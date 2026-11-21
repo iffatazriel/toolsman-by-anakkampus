@@ -1,24 +1,26 @@
+import {fill,type Lang} from './i18n';
+import dict from '../features/pdf/i18n';
 export type PageRangeResult =
 	| { ok: true; pages: number[] }
 	| { ok: false; message: string };
 
-export function parsePageRange(input: string, pageCount: number): PageRangeResult {
+export function parsePageRange(input: string, pageCount: number, lang: Lang = 'id'): PageRangeResult {
 	const text = input.replace(/\s+/g, '');
-	if (text === '') return { ok: false, message: 'Tulis halaman yang mau diambil, misalnya 1-3,5.' };
+	if (text === '') return { ok: false, message: dict[lang].rangeEmpty };
 
 	const pages = new Set<number>();
 	for (const part of text.split(',')) {
-		if (part === '') return { ok: false, message: 'Ada koma berlebih di rentang halaman.' };
+		if (part === '') return { ok: false, message: dict[lang].rangeComma };
 
 		const match = /^(\d+)(?:-(\d+))?$/.exec(part);
-		if (!match) return { ok: false, message: `"${part}" bukan rentang halaman yang sah.` };
+		if (!match) return { ok: false, message: fill(dict[lang].rangeInvalid,{part}) };
 
 		const from = Number(match[1]);
 		const to = match[2] === undefined ? from : Number(match[2]);
-		if (from < 1 || to < 1) return { ok: false, message: 'Nomor halaman mulai dari 1.' };
-		if (to < from) return { ok: false, message: `Rentang ${part} terbalik. Tulis yang kecil dulu.` };
+		if (from < 1 || to < 1) return { ok: false, message: dict[lang].rangeStart };
+		if (to < from) return { ok: false, message: fill(dict[lang].rangeReverse,{part}) };
 		if (to > pageCount) {
-			return { ok: false, message: `PDF ini hanya punya ${pageCount} halaman.` };
+			return { ok: false, message: fill(dict[lang].rangeCount,{count:pageCount}) };
 		}
 		for (let page = from; page <= to; page += 1) pages.add(page);
 	}
