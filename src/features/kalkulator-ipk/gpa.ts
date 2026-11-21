@@ -1,3 +1,5 @@
+import { WorkspaceError } from '../../lib/i18n';
+import dict from './i18n';
 export const scales = {
 	ab: { A: 4, AB: 3.5, B: 3, BC: 2.5, C: 2, D: 1, E: 0 },
 	plus: { A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, D: 1, E: 0 },
@@ -11,10 +13,10 @@ export function summarize(courses: Course[], values: Record<string, number>): Su
 	let credits = 0;
 	let points = 0;
 	for (const course of courses) {
-		if (!Number.isFinite(course.credits) || course.credits < 0 || course.credits > 30) throw new Error('SKS harus berupa angka 0 sampai 30.');
+		if (!Number.isFinite(course.credits) || course.credits < 0 || course.credits > 30) throw new WorkspaceError(dict, 'creditsError');
 		if (course.grade === '' || course.credits === 0) continue;
 		const value = values[course.grade];
-		if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 4) throw new Error('Nilai huruf tidak cocok dengan skala. Pilih ulang nilai kamu.');
+		if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 4) throw new WorkspaceError(dict, 'gradeError');
 		credits += course.credits; points += course.credits * value;
 	}
 	return { credits, points, gpa: credits === 0 ? null : points / credits };
@@ -25,9 +27,9 @@ export function cumulative(semesters: Semester[], values: Record<string, number>
 }
 
 export function targetAverage(current: Summary, remaining: number, target: number, maxGrade = 4): { needed: number; possible: boolean; reached: boolean } {
-	if (!Number.isFinite(remaining) || remaining <= 0 || remaining > 1000) throw new Error('Isi sisa SKS lebih dari 0 dan maksimal 1.000.');
-	if (!Number.isFinite(target) || target < 0 || target > 4) throw new Error('Target IPK harus antara 0 dan 4.');
-	if (!Number.isFinite(maxGrade) || maxGrade < 0 || maxGrade > 4) throw new Error('Skala nilai tidak valid.');
+	if (!Number.isFinite(remaining) || remaining <= 0 || remaining > 1000) throw new WorkspaceError(dict, 'remainingError');
+	if (!Number.isFinite(target) || target < 0 || target > 4) throw new WorkspaceError(dict, 'targetError');
+	if (!Number.isFinite(maxGrade) || maxGrade < 0 || maxGrade > 4) throw new WorkspaceError(dict, 'scaleError');
 	const raw = (target * (current.credits + remaining) - current.points) / remaining;
 	return { needed: Math.max(0, raw), possible: raw <= maxGrade + 1e-12, reached: raw <= 0 };
 }
@@ -38,9 +40,9 @@ export function changeScale(data: GpaData, scale: GpaData['scale']): GpaData {
 }
 
 export function parseData(raw: string): GpaData {
-	if (raw.length > 1_000_000) throw new Error('Berkas terlalu besar. Maksimal 1 MB.');
+	if (raw.length > 1_000_000) throw new WorkspaceError(dict, 'sizeError');
 	const data = JSON.parse(raw);
-	const invalid = () => { throw new Error('Data IPK tidak valid. Gunakan JSON hasil ekspor kalkulator ini.'); };
+	const invalid = () => { throw new WorkspaceError(dict, 'dataError'); };
 	if (!data || data.version !== 1 || !['ab', 'plus'].includes(data.scale) || !data.values || typeof data.values !== 'object' || Array.isArray(data.values) || !Array.isArray(data.semesters) || data.semesters.length > 50) invalid();
 	const expected = Object.keys(scales[data.scale as GpaData['scale']]);
 	if (Object.keys(data.values).length !== expected.length || !expected.every((grade) => Object.hasOwn(data.values, grade) && typeof data.values[grade] === 'number' && Number.isFinite(data.values[grade]) && data.values[grade] >= 0 && data.values[grade] <= 4)) invalid();
