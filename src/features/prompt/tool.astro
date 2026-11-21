@@ -1,4 +1,5 @@
 ---
+import dict from './i18n';
 import Icon from '../../components/ui/Icon.astro';
 import { prompts } from '../../lib/prompts';
 import { promptAi, promptCategories, promptLevels } from '../../lib/prompt-taxonomy';
@@ -8,19 +9,17 @@ const githubUrl = siteConfig.githubUrl.trim();
 const submitUrl =
 	githubUrl === '' ? '' : `${githubUrl.replace(/\/+$/, '')}/blob/main/CONTRIBUTING-PROMPTS.md`;
 
-const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
+const suggestions = [{query:'ringkasan',key:'suggest.summary'},{query:'debugging',key:null},{query:'cv',key:null},{query:'laporan',key:'suggest.report'},{query:'jadwal',key:'suggest.schedule'}] as const;
 ---
 
 <div class="prompt-tool" data-prompt-tool>
 	<p class="prompt-tool__privacy">
 		<Icon name="laptop" size={16} />
-		<span data-p="privacy">
-			Semua pencarian dan isian diproses di browser ini. Tidak ada yang dikirim ke server.
-		</span>
+		<span data-i18n="workspace.prompt.privacy">{dict.id["privacy"]}</span>
 	</p>
 
 	<div class="prompt-search">
-		<label class="field-label" for="prompt-search" data-p="search.label">Cari prompt</label>
+		<label class="field-label" for="prompt-search" data-i18n="workspace.prompt.search.label">{dict.id["search.label"]}</label>
 		<div class="prompt-search__field">
 			<span class="prompt-search__icon" aria-hidden="true"><Icon name="search" size={20} /></span>
 			<input
@@ -31,17 +30,15 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 				placeholder="mis. ringkas laporan, debug error, cv"
 				aria-describedby="prompt-search-hint"
 				data-prompt-search
-				data-p-placeholder="search.placeholder"
+				data-i18n-placeholder="workspace.prompt.search.placeholder"
 			/>
 		</div>
-		<p class="field-hint" id="prompt-search-hint" data-p="search.hint">
-			Cari di judul, tag, dan cuplikan. Huruf besar-kecil dan aksen diabaikan.
-		</p>
+		<p class="field-hint" id="prompt-search-hint" data-i18n="workspace.prompt.search.hint">{dict.id["search.hint"]}</p>
 	</div>
 
 	<div class="prompt-filters">
-		<fieldset class="prompt-filtergroup" data-p-aria="filter.groupCategory">
-			<legend class="prompt-filtergroup__legend" data-p="filter.category">Kategori</legend>
+		<fieldset class="prompt-filtergroup" data-i18n-aria="workspace.prompt.filter.groupCategory">
+			<legend class="prompt-filtergroup__legend" data-i18n="workspace.prompt.filter.category">{dict.id["filter.category"]}</legend>
 			<div class="chip-row">
 				<button
 					type="button"
@@ -49,7 +46,7 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 					data-prompt-kategori="semua"
 					aria-pressed="true"
 				>
-					<span data-p="filter.all">Semua</span>
+					<span data-i18n="workspace.prompt.filter.all">{dict.id["filter.all"]}</span>
 				</button>
 				{promptCategories.map((category) => (
 					<button
@@ -66,21 +63,21 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 
 		<div class="prompt-selects">
 			<div class="prompt-select">
-				<label class="field-label" for="prompt-ai" data-p="filter.ai">AI</label>
-				<select id="prompt-ai" class="field-input" data-prompt-ai data-p-aria="filter.groupAi">
-					<option value="semua" data-p="filter.all">Semua</option>
+				<label class="field-label" for="prompt-ai" data-i18n="workspace.prompt.filter.ai">{dict.id["filter.ai"]}</label>
+				<select id="prompt-ai" class="field-input" data-prompt-ai data-i18n-aria="workspace.prompt.filter.groupAi">
+					<option value="semua" data-i18n="workspace.prompt.filter.all">{dict.id["filter.all"]}</option>
 					{promptAi.map((item) => <option value={item.id}>{item.label}</option>)}
 				</select>
 			</div>
 			<div class="prompt-select">
-				<label class="field-label" for="prompt-level" data-p="filter.level">Level</label>
+				<label class="field-label" for="prompt-level" data-i18n="workspace.prompt.filter.level">{dict.id["filter.level"]}</label>
 				<select
 					id="prompt-level"
 					class="field-input"
 					data-prompt-level
-					data-p-aria="filter.groupLevel"
+					data-i18n-aria="workspace.prompt.filter.groupLevel"
 				>
-					<option value="semua" data-p="filter.all">Semua</option>
+					<option value="semua" data-i18n="workspace.prompt.filter.all">{dict.id["filter.all"]}</option>
 					{promptLevels.map((item) => <option value={item.id}>{item.label}</option>)}
 				</select>
 			</div>
@@ -89,10 +86,10 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 				class="chip prompt-favchip"
 				data-prompt-favorites
 				aria-pressed="false"
-				data-p-aria="filter.favoriteOnly"
+				data-i18n-aria="workspace.prompt.filter.favoriteOnly"
 			>
 				<Icon name="star" size={16} />
-				<span data-p="filter.favorite">Favorit</span>
+				<span data-i18n="workspace.prompt.filter.favorite">{dict.id["filter.favorite"]}</span>
 			</button>
 		</div>
 	</div>
@@ -101,22 +98,18 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 		<p class="prompt-count" data-prompt-count aria-live="polite"></p>
 	</div>
 
-	<p class="prompt-loading" data-prompt-loading data-p="loading">Memuat indeks prompt…</p>
-	<p class="prompt-error" data-prompt-error data-p="loadError" hidden>
-		Indeks prompt gagal dimuat. Coba muat ulang halaman.
-	</p>
+	<p class="prompt-loading" data-prompt-loading data-i18n="workspace.prompt.loading">{dict.id["loading"]}</p>
+	<p class="prompt-error" data-prompt-error data-i18n="workspace.prompt.loadError" hidden>{dict.id["loadError"]}</p>
 
 	<ul
 		class="prompt-results"
 		data-prompt-results
 		aria-label="Daftar prompt"
-		data-p-aria="list.label"
+		data-i18n-aria="workspace.prompt.list.label"
 	></ul>
 
 	<noscript>
-		<p class="prompt-noscript">
-			JavaScript mati, jadi pencarian dan filter tidak jalan. Ini daftar lengkapnya:
-		</p>
+		<p class="prompt-noscript" data-i18n="workspace.prompt.noscript">{dict.id.noscript}</p>
 		<ul class="prompt-noscript__list">
 			{prompts.map((prompt) => (
 				<li>
@@ -139,23 +132,19 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 			<path d="m53 45 12 12" />
 			<path d="M78 30h18M78 42h12" />
 		</svg>
-		<p class="empty-state__title" data-p="empty.title">Tidak ada prompt yang cocok</p>
-		<p class="empty-state__body" data-prompt-empty-body>
-			Belum ada hasil untuk pencarian atau filter ini. Coba kata yang lebih umum, hapus satu
-			filter, atau pilih salah satu saran di bawah.
-		</p>
-		<button type="button" class="btn btn--secondary mt-4" data-prompt-reset data-p="empty.reset">
-			Hapus semua filter
-		</button>
+		<p class="empty-state__title" data-i18n="workspace.prompt.empty.title">{dict.id["empty.title"]}</p>
+		<p class="empty-state__body" data-prompt-empty-body>{dict.id['empty.body']}</p>
+		<button type="button" class="btn btn--secondary mt-4" data-prompt-reset data-i18n="workspace.prompt.empty.reset">{dict.id["empty.reset"]}</button>
 		<div class="prompt-suggestions">
-			<span data-p="empty.try">Coba:</span>
+			<span data-i18n="workspace.prompt.empty.try">{dict.id["empty.try"]}</span>
 			{suggestions.map((suggestion) => (
 				<button
 					type="button"
 					class="chip chip--example"
-					data-prompt-suggestion={suggestion}
+					data-prompt-suggestion={suggestion.query}
+ data-i18n={suggestion.key ? `workspace.prompt.${suggestion.key}` : undefined}
 				>
-					{suggestion}
+					{suggestion.key ? dict.id[suggestion.key] : suggestion.query}
 				</button>
 			))}
 		</div>
@@ -175,11 +164,9 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 					rel="noopener noreferrer"
 				>
 					<Icon name="github" size={16} />
-					<span data-p="submit">Kirim prompt</span>
+					<span data-i18n="workspace.prompt.submit">{dict.id["submit"]}</span>
 				</a>
-				<span class="field-hint" data-p="submitHint">
-					Punya prompt bagus? Ikuti format di panduan kontribusi.
-				</span>
+				<span class="field-hint" data-i18n="workspace.prompt.submitHint">{dict.id["submitHint"]}</span>
 			</div>
 		)
 	}
@@ -187,11 +174,9 @@ const suggestions = ['ringkasan', 'debugging', 'cv', 'laporan', 'jadwal'];
 
 <script>
 	import { initPromptList } from './prompt-list';
-	import { initPromptStrings } from './strings';
 
 	const root = document.querySelector<HTMLElement>('[data-prompt-tool]');
 	if (root) initPromptList(root);
-	initPromptStrings();
 </script>
 
 <style is:global>
