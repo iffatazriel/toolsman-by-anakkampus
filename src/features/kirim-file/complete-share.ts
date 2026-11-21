@@ -1,4 +1,5 @@
 import type { ShareFileRow } from './db';
+import { logEvent, type LogContext } from '../../lib/server-log';
 
 export interface VerifyResult {
 	ok: boolean;
@@ -17,6 +18,7 @@ export interface StorageProbe {
 export async function verifyUploadedFiles(
 	files: Pick<ShareFileRow, 'object_key' | 'name' | 'size'>[],
 	probe: StorageProbe,
+	context: LogContext = { route: '/api/shares/:id/complete' },
 ): Promise<VerifyResult> {
 	const missing: string[] = [];
 	const mismatched: string[] = [];
@@ -25,7 +27,8 @@ export async function verifyUploadedFiles(
 		let size: number | null;
 		try {
 			size = await probe.head(file.object_key);
-		} catch {
+		} catch (error) {
+			logEvent('warn', 'shares.upload_probe_failed', context, error);
 			missing.push(file.name);
 			continue;
 		}
@@ -41,9 +44,9 @@ export async function verifyUploadedFiles(
 	const cleanup = await Promise.allSettled(
 		files.map((file) => probe.remove(file.object_key)),
 	);
-	for (const [index, result] of cleanup.entries()) {
+	for (const result of cleanup) {
 		if (result.status === 'rejected') {
-			console.error(`Gagal menghapus objek ${files[index]?.object_key}:`, result.reason);
+			logEvent('error', 'shares.upload_rollback_failed', context, result.reason);
 		}
 	}
 

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { shareEnv } from '../../features/kirim-file/bindings';
+import { logEvent } from '../../lib/server-log';
 
 export const prerender = false;
 
@@ -12,14 +13,14 @@ function ping(ok: boolean): Response {
 	);
 }
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ request }) => {
 	const env = shareEnv();
-	if (!env) return ping(false);
+	if (!env) { logEvent('warn', 'health.unconfigured', { request, route: '/api/health' }); return ping(false); }
 
 	try {
 		await env.DB.prepare('SELECT 1 AS ok').bind().first();
 	} catch (error) {
-		console.error('Health check D1 gagal:', error);
+		logEvent('error', 'health.db_failed', { request, route: '/api/health' }, error);
 		return ping(false);
 	}
 

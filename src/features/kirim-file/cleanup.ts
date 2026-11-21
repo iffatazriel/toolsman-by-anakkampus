@@ -1,5 +1,6 @@
 import type { SharesDb, ShareFileRow } from './db';
 import { abortMultipartUpload, deleteObject, type R2Env } from './r2';
+import { logEvent } from '../../lib/server-log';
 
 export interface CleanupEnv extends R2Env {
 	DB: SharesDb;
@@ -32,7 +33,7 @@ async function removeExpiredBatch(env: CleanupEnv, now: number): Promise<BatchRe
 		for (const file of files) {
 			if (file.upload_id) {
 				await abortMultipartUpload(env, file.object_key, file.upload_id).catch((error) => {
-					console.error(`Gagal membatalkan unggahan ${file.object_key}:`, error);
+					logEvent('error', 'cleanup.abort_failed', { route: 'cleanup', method: 'SCHEDULED', shareId: share.id }, error);
 					failed = true;
 				});
 			}
@@ -40,7 +41,7 @@ async function removeExpiredBatch(env: CleanupEnv, now: number): Promise<BatchRe
 			try {
 				await deleteObject(env, file.object_key);
 			} catch (error) {
-				console.error(`Gagal menghapus objek ${file.object_key}:`, error);
+				logEvent('error', 'cleanup.object_delete_failed', { route: 'cleanup', method: 'SCHEDULED', shareId: share.id }, error);
 				failed = true;
 			}
 		}
@@ -58,7 +59,7 @@ async function removeExpiredBatch(env: CleanupEnv, now: number): Promise<BatchRe
 			await env.DB.prepare('DELETE FROM reports WHERE share_id = ?').bind(share.id).run();
 			removed += 1;
 		} catch (error) {
-			console.error(`Gagal membersihkan data share ${share.id}:`, error);
+			logEvent('error', 'cleanup.rows_delete_failed', { route: 'cleanup', method: 'SCHEDULED', shareId: share.id }, error);
 		}
 	}
 
@@ -123,7 +124,7 @@ async function purgeExhaustedBatch(env: CleanupEnv, now: number): Promise<PurgeR
 				.run();
 			purged += 1;
 		} catch (error) {
-			console.error(`Gagal menghapus berkas habis pakai ${file.object_key}:`, error);
+			logEvent('error', 'cleanup.exhausted_delete_failed', { route: 'cleanup', method: 'SCHEDULED', shareId: file.share_id }, error);
 		}
 	}
 

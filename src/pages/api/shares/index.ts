@@ -19,6 +19,7 @@ import {
 } from '../../../features/kirim-file/quota';
 import { shareEnv, type ShareEnv } from '../../../features/kirim-file/bindings';
 import { verifyTurnstile } from '../../../features/kirim-file/turnstile';
+import { logEvent } from '../../../lib/server-log';
 export const prerender = false;
 
 interface Body {
@@ -50,7 +51,8 @@ export const POST: APIRoute = async ({ request }) => {
 	let body: Body;
 	try {
 		body = (await request.json()) as Body;
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.invalid_json', { request }, error);
 		return json({ error: 'Permintaan tidak valid.' }, 400);
 	}
 
@@ -75,7 +77,7 @@ export const POST: APIRoute = async ({ request }) => {
 		return json({ error: 'Verifikasi keamanan belum dikonfigurasi di server.' }, 503);
 	}
 
-	const verified = await verifyTurnstile(turnstileSecret, body.turnstileToken, clientIp(request));
+	const verified = await verifyTurnstile(turnstileSecret, body.turnstileToken, clientIp(request), { request });
 	if (!verified) {
 		return json(
 			{ error: 'Verifikasi keamanan gagal. Selesaikan ulang, lalu coba lagi.' },
@@ -136,8 +138,10 @@ export const POST: APIRoute = async ({ request }) => {
 			uploads: files.map((file) => ({ name: file.name, uploadUrl: file.uploadUrl })),
 		});
 	} catch (error) {
-		console.error('Gagal menyiapkan share:', error);
-		await releaseUploadQuota(quotaStore, { ip, bytes: totalBytes, now }).catch(() => undefined);
+		logEvent('error', 'shares.create_failed', { request, shareId }, error);
+		await releaseUploadQuota(quotaStore, { ip, bytes: totalBytes, now }).catch((releaseError) => {
+			logEvent('warn', 'shares.quota_release_failed', { request, shareId }, releaseError);
+		});
 		return json({ error: 'Server gagal menyiapkan unggahan. Coba lagi.' }, 500);
 	}
 };
