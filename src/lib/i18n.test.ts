@@ -18,6 +18,7 @@ const slugs = [
 	'format-kode',
 	'sitasi',
 	'kalkulator-ipk',
+	'bilangan-subnet',
 	'hapus-exif',
 	'cron',
 	'code-to-image',

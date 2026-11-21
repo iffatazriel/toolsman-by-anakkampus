@@ -194,6 +194,10 @@ export interface ToolText {
 }
 
 export const toolText: Record<string, Record<Lang, ToolText>> = {
+	'bilangan-subnet': {
+		id: { name: 'Bilangan & Subnet', tagline: 'Konversi bilangan besar antarbasis dengan BigInt, lihat komplemen dua, dan hitung atau bagi subnet IPv4.', usage: ['Pilih tab bilangan atau subnet IPv4.', 'Isi bilangan dan basis, atau IPv4 dengan CIDR atau mask.', 'Salin hasil konversi atau daftar subnet.'] },
+		en: { name: 'Numbers & Subnets', tagline: 'Convert large integers with BigInt, inspect two’s complement, and calculate or split IPv4 subnets.', usage: ['Choose number conversion or IPv4 subnets.', 'Enter a number and base, or IPv4 with CIDR or a subnet mask.', 'Copy conversions or the subnet list.'] },
+	},
 	'kalkulator-ipk': {
 		id: { name: 'Kalkulator IPK', tagline: 'Hitung IPS per semester, IPK kumulatif, dan rata-rata nilai yang kamu perlukan untuk mengejar target IPK.', usage: ['Pilih skala nilai kampus kamu dan sesuaikan bobot jika perlu.', 'Tambahkan semester, mata kuliah, SKS, dan nilai.', 'Periksa IPS, IPK, dan target. Ekspor JSON untuk cadangan.'] },
 		en: { name: 'GPA Calculator', tagline: 'Calculate semester and cumulative GPA, and the average grade needed to reach your target.', usage: ['Choose your grading scale and adjust grade points if needed.', 'Add semesters, courses, credits, and grades.', 'Review GPA and your target. Export JSON for a backup.'] },
