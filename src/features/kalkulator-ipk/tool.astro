@@ -1,0 +1,139 @@
+---
+---
+
+<div class="tool-shell ipk-shell">
+	<div class="pane-grid pane-grid--split">
+		<div class="pane">
+			<label class="field-label" for="ipk-scale">Skala nilai</label>
+			<select class="field-input" id="ipk-scale"><option value="ab">A, AB, B, BC, C, D, E</option><option value="plus">A, A-, B+, B, B-, C+, C, D, E</option></select>
+			<p class="field-hint">Mengganti skala mengembalikan bobot standar dan mengosongkan nilai yang tidak cocok. Bobot bisa kamu ubah (0–4). Nilai kosong atau SKS 0 tidak dihitung. Mata kuliah mengulang dihitung sebagai baris terpisah.</p>
+			<div id="ipk-values" class="ipk-values"></div>
+		</div>
+		<div class="pane">
+			<h2 class="pane__title">Ringkasan kumulatif</h2>
+			<p id="ipk-summary" class="ipk-summary" role="status"></p>
+			<h3 class="pane__title">Target IPK</h3>
+			<label class="field-label">Target (0–4)<input class="field-input" id="ipk-target" type="number" min="0" max="4" step="0.01" value="3.5" /></label>
+			<label class="field-label">Sisa SKS<input class="field-input" id="ipk-remaining" type="number" min="0.5" max="1000" step="0.5" value="20" /></label>
+			<p id="ipk-target-result" role="status"></p>
+			<p class="field-hint">Perhitungan tidak dibulatkan di tengah proses; tampilan memakai 2 desimal. Hasil target adalah perkiraan, bukan jaminan kelulusan.</p>
+		</div>
+	</div>
+	<div id="ipk-semesters"></div>
+	<div class="pane-actions"><button class="btn btn--primary" id="ipk-add-semester" type="button">Tambah semester</button><button class="btn btn--secondary" id="ipk-copy" type="button">Salin ringkasan</button><button class="btn btn--secondary" id="ipk-export" type="button">Ekspor JSON</button><label class="btn btn--secondary" for="ipk-import">Impor JSON</label><input id="ipk-import" type="file" accept="application/json,.json" /><button class="btn btn--ghost" id="ipk-reset" type="button">Reset semua</button></div>
+	<p class="field-hint" role="status" id="ipk-status"></p>
+	<p class="field-error" role="alert" id="ipk-error" hidden></p>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { changeScale, cumulative, initialData, parseData, summarize, targetAverage, type GpaData, type Semester } from './gpa';
+	const scale = document.querySelector<HTMLSelectElement>('#ipk-scale')!;
+	const semesters = document.querySelector<HTMLElement>('#ipk-semesters')!;
+	const weights = document.querySelector<HTMLElement>('#ipk-values')!;
+	const summary = document.querySelector<HTMLElement>('#ipk-summary')!;
+	const error = document.querySelector<HTMLElement>('#ipk-error')!;
+	const status = document.querySelector<HTMLElement>('#ipk-status')!;
+	const target = document.querySelector<HTMLInputElement>('#ipk-target')!;
+	const remaining = document.querySelector<HTMLInputElement>('#ipk-remaining')!;
+	const targetResult = document.querySelector<HTMLElement>('#ipk-target-result')!;
+	const key = 'toolsman-ipk-v1';
+	let data = initialData();
+	const showError = (text: string) => { error.textContent = text; error.hidden = false; };
+	try { const raw = localStorage.getItem(key); if (raw) data = parseData(raw); } catch { showError('Data tersimpan tidak bisa dibaca. Data lama belum dihapus; kamu bisa mengimpor cadangan JSON.'); }
+	const save = () => { try { localStorage.setItem(key, JSON.stringify(data)); } catch { showError('Data belum tersimpan. Penyimpanan penuh atau diblokir. Ekspor JSON untuk cadangan.'); } };
+	const display = (value: number | null) => value === null ? '—' : value.toFixed(2);
+	const calculate = () => {
+		if (weights.querySelector('input:invalid') || semesters.querySelector('input:invalid')) {
+			summary.textContent = 'Perbaiki isian SKS atau bobot yang tidak valid untuk melihat ringkasan.';
+			targetResult.textContent = 'Perbaiki data nilai kamu dulu.';
+			return;
+		}
+		try {
+			const total = cumulative(data.semesters, data.values);
+			summary.textContent = `IPK ${display(total.gpa)} · Total SKS bernilai ${total.credits}`;
+			data.semesters.forEach((semester) => {
+				const result = summarize(semester.courses, data.values);
+				const node = document.getElementById(`ips-${semester.id}`);
+				if (node) node.textContent = `IPS ${display(result.gpa)} · ${result.credits} SKS bernilai`;
+			});
+			try {
+				const result = targetAverage(total, remaining.valueAsNumber, target.valueAsNumber, Math.max(...Object.values(data.values)));
+				targetResult.textContent = result.reached ? 'Target tetap tercapai meski rata-rata sisa SKS 0,00.' : result.possible ? `Rata-rata minimal sisa SKS: ${result.needed.toFixed(2)}.` : `Belum mungkin dengan skala ini. Perlu rata-rata ${result.needed.toFixed(2)}, melebihi bobot tertinggi ${Math.max(...Object.values(data.values)).toFixed(2)}. Tambah sisa SKS atau turunkan target.`;
+			} catch (problem) { targetResult.textContent = problem instanceof Error ? problem.message : 'Periksa target dan sisa SKS kamu.'; }
+		} catch (problem) { showError(problem instanceof Error ? problem.message : 'Periksa nilai kamu.'); }
+	};
+	const button = (text: string, action: () => void) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn--secondary'; b.textContent = text; b.addEventListener('click', action); return b; };
+	const field = (text: string, input: HTMLInputElement | HTMLSelectElement) => { const label = document.createElement('label'); label.className = 'field-label'; label.append(text, input); return label; };
+	const input = (value: string) => { const node = document.createElement('input'); node.className = 'field-input'; node.value = value; node.maxLength = 200; return node; };
+	const changed = () => { error.hidden = true; save(); calculate(); };
+	const renderCourses = (semester: Semester, container: HTMLElement) => {
+		container.replaceChildren();
+		semester.courses.forEach((course) => {
+			const row = document.createElement('div'); row.className = 'ipk-course';
+			const name = input(course.name);
+			name.addEventListener('input', () => { course.name = name.value; changed(); });
+			const credits = input(String(course.credits)); credits.type = 'number'; credits.min = '0'; credits.max = '30'; credits.step = 'any'; credits.required = true;
+			credits.addEventListener('input', () => {
+				if (!credits.validity.valid || !Number.isFinite(credits.valueAsNumber)) { showError('SKS harus berupa angka 0 sampai 30.'); calculate(); return; }
+				course.credits = credits.valueAsNumber; changed();
+			});
+			const grade = document.createElement('select'); grade.className = 'field-input';
+			for (const g of ['', ...Object.keys(data.values)]) { const option = document.createElement('option'); option.value = g; option.textContent = g || 'Belum ada nilai'; grade.append(option); }
+			grade.value = course.grade; grade.addEventListener('change', () => { course.grade = grade.value; changed(); });
+			row.append(field('Mata kuliah', name), field('SKS', credits), field('Nilai', grade), button('Hapus mata kuliah', () => { semester.courses = semester.courses.filter((c) => c.id !== course.id); render(); changed(); document.getElementById(`add-${semester.id}`)!.focus(); }));
+			container.append(row);
+		});
+	};
+	const render = () => {
+		scale.value = data.scale; weights.replaceChildren(); semesters.replaceChildren();
+		for (const [grade, value] of Object.entries(data.values)) {
+			const weight = input(String(value)); weight.type = 'number'; weight.min = '0'; weight.max = '4'; weight.step = 'any'; weight.required = true;
+			weight.addEventListener('input', () => {
+				if (!weight.validity.valid || !Number.isFinite(weight.valueAsNumber)) { showError('Bobot nilai harus berupa angka 0 sampai 4.'); calculate(); return; }
+				data.values[grade] = weight.valueAsNumber; changed();
+			}); weights.append(field(grade, weight));
+		}
+		data.semesters.forEach((semester) => {
+			const section = document.createElement('section'); section.className = 'pane ipk-semester';
+			const name = input(semester.name); name.addEventListener('input', () => { semester.name = name.value; changed(); });
+			const ips = document.createElement('p'); ips.id = `ips-${semester.id}`; ips.className = 'ipk-summary';
+			const rows = document.createElement('div'); renderCourses(semester, rows);
+			const add = button('Tambah mata kuliah', () => { if (semester.courses.length >= 100) { showError('Maksimal 100 mata kuliah per semester.'); return; } semester.courses.push({ id: crypto.randomUUID(), name: '', credits: 3, grade: '' }); renderCourses(semester, rows); changed(); rows.lastElementChild!.querySelector('input')!.focus(); }); add.id = `add-${semester.id}`;
+			section.append(field('Nama semester', name), ips, rows, add, button('Hapus semester', () => { if (!confirm(`Hapus ${semester.name} beserta semua mata kuliahnya?`)) return; data.semesters = data.semesters.filter((s) => s.id !== semester.id); render(); changed(); document.getElementById('ipk-add-semester')!.focus(); }));
+			semesters.append(section);
+		}); calculate();
+	};
+	scale.addEventListener('change', () => { if (!confirm('Ganti skala dan kembalikan bobot standar? Nilai yang tidak cocok akan dikosongkan.')) { scale.value = data.scale; return; } data = changeScale(data, scale.value as GpaData['scale']); render(); changed(); });
+	[target, remaining].forEach((node) => node.addEventListener('input', calculate));
+	document.getElementById('ipk-add-semester')!.addEventListener('click', () => { if (data.semesters.length >= 50) { showError('Maksimal 50 semester.'); return; } data.semesters.push({ id: crypto.randomUUID(), name: `Semester ${data.semesters.length + 1}`, courses: [] }); render(); changed(); semesters.lastElementChild!.querySelector('input')!.focus(); });
+	document.getElementById('ipk-copy')!.addEventListener('click', async () => { const text = [summary.textContent, ...data.semesters.map((s) => `${s.name}: IPS ${display(summarize(s.courses, data.values).gpa)}`)].join('\n'); status.textContent = await copyText(text) ? 'Ringkasan disalin.' : 'Gagal menyalin. Pilih ringkasan lalu tekan Ctrl+C.'; });
+	document.getElementById('ipk-export')!.addEventListener('click', () => downloadText('ipk.json', JSON.stringify(data, null, 2), 'application/json;charset=utf-8'));
+	const upload = document.querySelector<HTMLInputElement>('#ipk-import')!;
+	upload.addEventListener('change', async () => {
+		const file = upload.files?.[0]; if (!file) return;
+		try {
+			if (file.size > 1_000_000) throw new Error('Berkas terlalu besar. Maksimal 1 MB.');
+			const imported = parseData(await file.text());
+			if (!confirm('Ganti data saat ini dengan isi JSON? Ekspor dulu jika kamu memerlukan cadangan.')) return;
+			data = imported; render(); changed(); status.textContent = 'Data JSON berhasil diimpor.';
+		} catch (problem) { showError(problem instanceof Error ? problem.message : 'JSON tidak bisa dibaca.'); }
+		finally { upload.value = ''; }
+	});
+	document.getElementById('ipk-reset')!.addEventListener('click', () => { if (!confirm('Hapus semua semester dan nilai? Ekspor JSON dulu jika kamu memerlukan cadangan.')) return; data = initialData(); render(); changed(); status.textContent = 'Data direset.'; });
+	render();
+</script>
+
+<style>
+	.ipk-shell { padding: var(--space-4); }
+	.ipk-values { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+	:global(.ipk-values label) { width: 80px; }
+	:global(.ipk-course) { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: end; margin-block: var(--space-3); }
+	:global(.ipk-course label) { flex: 1 1 130px; }
+	:global(.ipk-course label:first-child) { flex: 2 1 200px; }
+	:global(.ipk-semester) { margin-block: var(--space-4); }
+	:global(.ipk-summary) { font-family: var(--font-mono); font-size: 1.125rem; }
+	.pane-actions { flex-wrap: wrap; }
+	#ipk-import { max-width: 100%; }
+</style>

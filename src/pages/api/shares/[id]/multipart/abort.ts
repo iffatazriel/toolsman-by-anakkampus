@@ -7,6 +7,7 @@ import {
 	loadUploadingShare,
 } from '../../../../../features/kirim-file/multipart-server';
 import { abortMultipartUpload } from '../../../../../features/kirim-file/r2';
+import { logEvent } from '../../../../../lib/server-log';
 
 export const prerender = false;
 
@@ -21,7 +22,8 @@ export const POST: APIRoute = async ({ request, params }) => {
 	try {
 		const body = (await request.json()) as { index?: unknown };
 		index = Number(body.index);
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.multipart_abort_invalid_json', { request, shareId: id }, error);
 		return json({ error: 'Permintaan tidak valid.' }, 400);
 	}
 	if (!Number.isInteger(index) || index < 0 || index > 9) {
@@ -51,7 +53,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
 		return json({ ok: true });
 	} catch (error) {
-		console.error('Gagal membatalkan multipart:', error);
+		logEvent('error', 'shares.multipart_abort_failed', { request, shareId: id }, error);
 		return json({ error: 'Gagal membatalkan unggahan.' }, 500);
 	}
 };

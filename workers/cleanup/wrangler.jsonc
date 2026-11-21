@@ -1,6 +1,11 @@
 {
 	"$schema": "../../node_modules/wrangler/config-schema.json",
 	"name": "toolsman-cleanup",
+	"observability": {
+		"enabled": true,
+		"redact_query_string": true,
+		"logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": false }
+	},
 	"main": "index.ts",
 	"compatibility_date": "2026-01-01",
 	"compatibility_flags": ["nodejs_compat"],

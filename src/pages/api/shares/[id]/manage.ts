@@ -4,6 +4,7 @@ import type { ShareFileRow, ShareRow } from '../../../../features/kirim-file/db'
 import { MANAGE_TOKEN_PATTERN, verifyManageToken } from '../../../../features/kirim-file/manage-token';
 import { allowRequest, clientIp } from '../../../../features/kirim-file/rate-limit';
 import { abortMultipartUpload, deleteObject, hasR2Config } from '../../../../features/kirim-file/r2';
+import { logEvent } from '../../../../lib/server-log';
 
 export const prerender = false;
 
@@ -63,10 +64,10 @@ const manage: APIRoute = async ({ params, request }) => {
 			for (const file of files) {
 				if (file.upload_id) {
 					try { await abortMultipartUpload(env, file.object_key, file.upload_id); }
-					catch (error) { console.error('Gagal membatalkan unggahan saat menghapus kiriman:', error); failed = true; }
+					catch (error) { logEvent('error', 'shares.manage_abort_failed', { request, shareId: id }, error); failed = true; }
 				}
 				try { await deleteObject(env, file.object_key); }
-				catch (error) { console.error('Gagal menghapus objek kiriman:', error); failed = true; }
+				catch (error) { logEvent('error', 'shares.manage_delete_failed', { request, shareId: id }, error); failed = true; }
 			}
 			if (!failed) await env.DB.prepare('UPDATE share_files SET purged = 1, upload_id = NULL WHERE share_id = ?').bind(id).run();
 			return json({ ok: true, pendingCleanup: failed }, failed ? 202 : 200);
@@ -79,7 +80,7 @@ const manage: APIRoute = async ({ params, request }) => {
 			files: files.map((file) => ({ name: file.name, size: file.size, downloads: file.downloads, purged: Boolean(file.purged) })),
 		});
 	} catch (error) {
-		console.error('Gagal mengelola kiriman:', error);
+		logEvent('error', 'shares.manage_failed', { request, shareId: id }, error);
 		return json({ error: 'Kiriman belum bisa dikelola. Coba lagi sebentar.' }, 503);
 	}
 };

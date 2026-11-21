@@ -7,12 +7,12 @@ import { POST } from '../../pages/api/shares/[id]/complete';
 import { deleteObject, headObject } from './r2';
 
 const ID = 'a'.repeat(32);
-let status: string, statements: string[], takedownAt: number | null, failUpdate: boolean;
+let status: string, statements: string[], takedownAt: number | null, failUpdate: boolean, failRollback: boolean;
 let files: { object_key: string; name: string; size: number }[];
 beforeEach(() => {
 	vi.resetAllMocks(); vi.spyOn(console, 'error').mockImplementation(() => undefined);
 	vi.mocked(headObject).mockResolvedValue(10); status = 'uploading'; statements = [];
-	takedownAt = null; failUpdate = false; files = [{ object_key: 'key', name: 'a', size: 10 }];
+	takedownAt = null; failUpdate = false; failRollback = false; files = [{ object_key: 'key', name: 'a', size: 10 }];
 	state.env = { DB: { prepare(sql: string) {
 		statements.push(sql);
 		const statement = { bind() { return statement; }, async first() {
@@ -23,6 +23,7 @@ beforeEach(() => {
 			}
 			return { status, expires_at: Date.now() + 10000, takedown_at: takedownAt };
 		}, async all() { return { results: files }; }, async run() {
+			if (failRollback) throw new Error('rollback failed');
 			if (sql.startsWith("UPDATE shares SET status = 'deleted'")) status = 'deleted';
 			return {};
 		} }; return statement;
@@ -49,7 +50,17 @@ describe('complete dan penghapusan pengirim', () => {
 	});
 	it('mengembalikan kegagalan server jika update D1 gagal', async () => {
 		failUpdate = true;
-		expect((await POST({ params: { id: ID } } as never)).status).toBe(500); expect(status).toBe('uploading');
+		const request = new Request(`https://toolsman.test/api/shares/${ID}/complete`, { method: 'POST' });
+		expect((await POST({ params: { id: ID }, request } as never)).status).toBe(500); expect(status).toBe('uploading');
+		expect(JSON.parse(vi.mocked(console.error).mock.calls[0]![0])).toMatchObject({ event: 'shares.complete_failed', route: '/api/shares/:id/complete', method: 'POST', shareId: ID });
+	});
+	it('mencatat kegagalan rollback tanpa menghapus tracking', async () => {
+		vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+		failRollback = true; vi.mocked(headObject).mockResolvedValue(null as never);
+		const request = new Request(`https://toolsman.test/api/shares/${ID}/complete`, { method: 'POST' });
+		expect((await POST({ params: { id: ID }, request } as never)).status).toBe(409);
+		expect(statements.some((sql) => sql.startsWith('DELETE FROM'))).toBe(false);
+		expect(JSON.parse(vi.mocked(console.warn).mock.calls[0]![0])).toMatchObject({ event: 'shares.complete_rollback_failed', route: '/api/shares/:id/complete', method: 'POST', shareId: ID });
 	});
 	it('verifikasi gagal dan R2 gagal hapus tidak membuang tracking', async () => {
 		vi.mocked(headObject).mockResolvedValue(null as never); vi.mocked(deleteObject).mockRejectedValue(new Error('R2 unavailable'));

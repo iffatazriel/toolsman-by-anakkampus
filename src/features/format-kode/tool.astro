@@ -1,0 +1,113 @@
+---
+---
+
+<div class="tool-shell format-shell">
+	<div class="format-options">
+		<label class="field-label">Bahasa<select class="field-input" id="format-language"><option value="sql">SQL</option><option value="json">JSON</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="html">HTML</option><option value="css">CSS</option></select></label>
+		<label class="field-label" id="format-dialect-field">Dialek SQL<select class="field-input" id="format-dialect"><option value="sql">Standar</option><option value="mysql">MySQL</option><option value="postgresql">PostgreSQL</option><option value="sqlite">SQLite</option></select></label>
+		<label class="field-label">Indentasi<select class="field-input" id="format-indent"><option value="2">2 spasi</option><option value="4">4 spasi</option><option value="tab">Tab</option></select></label>
+		<label class="field-label" id="format-case-field">Kata kunci SQL<select class="field-input" id="format-case"><option value="upper">HURUF BESAR</option><option value="lower">huruf kecil</option><option value="preserve">Pertahankan</option></select></label>
+	</div>
+	<p class="field-hint" id="format-hint">Maksimal 500.000 karakter. SQL dirapikan, bukan divalidasi penuh. Minify tersedia untuk JSON dan CSS.</p>
+	<div class="pane-grid pane-grid--split">
+		<div class="pane">
+			<label class="field-label" for="format-input">Kode kamu</label>
+			<textarea class="code-area" id="format-input" spellcheck="false" maxlength="500000" aria-describedby="format-hint" placeholder="Tempel kode kamu di sini"></textarea>
+			<div class="pane-actions"><button class="btn btn--primary" type="button" id="format-run">Format</button><button class="btn btn--secondary" type="button" id="format-minify" disabled>Minify</button></div>
+			<p class="field-hint" id="format-status" role="status"></p>
+			<p class="field-error" id="format-error" role="alert" hidden></p>
+		</div>
+		<div class="pane">
+			<label class="field-label" for="format-output">Hasil</label>
+			<textarea class="code-area" id="format-output" readonly spellcheck="false" placeholder="Hasil format muncul di sini"></textarea>
+			<div class="pane-actions"><button class="btn btn--secondary" type="button" id="format-copy" disabled>Salin</button><button class="btn btn--secondary" type="button" id="format-download" disabled>Unduh .sql</button></div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { toast } from '../../lib/toast';
+	import { canMinify, extensions, formatCode, type FormatOptions, type Language } from './formatter';
+
+	const input = document.querySelector<HTMLTextAreaElement>('#format-input')!;
+	const output = document.querySelector<HTMLTextAreaElement>('#format-output')!;
+	const language = document.querySelector<HTMLSelectElement>('#format-language')!;
+	const dialect = document.querySelector<HTMLSelectElement>('#format-dialect')!;
+	const indent = document.querySelector<HTMLSelectElement>('#format-indent')!;
+	const keywordCase = document.querySelector<HTMLSelectElement>('#format-case')!;
+	const run = document.querySelector<HTMLButtonElement>('#format-run')!;
+	const minify = document.querySelector<HTMLButtonElement>('#format-minify')!;
+	const copy = document.querySelector<HTMLButtonElement>('#format-copy')!;
+	const download = document.querySelector<HTMLButtonElement>('#format-download')!;
+	const status = document.querySelector<HTMLElement>('#format-status')!;
+	const error = document.querySelector<HTMLElement>('#format-error')!;
+	let revision = 0;
+	let busy = false;
+	const sync = () => {
+		run.disabled = busy;
+		minify.disabled = busy || !canMinify(language.value as Language);
+		copy.disabled = download.disabled = output.value === '';
+		download.textContent = `Unduh .${extensions[language.value as Language]}`;
+		document.getElementById('format-dialect-field')!.hidden = language.value !== 'sql';
+		document.getElementById('format-case-field')!.hidden = language.value !== 'sql';
+	};
+	const reset = () => {
+		revision += 1;
+		output.value = '';
+		error.hidden = true;
+		status.textContent = '';
+		sync();
+	};
+	input.addEventListener('input', reset);
+	[language, dialect, indent, keywordCase].forEach((select) => select.addEventListener('change', reset));
+	const process = async (compact: boolean) => {
+		reset();
+		if (input.value.trim() === '') {
+			error.textContent = 'Tempel kode kamu dulu, lalu pilih Format atau Minify.';
+			error.hidden = false;
+			input.focus();
+			return;
+		}
+		const current = revision;
+		busy = true;
+		status.textContent = 'Mengolah kode…';
+		sync();
+		try {
+			const result = await formatCode(input.value, {
+				language: language.value, dialect: dialect.value, indent: indent.value, keywordCase: keywordCase.value,
+			} as FormatOptions, compact);
+			if (current !== revision) return;
+			output.value = result;
+			status.textContent = 'Kode siap disalin atau diunduh.';
+		} catch (problem) {
+			if (current !== revision) return;
+			error.textContent = problem instanceof Error ? problem.message : 'Kode gagal diolah. Coba lagi.';
+			error.hidden = false;
+			status.textContent = '';
+		} finally {
+			busy = false;
+			sync();
+		}
+	};
+	run.addEventListener('click', () => void process(false));
+	minify.addEventListener('click', () => void process(true));
+	copy.addEventListener('click', async () => {
+		const ok = await copyText(output.value);
+		toast(ok ? 'Hasil disalin.' : 'Gagal menyalin. Pilih hasilnya lalu tekan Ctrl+C.', { tone: ok ? 'success' : 'error' });
+	});
+	download.addEventListener('click', () => downloadText(`kode.${extensions[language.value as Language]}`, output.value, 'text/plain;charset=utf-8'));
+	sync();
+</script>
+
+<style>
+	.format-shell { padding: var(--space-4); }
+	.format-options { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+	.format-options label { flex: 1 1 160px; }
+	.format-options [hidden] { display: none; }
+	.format-options select { display: block; width: 100%; margin-top: var(--space-2); }
+	.pane-actions { flex-wrap: wrap; }
+	.code-area { min-height: 320px; }
+	.field-error { white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>

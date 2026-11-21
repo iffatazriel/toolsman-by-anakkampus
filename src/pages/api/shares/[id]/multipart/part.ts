@@ -8,6 +8,7 @@ import {
 	loadUploadingShare,
 } from '../../../../../features/kirim-file/multipart-server';
 import { hasR2Config, uploadPart } from '../../../../../features/kirim-file/r2';
+import { logEvent } from '../../../../../lib/server-log';
 
 export const prerender = false;
 
@@ -37,7 +38,8 @@ export const PUT: APIRoute = async ({ request, params, url }) => {
 	let expected: { start: number; end: number };
 	try {
 		expected = partRange(file.size, partNumber);
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.multipart_part_invalid_range', { request, shareId: id }, error);
 		return json({ error: 'Bagian di luar jangkauan.' }, 400);
 	}
 
@@ -65,7 +67,7 @@ export const PUT: APIRoute = async ({ request, params, url }) => {
 
 		return json({ ok: true, partNumber, size: wanted, start: expected.start });
 	} catch (error) {
-		console.error('Gagal mengunggah bagian:', error);
+		logEvent('error', 'shares.multipart_part_failed', { request, shareId: id }, error);
 		return json({ error: 'Bagian gagal disimpan. Coba lagi.' }, 500);
 	}
 };

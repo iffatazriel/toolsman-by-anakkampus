@@ -1,3 +1,5 @@
+import { logEvent } from '../../lib/server-log';
+
 const ITERATIONS = 100_000;
 const SALT_BYTES = 16;
 const KEY_BITS = 256;
@@ -60,7 +62,8 @@ export async function verifyPassword(password: string, stored: string): Promise<
 	try {
 		salt = fromBase64(saltRaw);
 		expected = fromBase64(hashRaw);
-	} catch {
+	} catch (error) {
+		logEvent('warn', 'shares.password_hash_invalid', {}, error);
 		return false;
 	}
 

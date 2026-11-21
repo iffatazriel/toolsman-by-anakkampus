@@ -95,8 +95,11 @@ describe('manage API', () => {
 		expect(await (await call()).json()).toMatchObject({ status: 'deleted', available: false, downloads: 2 });
 	});
 	it('partial R2 failure tetap retryable dan dipulihkan cron sebelum kedaluwarsa', async () => {
-		vi.mocked(deleteObject).mockRejectedValueOnce(new Error('R2 failure'));
+		vi.mocked(deleteObject).mockRejectedValueOnce(new Error(`R2 failure ${token}`));
 		const response = await call('DELETE'); expect(response.status).toBe(202); expect(await response.json()).toEqual({ ok: true, pendingCleanup: true });
+		const line = vi.mocked(console.error).mock.calls[0]![0];
+		expect(JSON.parse(line)).toMatchObject({ level: 'error', event: 'shares.manage_delete_failed', route: '/api/shares/:id/manage', method: 'DELETE', shareId: ID, error: { message: '[REDACTED]' } });
+		expect(line).not.toContain(token);
 		expect(share!.status).toBe('deleted'); expect(files).toHaveLength(2); expect(files[1]!.upload_id).toBe('multipart-id'); expect(files[1]!.purged).toBe(0);
 		const env = installEnv(); expect(await removeExpiredShares(env)).toBe(1); expect(files.every((file) => file.purged)).toBe(true); expect(files).toHaveLength(2);
 		expect(await removeExpiredShares(env, share!.expires_at + 1)).toBe(1); expect(files).toHaveLength(0);
@@ -104,9 +107,11 @@ describe('manage API', () => {
 	it('abort gagal tidak membuang tracking dan penghapusan objek tetap dicoba', async () => {
 		vi.mocked(abortMultipartUpload).mockRejectedValueOnce(new Error('abort failure'));
 		expect((await call('DELETE')).status).toBe(202); expect(files[1]!.upload_id).toBe('multipart-id'); expect(deleteObject).toHaveBeenCalledTimes(2);
+		expect(JSON.parse(vi.mocked(console.error).mock.calls[0]![0])).toMatchObject({ event: 'shares.manage_abort_failed', route: '/api/shares/:id/manage', method: 'DELETE', shareId: ID });
 	});
 	it('gangguan DB/R2 config menjadi 503, bukan sukses palsu', async () => {
 		vi.mocked(hasR2Config).mockReturnValue(false); expect((await call('DELETE')).status).toBe(503); expect(share!.status).toBe('ready');
 		state.env = { DB: { prepare() { throw new Error('DB unavailable'); } } }; expect((await call()).status).toBe(503);
+		expect(JSON.parse(vi.mocked(console.error).mock.calls[0]![0])).toMatchObject({ event: 'shares.manage_failed', route: '/api/shares/:id/manage', method: 'POST', shareId: ID });
 	});
 });

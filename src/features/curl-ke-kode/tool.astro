@@ -1,0 +1,58 @@
+---
+---
+
+<div class="tool-shell curl-shell">
+	<div class="pane-grid pane-grid--split">
+		<section class="pane">
+			<label class="field-label" for="curl-input">Perintah cURL (maksimal 200.000 karakter)</label>
+			<textarea class="code-area" id="curl-input" maxlength="200000" spellcheck="false" placeholder={'curl https://example.com/api \\\n  --json \'{"nama":"Kamu"}\''}></textarea>
+			<p class="field-hint">Mendukung kutip tunggal/ganda dan lanjutan baris dengan \ atau ^. Request tidak dijalankan. Token, password, dan cookie di input maupun hasil tetap rahasia.</p>
+			<label class="field-label" for="curl-target">Target kode</label>
+			<select class="field-input" id="curl-target"><option value="fetch">JavaScript Fetch</option><option value="axios">Axios (Node.js / browser)</option></select>
+			<div class="actions"><button type="button" class="btn btn--primary" id="curl-convert">Konversi</button><button type="button" class="btn btn--secondary" id="curl-clear">Hapus input dan hasil</button></div>
+			<p class="field-error" role="alert" id="curl-error" hidden></p>
+		</section>
+		<section class="pane">
+			<label class="field-label" for="curl-output">Kode hasil</label><textarea class="code-area" id="curl-output" readonly spellcheck="false"></textarea>
+			<button type="button" class="btn btn--secondary" id="curl-copy" disabled>Salin kode</button>
+			<p class="field-hint" role="status" id="curl-status"></p>
+			<div id="curl-warnings" hidden><h3>Periksa sebelum menjalankan</h3><ul id="curl-warning-list"></ul></div>
+		</section>
+	</div>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { generateCode, parseCurl } from './curl';
+	const source = document.querySelector<HTMLTextAreaElement>('#curl-input')!;
+	const output = document.querySelector<HTMLTextAreaElement>('#curl-output')!;
+	const target = document.querySelector<HTMLSelectElement>('#curl-target')!;
+	const errorNode = document.getElementById('curl-error')!;
+	const warnings = document.getElementById('curl-warnings')!;
+	const list = document.getElementById('curl-warning-list')!;
+	const status = document.getElementById('curl-status')!;
+	const copy = document.querySelector<HTMLButtonElement>('#curl-copy')!;
+	const clearResult = () => { output.value = ''; copy.disabled = true; errorNode.hidden = true; warnings.hidden = true; list.replaceChildren(); status.textContent = ''; };
+	const convert = () => {
+		clearResult();
+		try {
+			const request = parseCurl(source.value);
+			output.value = generateCode(request, target.value as 'fetch' | 'axios');
+			for (const warning of request.warnings) { const item = document.createElement('li'); item.textContent = warning; list.append(item); }
+			warnings.hidden = !request.warnings.length; copy.disabled = false;
+			status.textContent = 'Kode siap. Request tidak dijalankan.';
+		} catch (error) { errorNode.textContent = error instanceof Error ? error.message : 'Periksa format perintah kamu.'; errorNode.hidden = false; }
+	};
+	document.getElementById('curl-convert')!.addEventListener('click', convert);
+	source.addEventListener('input', clearResult);
+	target.addEventListener('change', () => { if (source.value.trim()) convert(); });
+	document.getElementById('curl-clear')!.addEventListener('click', () => { source.value = ''; clearResult(); source.focus(); });
+	copy.addEventListener('click', async () => { status.textContent = await copyText(output.value) ? 'Kode disalin. Periksa rahasia dan placeholder sebelum membagikan.' : 'Gagal menyalin. Pilih hasil lalu tekan Ctrl+C.'; });
+</script>
+
+<style>
+	.curl-shell { padding: var(--space-4); }
+	.code-area { min-height: 360px; }
+	.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-block: var(--space-3); }
+	#curl-warning-list { padding-left: var(--space-5); overflow-wrap: anywhere; }
+</style>

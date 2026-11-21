@@ -1,0 +1,92 @@
+---
+---
+
+<div class="tool-shell latex-shell">
+	<div class="option-row">
+		<label class="field-label">Arah konversi<select class="field-input" id="table-direction"><option value="forward">Markdown / CSV / TSV → LaTeX</option><option value="reverse">LaTeX tabular sederhana → Markdown</option></select></label>
+		<label class="field-label">Format input<select class="field-input" id="table-format"><option value="auto">Deteksi otomatis</option><option value="markdown">Markdown</option><option value="csv">CSV (koma)</option><option value="tsv">TSV (tab)</option></select></label>
+	</div>
+	<div class="pane-grid pane-grid--split">
+		<section class="pane">
+			<label class="field-label" for="table-input">Tabel input (maksimal 200.000 karakter)</label>
+			<textarea id="table-input" class="code-area" maxlength="200000" spellcheck="false">{'| Mata kuliah | SKS |\n| :--- | ---: |\n| Algoritma | 3 |\n| Basis Data | 4 |'}</textarea>
+			<p class="field-hint">Baris pertama menjadi header. CSV/TSV memakai kutip ganda untuk nilai yang berisi delimiter atau baris baru. Pilih format secara manual jika deteksi keliru.</p>
+			<fieldset id="table-options"><legend>Opsi LaTeX</legend>
+				<div class="checks"><label><input id="table-booktabs" type="checkbox" checked /> Gunakan booktabs</label><label><input id="table-wrap" type="checkbox" /> Bungkus dalam table</label><label><input id="table-bold" type="checkbox" checked /> Tebalkan header</label></div>
+				<label class="field-label">Caption<input class="field-input" id="table-caption" maxlength="2000" disabled /></label>
+				<label class="field-label">Label (memerlukan caption)<input class="field-input" id="table-label" placeholder="tab:hasil" maxlength="200" disabled /></label>
+				<label class="field-label">Tipe kolom (kosong = ikuti input)<input class="field-input" id="table-columns" placeholder="lr atau |l|p{3cm}|" maxlength="2000" spellcheck="false" /></label>
+				<p class="field-hint">Pakai l/c/r, |, atau p/m/b dengan lebar seperti p&#123;3cm&#125; atau p&#123;0.4\textwidth&#125;. Jumlah harus sama dengan kolom input. Booktabs memerlukan paket booktabs; m/b memerlukan array. Perataan lebar p/m/b di preview ditampilkan rata kiri.</p>
+			</fieldset>
+			<button type="button" class="btn btn--secondary" id="table-clear">Hapus tabel</button>
+		</section>
+		<section class="pane">
+			<label class="field-label" for="table-output">Hasil konversi</label><textarea class="code-area" id="table-output" readonly spellcheck="false"></textarea>
+			<div class="actions"><button type="button" class="btn btn--primary" id="table-copy" disabled>Salin hasil</button><button type="button" class="btn btn--secondary" id="table-download" disabled>Unduh .tex</button></div>
+			<p class="field-error" id="table-error" role="alert" hidden></p>
+			<p class="field-hint" id="table-status" role="status"></p>
+			<p class="field-hint">Pratinjau berisi teks, bukan kompilasi LaTeX atau rendering Markdown. Format inline dipertahankan sebagai teks pada arah maju. Reverse hanya mengambil teks dari textbf/textit/emph.</p>
+		</section>
+	</div>
+	<section class="pane"><h2 class="pane__title">Pratinjau tabel</h2><div class="table-scroll" tabindex="0" role="region" aria-label="Pratinjau tabel, geser untuk melihat semua kolom"><table id="table-preview"></table></div></section>
+</div>
+
+<script>
+	import { copyText } from '../../lib/clipboard';
+	import { downloadText } from '../../lib/download';
+	import { latexToTable, parseTable, resolveColumns, toLatex, toMarkdown } from './table';
+	const source = document.querySelector<HTMLTextAreaElement>('#table-input')!;
+	const output = document.querySelector<HTMLTextAreaElement>('#table-output')!;
+	const direction = document.querySelector<HTMLSelectElement>('#table-direction')!;
+	const format = document.querySelector<HTMLSelectElement>('#table-format')!;
+	const options = document.querySelector<HTMLFieldSetElement>('#table-options')!;
+	const field = (name: string) => document.querySelector<HTMLInputElement>(`#table-${name}`)!;
+	const copy = document.querySelector<HTMLButtonElement>('#table-copy')!;
+	const download = document.querySelector<HTMLButtonElement>('#table-download')!;
+	const errorNode = document.getElementById('table-error')!;
+	const status = document.getElementById('table-status')!;
+	const preview = document.querySelector<HTMLTableElement>('#table-preview')!;
+	let timer: ReturnType<typeof setTimeout>;
+	const render = () => {
+		clearTimeout(timer); output.value = ''; copy.disabled = true; download.disabled = true; errorNode.hidden = true; preview.replaceChildren(); status.textContent = '';
+		const reverse = direction.value === 'reverse';
+		options.disabled = reverse; format.disabled = reverse;
+		field('caption').disabled = reverse || !field('wrap').checked; field('label').disabled = reverse || !field('wrap').checked;
+		download.textContent = reverse ? 'Unduh .md' : 'Unduh .tex';
+		if (!source.value.trim()) return;
+		try {
+			const table = reverse ? latexToTable(source.value) : parseTable(source.value, format.value as 'auto' | 'markdown' | 'csv' | 'tsv');
+			const columns = reverse ? table.alignments : resolveColumns(field('columns').value, table.alignments).alignments;
+			output.value = reverse ? toMarkdown(table) : toLatex(table, { booktabs: field('booktabs').checked, wrap: field('wrap').checked, boldHeader: field('bold').checked, caption: field('caption').value, label: field('label').value, columns: field('columns').value });
+			const head = document.createElement('thead'), body = document.createElement('tbody');
+			[table.headers, ...table.rows].forEach((values, index) => {
+				const row = document.createElement('tr');
+				values.forEach((value, column) => { const cell = document.createElement(index ? 'td' : 'th'); if (!index) cell.setAttribute('scope', 'col'); cell.textContent = value; cell.style.textAlign = columns[column] === 'r' ? 'right' : columns[column] === 'c' ? 'center' : 'left'; row.append(cell); });
+				(index ? body : head).append(row);
+			});
+			preview.append(head, body); copy.disabled = false; download.disabled = false;
+			status.textContent = `${table.rows.length} baris data, ${table.headers.length} kolom. Hasil diperbarui.`;
+		} catch (error) { errorNode.textContent = error instanceof Error ? error.message : 'Periksa format tabel kamu.'; errorNode.hidden = false; }
+	};
+	const schedule = () => { clearTimeout(timer); output.value = ''; copy.disabled = true; download.disabled = true; timer = setTimeout(render, 150); };
+	source.addEventListener('input', schedule);
+	options.addEventListener('input', schedule);
+	direction.addEventListener('change', render); format.addEventListener('change', render);
+	document.getElementById('table-clear')!.addEventListener('click', () => { source.value = ''; render(); source.focus(); });
+	copy.addEventListener('click', async () => { status.textContent = await copyText(output.value) ? 'Hasil disalin.' : 'Gagal menyalin. Pilih hasil lalu tekan Ctrl+C.'; });
+	download.addEventListener('click', () => { const reverse = direction.value === 'reverse'; downloadText(reverse ? 'tabel.md' : 'tabel.tex', output.value, 'text/plain;charset=utf-8'); });
+	render();
+</script>
+
+<style>
+	.latex-shell { padding: var(--space-4); }
+	.option-row, .checks, .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-3); }
+	.option-row > label { flex: 1 1 220px; }
+	.code-area { min-height: 260px; }
+	fieldset { border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-3); min-width: 0; }
+	legend { font-weight: 600; padding-inline: var(--space-2); }
+	.table-scroll { overflow: auto; max-height: 480px; }
+	table { width: 100%; border-collapse: collapse; }
+	th, td { border: 1px solid var(--border); padding: var(--space-2) var(--space-3); white-space: pre-wrap; overflow-wrap: anywhere; min-width: 90px; }
+	th { background: var(--surface-2); }
+</style>

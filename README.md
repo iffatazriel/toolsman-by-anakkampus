@@ -352,6 +352,41 @@ Alasan di balik keputusan yang tidak kelihatan dari kode:
 
 ## Catatan teknis
 
+### Log Worker
+
+Observability aktif dengan sampling log `1` (100%) untuk `toolsman` dan
+`toolsman-cleanup`. Setelah deploy, buka **Cloudflare Dashboard → Workers & Pages
+→ pilih Worker → Observability → Logs (Workers Logs)**. Filter field `event`
+pada pesan JSON, misalnya `api.unhandled`, `health.db_failed`, atau
+`cleanup.object_delete_failed`. `level`, `route`, `method`, `shareId` (jika ada),
+dan `requestId` (`cf-ray` yang valid) membantu menghubungkan kejadian.
+`cleanup.finished` berarti eksekusi selesai, bukan semua penghapusan berhasil;
+periksa juga event error pada invocation yang sama.
+
+Untuk mengikuti log deploy dari terminal:
+
+```sh
+npx wrangler tail toolsman --format json
+npx wrangler tail toolsman-cleanup --config workers/cleanup/wrangler.jsonc --format json
+```
+
+Untuk memfilter event di terminal (memerlukan `jq`):
+
+```sh
+npx wrangler tail toolsman --format json | jq -c '.logs[]?.message[]? | fromjson? | select(.event == "api.unhandled")'
+```
+
+Gunakan nama event statis pada `src/lib/server-log.ts`; jangan mengirim body,
+header autentikasi, token, password, URL bertanda tangan, nama/isi berkas, atau
+objek metadata bebas. Pesan exception arbitrer sengaja disamarkan: hanya nama
+error yang dikenal, klasifikasi aman (misalnya `D1_ERROR`), dan lokasi stack
+terbatas yang disimpan. Stack tidak menyimpan URL, argumen, atau pesan mentah.
+Query string disamarkan di konfigurasi observability dan invocation logs otomatis
+dinonaktifkan agar URL request mentah tidak ikut tersimpan. Jangan membagikan
+hasil `wrangler tail` tanpa memeriksanya; envelope platform tetap di luar helper.
+
+### Implementasi
+
 - Tailwind v4 lewat `@tailwindcss/vite`; token didefinisikan di `src/styles/global.css`.
 - Tema memakai `light-dark()` dan `color-scheme`, jadi preferensi sistem jalan tanpa JavaScript. Toggle manual hanya mengubah `color-scheme` di `<html>`.
 - `vite.css.postcss` sengaja diisi objek kosong. Ada `postcss.config.mjs` di luar folder proyek yang ikut terdeteksi Vite dan mematahkan build.
