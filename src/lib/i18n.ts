@@ -194,6 +194,38 @@ export interface ToolText {
 }
 
 export const toolText: Record<string, Record<Lang, ToolText>> = {
+	'tabel-latex': {
+		id: { name: 'Tabel Markdown ke LaTeX', tagline: 'Ubah tabel Markdown, CSV, atau TSV dari spreadsheet menjadi LaTeX dengan pratinjau, perataan, dan escape otomatis.', usage: ['Tempel tabel Markdown, CSV, atau TSV; baris pertama menjadi header.', 'Atur garis, caption, label, dan tipe kolom sambil memeriksa pratinjau.', 'Salin atau unduh hasil. Arah balik mendukung tabular sederhana.'] },
+		en: { name: 'Markdown Table to LaTeX', tagline: 'Convert Markdown, CSV, or spreadsheet TSV tables to LaTeX with a preview, alignment, and automatic escaping.', usage: ['Paste Markdown, CSV, or TSV; the first row becomes the header.', 'Adjust rules, caption, label, and column types while checking the preview.', 'Copy or download the result. Reverse conversion supports simple tabular environments.'] },
+	},
+	'curl-ke-kode': {
+		id: { name: 'cURL ke Kode', tagline: 'Ubah perintah cURL menjadi JavaScript Fetch atau Axios tanpa menjalankan request atau mengirim kredensial kamu.', usage: ['Tempel satu perintah cURL.', 'Pilih Fetch atau Axios, lalu baca peringatan hasil konversi.', 'Salin kode dan ganti placeholder sebelum menjalankannya.'] },
+		en: { name: 'cURL to Code', tagline: 'Convert cURL commands to JavaScript Fetch or Axios without executing requests or sending your credentials.', usage: ['Paste a single cURL command.', 'Choose Fetch or Axios and review conversion warnings.', 'Copy the code and replace placeholders before running it.'] },
+	},
+	'bilangan-subnet': {
+		id: { name: 'Bilangan & Subnet', tagline: 'Konversi bilangan besar antarbasis dengan BigInt, lihat komplemen dua, dan hitung atau bagi subnet IPv4.', usage: ['Pilih tab bilangan atau subnet IPv4.', 'Isi bilangan dan basis, atau IPv4 dengan CIDR atau mask.', 'Salin hasil konversi atau daftar subnet.'] },
+		en: { name: 'Numbers & Subnets', tagline: 'Convert large integers with BigInt, inspect two’s complement, and calculate or split IPv4 subnets.', usage: ['Choose number conversion or IPv4 subnets.', 'Enter a number and base, or IPv4 with CIDR or a subnet mask.', 'Copy conversions or the subnet list.'] },
+	},
+	'kalkulator-ipk': {
+		id: { name: 'Kalkulator IPK', tagline: 'Hitung IPS per semester, IPK kumulatif, dan rata-rata nilai yang kamu perlukan untuk mengejar target IPK.', usage: ['Pilih skala nilai kampus kamu dan sesuaikan bobot jika perlu.', 'Tambahkan semester, mata kuliah, SKS, dan nilai.', 'Periksa IPS, IPK, dan target. Ekspor JSON untuk cadangan.'] },
+		en: { name: 'GPA Calculator', tagline: 'Calculate semester and cumulative GPA, and the average grade needed to reach your target.', usage: ['Choose your grading scale and adjust grade points if needed.', 'Add semesters, courses, credits, and grades.', 'Review GPA and your target. Export JSON for a backup.'] },
+	},
+	sitasi: {
+		id: { name: 'Generator Sitasi', tagline: 'Susun daftar pustaka APA 7 atau IEEE dari buku, jurnal, dan halaman web. Simpan di browser dan ekspor BibTeX.', usage: ['Pilih gaya, jenis sumber, dan isi data penulis.', 'Tambahkan sumber dan periksa sitasi serta contoh kutipan dalam teks.', 'Salin daftar, unduh teks, atau ekspor BibTeX.'] },
+		en: { name: 'Citation Generator', tagline: 'Build APA 7 or IEEE references for books, journal articles, and web pages. Save locally and export BibTeX.', usage: ['Choose a style and source type, then enter author details.', 'Add sources and review references and in-text examples.', 'Copy the list, download text, or export BibTeX.'] },
+	},
+	'format-kode': {
+		id: {
+			name: 'Format Kode',
+			tagline: 'Rapikan SQL, JSON, JavaScript, TypeScript, HTML, dan CSS. Perkecil JSON atau CSS tanpa mengirim kode ke server.',
+			usage: ['Tempel kode kamu, lalu pilih bahasa dan dialek SQL jika diperlukan.', 'Pilih indentasi dan gaya kata kunci SQL, lalu tekan Format atau Minify untuk JSON dan CSS.', 'Salin atau unduh hasilnya sesuai ekstensi bahasa yang kamu pilih.'],
+		},
+		en: {
+			name: 'Code Formatter',
+			tagline: 'Format SQL, JSON, JavaScript, TypeScript, HTML, and CSS. Minify JSON or CSS without sending code to a server.',
+			usage: ['Paste your code, then choose a language and SQL dialect if needed.', 'Choose indentation and SQL keyword case, then select Format or Minify for JSON and CSS.', 'Copy or download the result with the matching file extension.'],
+		},
+	},
 	draw: {
 		en: {
 			name: 'Drawing Canvas',
