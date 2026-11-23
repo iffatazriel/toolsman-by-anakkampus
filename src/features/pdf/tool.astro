@@ -422,6 +422,7 @@ import PageGrid from './PageGrid.astro';
 	const revisions: Record<string, number> = {};
 	const busy = new Set<string>();
 	const results: Partial<Record<string, WorkspaceResult>> = {};
+	const renderedImageResults = new WeakMap<HTMLElement, WorkspaceResult>();
 	const zipping = new Set<string>();
 	const nextRevision = (name: string) => (revisions[name] = (revisions[name] ?? 0) + 1);
 	const splitGrid = new PageGrid($<HTMLElement>('[data-page-grid="pisah"]')!, {
@@ -629,6 +630,7 @@ import PageGrid from './PageGrid.astro';
 		box.hidden = !result;
 		if (!result) {
 			box.querySelector('[data-result-images]')!.replaceChildren();
+			renderedImageResults.delete(box);
 			return;
 		}
 		const size = result.files.reduce((sum, file) => sum + file.bytes.byteLength, 0);
@@ -649,20 +651,26 @@ import PageGrid from './PageGrid.astro';
 		save.className = `btn btn--${warning.hidden ? 'primary' : 'secondary'}`;
 		save.disabled = zipping.has(mode);
 		const list = box.querySelector<HTMLOListElement>('[data-result-images]')!;
-		list.replaceChildren();
-		if (mode === 'ke-gambar') result.files.forEach((file) => {
-			const row = document.createElement('li');
-			row.className = 'output-image';
-			const name = document.createElement('span');
-			name.textContent = `${file.name} · ${formatBytes(file.bytes.byteLength)}`;
-			const button = document.createElement('button');
-			button.type = 'button';
-			button.className = 'btn btn--secondary';
+		if (mode === 'ke-gambar' && renderedImageResults.get(box) !== result) {
+			list.replaceChildren();
+			result.files.forEach((file) => {
+				const row = document.createElement('li');
+				row.className = 'output-image';
+				const name = document.createElement('span');
+				name.textContent = `${file.name} · ${formatBytes(file.bytes.byteLength)}`;
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'btn btn--secondary';
+				button.addEventListener('click', () => download(file.name, file.bytes, file.mime));
+				row.append(name, button);
+				list.append(row);
+			});
+			renderedImageResults.set(box, result);
+		}
+		if (mode === 'ke-gambar') result.files.forEach((file, index) => {
+			const button = list.children[index]!.querySelector('button')!;
 			button.textContent = tr(dict, 'download');
 			button.setAttribute('aria-label', tr(dict, 'downloadFile', { name: file.name }));
-			button.addEventListener('click', () => download(file.name, file.bytes, file.mime));
-			row.append(name, button);
-			list.append(row);
 		});
 	}
 
