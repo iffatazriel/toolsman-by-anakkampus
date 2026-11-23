@@ -10,5 +10,14 @@ export function classifyPdfError(error: unknown): PdfErrorCode {
 
 export function supportedFile(file: Pick<File, 'name' | 'type'>, kind: 'pdf' | 'image') {
 	if (kind === 'pdf') return /\.pdf$/i.test(file.name) && (!file.type || file.type === 'application/pdf' || file.type === 'application/octet-stream');
-	return /\.(png|jpe?g)$/i.test(file.name) && (!file.type || ['image/png', 'image/jpeg', 'application/octet-stream'].includes(file.type));
+	return imageFileType(file) !== undefined;
+}
+
+export function imageFileType(file: Pick<File, 'name' | 'type'>) {
+	if (file.type === 'image/png') return 'png';
+	if (file.type === 'image/jpeg') return 'jpg';
+	if (file.type && file.type !== 'application/octet-stream') return undefined;
+	if (/\.png$/i.test(file.name)) return 'png';
+	if (/\.(jpe?g|jpe|jfif)$/i.test(file.name)) return 'jpg';
+	return undefined;
 }

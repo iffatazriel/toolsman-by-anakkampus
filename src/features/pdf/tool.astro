@@ -81,7 +81,7 @@ import PageGrid from './PageGrid.astro';
 			<div class="pdf-panel">
 				<p class="mode-explanation" data-i18n="workspace.pdf.explainImages">{dict.id.explainImages}</p>
 				<div class="file-section-heading"><h2 data-i18n="workspace.pdf.chooseStep">{dict.id.chooseStep}</h2><button type="button" class="btn btn--ghost" data-clear="gambar" hidden data-i18n="workspace.pdf.clearAll">{dict.id.clearAll}</button></div>
-				<Dropzone id="gambar-input" label={dict.id.dropImages} labelKey="workspace.pdf.dropImages" accept="image/jpeg,image/png" multiple hint={dict.id.limits} hintKey="workspace.pdf.limits" />
+				<Dropzone id="gambar-input" label={dict.id.dropImages} labelKey="workspace.pdf.dropImages" accept="image/jpeg,image/png,.jpe,.jfif" multiple hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<ol class="file-list" data-list="gambar" aria-label={dict.id.imageOrder} data-i18n-aria="workspace.pdf.imageOrder"></ol>
 				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
 				<div class="form-grid">
@@ -180,7 +180,7 @@ import PageGrid from './PageGrid.astro';
 	import type { CompressLevel, Margin, Orientation } from './pdf-ops';
 	import { describeAction, type PdfMode } from './workspace-state';
 	import { compareSizes, currentResult, type WorkspaceResult } from './result-state';
-	import { supportedFile } from './file-errors';
+	import { imageFileType, supportedFile } from './file-errors';
 	import { PageGrid } from './page-grid';
 	import { selectedPages, toggleRange } from './page-selection';
 
@@ -940,7 +940,7 @@ import PageGrid from './PageGrid.astro';
 		await run('gambar', async () => ({ op: 'images', images: await Promise.all(
 			imageItems.map(async (item) => ({
 				bytes: await readBytes(item.file),
-				type: /\.png$/i.test(item.file.name) ? ('png' as const) : ('jpg' as const),
+				type: imageFileType(item.file)!,
 			})),
 		), orientation, margin }), 'gambar.pdf');
 	});
