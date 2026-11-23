@@ -142,12 +142,12 @@ const faq = [
 	</section>
 </div>
 
-<div class="tool-mobile-bar" data-mobile-bar>
+{tool.slug !== 'pdf' && <div class="tool-mobile-bar" data-mobile-bar>
 	<span class="tool-mobile-bar__name">{tool.name}</span>
 	<button type="button" class="btn btn--primary" data-copy-page data-i18n="tool.copyLink">
 		Salin link
 	</button>
-</div>
+</div>}
 
 <section class="related" aria-labelledby="lain-title">
 	<div class="container">

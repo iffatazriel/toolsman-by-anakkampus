@@ -1,54 +1,61 @@
 ---
 import dict from './i18n';
-import Tabs from '../../components/ui/Tabs.astro';
+import ModePicker from './ModePicker.astro';
 import Dropzone from '../../components/ui/Dropzone.astro';
 import Progress from '../../components/ui/Progress.astro';
-
-const tabs = [
-	{ id: 'gabung', label: dict.id.merge, labelKey: 'workspace.pdf.merge' },
-	{ id: 'pisah', label: dict.id.split, labelKey: 'workspace.pdf.split' },
-	{ id: 'kompres', label: dict.id.compress, labelKey: 'workspace.pdf.compress' },
-	{ id: 'gambar', label: dict.id.imagesPdf, labelKey: 'workspace.pdf.imagesPdf' },
-	{ id: 'ke-gambar', label: dict.id.pdfImages, labelKey: 'workspace.pdf.pdfImages' },
-	{ id: 'halaman', label: dict.id.edit, labelKey: 'workspace.pdf.edit' },
-];
+import ResultCard from './ResultCard.astro';
+import PageGrid from './PageGrid.astro';
 ---
 
-<div class="tool-shell">
-	<Tabs label={dict.id.tabs} labelKey="workspace.pdf.tabs" items={tabs}>
+<div class="tool-shell pdf-workspace">
+	<ModePicker>
 		<div data-panel="gabung" class="tool-panel">
 			<div class="pdf-panel">
+				<p class="mode-explanation" data-i18n="workspace.pdf.explainMerge">{dict.id.explainMerge}</p>
+				<div class="file-section-heading"><h2 data-i18n="workspace.pdf.chooseStep">{dict.id.chooseStep}</h2><button type="button" class="btn btn--ghost" data-clear="gabung" hidden data-i18n="workspace.pdf.clearAll">{dict.id.clearAll}</button></div>
 				<Dropzone id="gabung-input" label={dict.id.dropMany} labelKey="workspace.pdf.dropMany" accept="application/pdf" multiple hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<ol class="file-list" data-list="gabung" aria-label={dict.id.fileOrder} data-i18n-aria="workspace.pdf.fileOrder"></ol>
 				<p class="field-hint" data-i18n="workspace.pdf.orderHint">{dict.id.orderHint}</p>
 				<div class="pane-actions">
+					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="gabung" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="gabung" disabled data-i18n="workspace.pdf.mergeDownload">{dict.id.mergeDownload}</button>
 				</div>
 				<div data-progress="gabung" hidden><Progress label={dict.id.merging} labelKey="workspace.pdf.merging" value={0} /></div>
+				<ResultCard mode="gabung" />
 				<p class="alert" data-error="gabung" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="pisah" class="tool-panel" hidden>
 			<div class="pdf-panel">
+				<p class="mode-explanation" data-i18n="workspace.pdf.explainSplit">{dict.id.explainSplit}</p>
+				<div class="file-section-heading"><h2 data-i18n="workspace.pdf.chooseStep">{dict.id.chooseStep}</h2><button type="button" class="btn btn--ghost" data-clear="pisah" hidden data-i18n="workspace.pdf.clearAll">{dict.id.clearAll}</button></div>
 				<Dropzone id="pisah-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="pisah" hidden></div>
+				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
 				<label class="field-label" for="pisah-range" data-i18n="workspace.pdf.pagesTaken">{dict.id.pagesTaken}</label>
 				<input id="pisah-range" class="field-input" type="text" inputmode="numeric" placeholder={dict.id.rangePlaceholder} data-i18n-placeholder="workspace.pdf.rangePlaceholder" aria-describedby="pisah-range-hint" />
 				<p class="field-hint" id="pisah-range-hint" data-i18n="workspace.pdf.rangeHint">{dict.id.rangeHint}</p>
 				<p class="field-error" data-range-error="pisah" hidden role="alert"></p>
+				<PageGrid mode="pisah" />
 				<div class="pane-actions">
+					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="pisah" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="pisah" disabled data-i18n="workspace.pdf.splitDownload">{dict.id.splitDownload}</button>
 				</div>
 				<div data-progress="pisah" hidden><Progress label={dict.id.splitting} labelKey="workspace.pdf.splitting" value={0} /></div>
+				<ResultCard mode="pisah" />
 				<p class="alert" data-error="pisah" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="kompres" class="tool-panel" hidden>
 			<div class="pdf-panel">
+				<p class="mode-explanation" data-i18n="workspace.pdf.explainCompress">{dict.id.explainCompress}</p>
+				<div class="file-section-heading"><h2 data-i18n="workspace.pdf.chooseStep">{dict.id.chooseStep}</h2><button type="button" class="btn btn--ghost" data-clear="kompres" hidden data-i18n="workspace.pdf.clearAll">{dict.id.clearAll}</button></div>
 				<Dropzone id="kompres-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="kompres" hidden></div>
+				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
+				<p class="alert" data-i18n="workspace.pdf.compressNotice">{dict.id.compressNotice}</p>
 				<fieldset class="fieldset">
 					<legend class="field-label" data-i18n="workspace.pdf.level">{dict.id.level}</legend>
 					<div class="segmented" role="radiogroup" aria-label={dict.id.level} data-i18n-aria="workspace.pdf.level">
@@ -56,25 +63,27 @@ const tabs = [
 						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="sedang" data-i18n="workspace.pdf.medium">{dict.id.medium}</button>
 						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="maksimal" data-i18n="workspace.pdf.maximum">{dict.id.maximum}</button>
 					</div>
-					<p class="field-hint" data-i18n="workspace.pdf.compressHint">{dict.id.compressHint}</p>
+					<p class="field-hint" data-i18n="workspace.pdf.lightHelp">{dict.id.lightHelp}</p>
+					<p class="field-hint" data-i18n="workspace.pdf.mediumHelp">{dict.id.mediumHelp}</p>
+					<p class="field-hint" data-i18n="workspace.pdf.maximumHelp">{dict.id.maximumHelp}</p>
 				</fieldset>
-				<div class="compare" data-compare="kompres" hidden aria-live="polite">
-					<p class="compare__line"><span data-before></span> → <span data-after></span></p>
-					<p class="compare__delta" data-delta></p>
-					<p class="alert" data-warn="kompres" hidden><span data-i18n="workspace.pdf.notSmaller">{dict.id.notSmaller}</span></p>
-				</div>
 				<div class="pane-actions">
+					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="kompres" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="kompres" disabled data-i18n="workspace.pdf.compressDownload">{dict.id.compressDownload}</button>
 				</div>
 				<div data-progress="kompres" hidden><Progress label={dict.id.compressing} labelKey="workspace.pdf.compressing" value={0} /></div>
+				<ResultCard mode="kompres" />
 				<p class="alert" data-error="kompres" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="gambar" class="tool-panel" hidden>
 			<div class="pdf-panel">
-				<Dropzone id="gambar-input" label={dict.id.dropImages} labelKey="workspace.pdf.dropImages" accept="image/jpeg,image/png" multiple hint={dict.id.limits} hintKey="workspace.pdf.limits" />
+				<p class="mode-explanation" data-i18n="workspace.pdf.explainImages">{dict.id.explainImages}</p>
+				<div class="file-section-heading"><h2 data-i18n="workspace.pdf.chooseStep">{dict.id.chooseStep}</h2><button type="button" class="btn btn--ghost" data-clear="gambar" hidden data-i18n="workspace.pdf.clearAll">{dict.id.clearAll}</button></div>
+				<Dropzone id="gambar-input" label={dict.id.dropImages} labelKey="workspace.pdf.dropImages" accept="image/jpeg,image/png,.jpe,.jfif" multiple hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<ol class="file-list" data-list="gambar" aria-label={dict.id.imageOrder} data-i18n-aria="workspace.pdf.imageOrder"></ol>
+				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
 				<div class="form-grid">
 					<div>
 						<span class="field-label" data-i18n="workspace.pdf.orientation">{dict.id.orientation}</span>
@@ -94,17 +103,22 @@ const tabs = [
 					</div>
 				</div>
 				<div class="pane-actions">
+					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="gambar" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="gambar" disabled data-i18n="workspace.pdf.createDownload">{dict.id.createDownload}</button>
 				</div>
 				<div data-progress="gambar" hidden><Progress label={dict.id.creatingPdf} labelKey="workspace.pdf.creatingPdf" value={0} /></div>
+				<ResultCard mode="gambar" />
 				<p class="alert" data-error="gambar" role="alert" hidden><span></span></p>
 			</div>
 		</div>
 
 		<div data-panel="ke-gambar" class="tool-panel" hidden>
 			<div class="pdf-panel">
+				<p class="mode-explanation" data-i18n="workspace.pdf.explainToImages">{dict.id.explainToImages}</p>
+				<div class="file-section-heading"><h2 data-i18n="workspace.pdf.chooseStep">{dict.id.chooseStep}</h2><button type="button" class="btn btn--ghost" data-clear="ke-gambar" hidden data-i18n="workspace.pdf.clearAll">{dict.id.clearAll}</button></div>
 				<Dropzone id="ke-gambar-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="ke-gambar" hidden></div>
+				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
 				<div class="form-grid">
 					<div>
 						<span class="field-label" data-i18n="workspace.pdf.imageFormat">{dict.id.imageFormat}</span>
@@ -122,47 +136,53 @@ const tabs = [
 						</div>
 					</div>
 				</div>
-				<p class="field-hint" data-i18n="workspace.pdf.dpiHint">{dict.id.dpiHint}</p>
+				<p class="field-hint" data-i18n="workspace.pdf.formatHelp">{dict.id.formatHelp}</p>
+				<p class="field-hint" data-i18n="workspace.pdf.dpiHelp">{dict.id.dpiHelp}</p>
 				<div class="pane-actions">
+					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="ke-gambar" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="ke-gambar" disabled data-i18n="workspace.pdf.toImages">{dict.id.toImages}</button>
 				</div>
 				<div data-progress="ke-gambar" hidden><Progress label={dict.id.creatingImages} labelKey="workspace.pdf.creatingImages" value={0} /></div>
 				<p class="alert" data-error="ke-gambar" role="alert" hidden><span></span></p>
-				<div data-image-result="ke-gambar" hidden>
-					<div class="pane-actions">
-						<button type="button" class="btn btn--secondary" data-download-all="ke-gambar" data-i18n="workspace.pdf.downloadAll">{dict.id.downloadAll}</button>
-					</div>
-					<p class="field-hint" data-i18n="workspace.pdf.downloadsHint">{dict.id.downloadsHint}</p>
-					<ol class="file-list" data-image-list aria-label={dict.id.imageResults} data-i18n-aria="workspace.pdf.imageResults"></ol>
-				</div>
+				<ResultCard mode="ke-gambar" />
 			</div>
 		</div>
 
 		<div data-panel="halaman" class="tool-panel" hidden>
 			<div class="pdf-panel">
+				<p class="mode-explanation" data-i18n="workspace.pdf.explainEdit">{dict.id.explainEdit}</p>
+				<div class="file-section-heading"><h2 data-i18n="workspace.pdf.chooseStep">{dict.id.chooseStep}</h2><button type="button" class="btn btn--ghost" data-clear="halaman" hidden data-i18n="workspace.pdf.clearAll">{dict.id.clearAll}</button></div>
 				<Dropzone id="halaman-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="halaman" hidden></div>
+				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
 				<p class="field-hint" data-i18n="workspace.pdf.editHint">{dict.id.editHint}</p>
-				<ol class="page-list" data-page-list aria-label={dict.id.pdfPages} data-i18n-aria="workspace.pdf.pdfPages"></ol>
+				<PageGrid mode="halaman" />
 				<div class="pane-actions">
+					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="halaman" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="halaman" disabled data-i18n="workspace.pdf.saveDownload">{dict.id.saveDownload}</button>
 				</div>
 				<div data-progress="halaman" hidden><Progress label={dict.id.saving} labelKey="workspace.pdf.saving" value={0} /></div>
+				<ResultCard mode="halaman" />
 				<p class="alert" data-error="halaman" role="alert" hidden><span></span></p>
 			</div>
 		</div>
-	</Tabs>
+	</ModePicker>
 </div>
 
 <script>
  import {tr, currentLang, workspaceErrorMessage} from "../../lib/i18n";
  import {localizedText} from "../../lib/i18n-client";
  import dict from "./i18n";
-	import { formatBytes, parsePageRange, reductionPercent } from '../../lib/page-range';
+	import { formatBytes, parsePageRange } from '../../lib/page-range';
 	import { setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
 	import { runPdfTask } from './pdf-client';
 	import type { CompressLevel, Margin, Orientation } from './pdf-ops';
+	import { describeAction, type PdfMode } from './workspace-state';
+	import { compareSizes, currentResult, type WorkspaceResult } from './result-state';
+	import { imageFileType, supportedFile } from './file-errors';
+	import { PageGrid } from './page-grid';
+	import { selectedPages, toggleRange } from './page-selection';
 
 	type ReadState = 'reading' | 'ready' | 'failed';
 
@@ -173,7 +193,7 @@ const tabs = [
 		pages?: number;
 		previewUrl?: string;
 		thumbUrl?: string;
-		error?: boolean;
+		error?: unknown;
 	};
 
 	const $ = <T extends HTMLElement>(selector: string, root: ParentNode = document) =>
@@ -301,28 +321,33 @@ const tabs = [
 			const label = document.createElement('span');
 			label.className = 'file-card__name';
 			label.textContent = item.file.name;
+			label.title = item.file.name;
 
 			const meta = document.createElement('span');
 			meta.className = 'file-card__meta';
 			if (item.status === 'reading') {
-				localizedText(meta, () => tr(dict, 'reading'));
+				meta.textContent = formatBytes(item.file.size);
 			} else if (item.status === 'failed') {
-				localizedText(meta, () => tr(dict, 'unreadableShort'));
+				meta.textContent = formatBytes(item.file.size);
 				meta.classList.add('is-failed');
 			} else if (item.pages !== undefined) {
-				localizedText(meta, () => tr(dict, 'readyPages', {pages:item.pages!, size:formatBytes(item.file.size)}));
+				localizedText(meta, () => tr(dict, 'pageMeta', {pages:item.pages!, size:formatBytes(item.file.size)}));
 				meta.classList.add('is-ready');
 			} else {
-				localizedText(meta, () => tr(dict, 'readySize', {size:formatBytes(item.file.size)}));
+				meta.textContent = formatBytes(item.file.size);
 				meta.classList.add('is-ready');
 			}
 
 			info.append(label, meta);
+			const badge = document.createElement('span');
+			badge.className = 'file-badge';
+			localizedText(badge, () => tr(dict, item.status === 'ready' ? 'readyBadge' : item.status === 'reading' ? 'readingBadge' : 'failedBadge'));
 
 			const up = document.createElement('button');
 			up.type = 'button';
 			up.className = 'icon-button';
 			up.setAttribute('aria-label', tr(dict,'moveUp',{name:item.file.name}));
+			up.title = up.getAttribute('aria-label')!;
 			up.textContent = '▲';
 			up.disabled = index === 0;
 			up.addEventListener('click', () => {
@@ -335,6 +360,7 @@ const tabs = [
 			down.type = 'button';
 			down.className = 'icon-button';
 			down.setAttribute('aria-label', tr(dict,'moveDown',{name:item.file.name}));
+			down.title = down.getAttribute('aria-label')!;
 			down.textContent = '▼';
 			down.disabled = index === items.length - 1;
 			down.addEventListener('click', () => {
@@ -347,6 +373,7 @@ const tabs = [
 			remove.type = 'button';
 			remove.className = 'icon-button';
 			remove.setAttribute('aria-label', tr(dict,'removeFile',{name:item.file.name}));
+			remove.title = remove.getAttribute('aria-label')!;
 			remove.textContent = '×';
 			remove.addEventListener('click', () => {
 				const [removed] = items.splice(index, 1);
@@ -356,9 +383,13 @@ const tabs = [
 				onChange();
 			});
 
-			li.append(thumb, info, up, down, remove);
+			const controls = document.createElement('span');
+			controls.className = 'file-controls';
+			controls.append(up, down, remove);
+			li.append(thumb, info, badge, controls);
 			list.append(li);
 		});
+		syncWorkspace();
 	};
 
 	const runButton = (name: string) => $<HTMLButtonElement>(`[data-run="${name}"]`);
@@ -374,12 +405,10 @@ const tabs = [
 	let compressLevel: CompressLevel = 'ringan';
 	let orientation: Orientation = 'auto';
 	let margin: Margin = 'small';
-	let compressResult: { before: number; after: number } | null = null;
 
 	let toImageFile: File | null = null;
 	let imageFormat: 'png' | 'jpeg' = 'png';
 	let imageDpi = 150;
-	let renderedImages: { name: string; mime: string; bytes: Uint8Array }[] = [];
 
 	let pageFile: File | null = null;
 	let pageCount = 0;
@@ -389,27 +418,55 @@ const tabs = [
 	let compressPreviewUrl: string | undefined;
 	let toImagePreviewUrl: string | undefined;
 	let pagePreviewUrl: string | undefined;
+	const singlePages: Record<string, number> = {};
+	const revisions: Record<string, number> = {};
+	const busy = new Set<string>();
+	const results: Partial<Record<string, WorkspaceResult>> = {};
+	const renderedImageResults = new WeakMap<HTMLElement, WorkspaceResult>();
+	const zipping = new Set<string>();
+	const nextRevision = (name: string) => (revisions[name] = (revisions[name] ?? 0) + 1);
+	const splitGrid = new PageGrid($<HTMLElement>('[data-page-grid="pisah"]')!, {
+		toggle: (page) => {
+			const input = $<HTMLInputElement>('#pisah-range')!;
+			input.value = toggleRange(input.value, splitPageCount, page);
+			updateSplit();
+		},
+	});
+	const editGrid = new PageGrid($<HTMLElement>('[data-page-grid="halaman"]')!, {
+		rotate: (index, delta) => {
+			pageRotations[index] = ((pageRotations[index] ?? 0) + delta + 360) % 360;
+			updatePageEdit();
+		},
+		remove: (index) => {
+			if (!pageRemoved[index] && pageCount - pageRemoved.filter(Boolean).length <= 1) return;
+			pageRemoved[index] = !pageRemoved[index];
+			updatePageEdit();
+		},
+	});
 
-	const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 	const updateGabung = () => {
 		runButton('gabung')!.disabled =
 			mergeItems.length < 2 || mergeItems.some((item) => item.status !== 'ready');
+		syncWorkspace();
 	};
 
 	const updateGambar = () => {
 		runButton('gambar')!.disabled =
 			imageItems.length === 0 || imageItems.some((item) => item.status !== 'ready');
+		syncWorkspace();
 	};
 
 	const updateToImage = () => {
 		runButton('ke-gambar')!.disabled = toImageFile === null;
+		syncWorkspace();
 	};
 
 	const updatePageEdit = () => {
 		const kept = pageCount - pageRemoved.filter(Boolean).length;
 		const changed = pageRotations.some((angle) => angle !== 0) || pageRemoved.some(Boolean);
 		runButton('halaman')!.disabled = pageFile === null || kept === 0 || !changed;
+		syncWorkspace();
 	};
 
 	const updateSplit = () => {
@@ -419,6 +476,7 @@ const tabs = [
 		if (!splitFile || splitPageCount === 0) {
 			runButton('pisah')!.disabled = true;
 			err.hidden = true;
+			syncWorkspace();
 			return;
 		}
 		const value = input.value.trim();
@@ -426,18 +484,25 @@ const tabs = [
 		err.hidden = value === '' || result.ok;
 		localizedText(err,()=>{const result=parsePageRange(value,splitPageCount,currentLang());return result.ok?'':result.message;});
 		runButton('pisah')!.disabled = !result.ok;
+		syncWorkspace();
 	};
 
 	const readItems = async (items: Named[], done: () => void) => {
 		for (const item of items) {
 			try {
 				const info = await readPdfInfo(item.file);
+				if (!mergeItems.includes(item)) {
+					revoke(info.previewUrl);
+					continue;
+				}
 				item.pages = info.pages;
 				item.previewUrl = info.previewUrl;
 				item.status = 'ready';
-			} catch {
+			} catch (error) {
+				if (!mergeItems.includes(item)) continue;
 				item.status = 'failed';
-				item.error = true;
+				item.error = error;
+				setError('gabung', () => workspaceErrorMessage(error, tr(dict, 'corruptPdf')));
 			}
 			done();
 		}
@@ -445,7 +510,8 @@ const tabs = [
 
 	const addMergeFiles = (files: FileList | null) => {
 		if (!files) return;
-		const added: Named[] = Array.from(files).map((file) => ({
+		setError('gabung', null);
+		const added: Named[] = acceptedFiles(Array.from(files), 'gabung', 'pdf').map((file) => ({
 			file,
 			id: nextUid(),
 			status: 'reading',
@@ -461,7 +527,8 @@ const tabs = [
 
 	const addImageFiles = (files: FileList | null) => {
 		if (!files) return;
-		Array.from(files).forEach((file) =>
+		setError('gambar', null);
+		acceptedFiles(Array.from(files), 'gambar', 'image').forEach((file) =>
 			imageItems.push({
 				file,
 				id: nextUid(),
@@ -476,7 +543,7 @@ const tabs = [
 	const renderMetaCard = (
 		name: string,
 		file: File,
-		options: { loading?: boolean; pages?: number; previewUrl?: string; error?: boolean },
+		options: { loading?: boolean; pages?: number; previewUrl?: string; error?: unknown },
 	) => {
 		const meta = $<HTMLElement>(`[data-meta="${name}"]`);
 		if (!meta) return;
@@ -508,22 +575,29 @@ const tabs = [
 		const line = document.createElement('span');
 		line.className = 'file-card__name';
 		line.textContent = file.name;
+		line.title = file.name;
 
 		const sub = document.createElement('span');
 		sub.className = 'file-card__meta';
 		if (options.loading) {
-			localizedText(sub, () => tr(dict, 'reading'));
+			sub.textContent = formatBytes(file.size);
 		} else if (options.error) {
-			localizedText(sub, () => tr(dict, 'unreadableLong'));
+			localizedText(sub, () => workspaceErrorMessage(options.error, tr(dict, 'corruptPdf')));
 			sub.classList.add('is-failed');
 		} else {
-			localizedText(sub, () => tr(dict,'readyPages',{pages:options.pages??0,size:formatBytes(file.size)}));
+			localizedText(sub, () => tr(dict,'pageMeta',{pages:options.pages??0,size:formatBytes(file.size)}));
 			sub.classList.add('is-ready');
 		}
 
 		info.append(line, sub);
-		card.append(thumb, info);
+		const badge = document.createElement('span');
+		badge.className = 'file-badge';
+		localizedText(badge, () => tr(dict, options.loading ? 'readingBadge' : options.error ? 'failedBadge' : 'readyBadge'));
+		card.dataset.state = options.loading ? 'reading' : options.error ? 'failed' : 'ready';
+		card.append(thumb, info, badge);
 		meta.append(card);
+		singlePages[name] = options.pages ?? 0;
+		syncWorkspace();
 	};
 
 	const showPdfLoading = (name: string, file: File) =>
@@ -533,81 +607,72 @@ const tabs = [
 		renderMetaCard(name, file, { pages, previewUrl });
 
 	const renderPageList = () => {
-		const list = $<HTMLOListElement>('[data-page-list]');
-		if (!list) return;
-		list.innerHTML = '';
+		editGrid.setFile(pageFile, pageCount);
+		editGrid.update({ selected: new Set(), rotations: pageRotations, removed: pageRemoved });
+	};
 
-		for (let index = 0; index < pageCount; index += 1) {
-			const li = document.createElement('li');
-			li.className = 'page-card';
-			if (pageRemoved[index]) li.classList.add('page-card--removed');
+	function acceptedFiles(files: File[], mode: string, kind: 'pdf' | 'image') {
+		const rejected = files.filter((file) => !supportedFile(file, kind));
+		if (rejected.length) setError(mode, () => rejected.map((file) => tr(dict, kind === 'pdf' ? 'notPdf' : 'notImage', { name: file.name })).join(' · '));
+		return files.filter((file) => supportedFile(file, kind));
+	}
 
-			const name = document.createElement('span');
-			name.className = 'page-card__name';
-			localizedText(name, () => tr(dict,'page',{page:index+1}));
+	function signature(mode: string) {
+		if (mode === 'gabung') return JSON.stringify(mergeItems.map((item) => [item.id, item.status]));
+		if (mode === 'gambar') return JSON.stringify([imageItems.map((item) => item.id), orientation, margin]);
+		return JSON.stringify([revisions[mode], mode === 'pisah' ? $<HTMLInputElement>('#pisah-range')?.value : mode === 'kompres' ? compressLevel : mode === 'ke-gambar' ? [imageFormat, imageDpi] : [pageRotations, pageRemoved]]);
+	}
 
-			const angle = document.createElement('span');
-			angle.className = 'page-card__angle';
-			angle.textContent = `${pageRotations[index] ?? 0}°`;
-
-			const rotate = document.createElement('button');
-			rotate.type = 'button';
-			rotate.className = 'icon-button';
-			rotate.setAttribute('aria-label', tr(dict,'rotatePage',{page:index+1}));
-			rotate.textContent = '↻';
-			rotate.addEventListener('click', () => {
-				pageRotations[index] = ((pageRotations[index] ?? 0) + 90) % 360;
-				renderPageList();
-				updatePageEdit();
-			});
-
-			const remove = document.createElement('button');
-			remove.type = 'button';
-			remove.className = 'icon-button';
-			remove.setAttribute('aria-pressed', pageRemoved[index] ? 'true' : 'false');
-			localizedText(remove, () => pageRemoved[index] ? tr(dict, 'cancel') : tr(dict, 'remove'));
-			remove.setAttribute('aria-label', tr(dict,'removePage',{page:index+1}));
-			remove.addEventListener('click', () => {
-				pageRemoved[index] = !pageRemoved[index];
-				renderPageList();
-				updatePageEdit();
-			});
-
-			li.append(name, angle, rotate, remove);
-			list.append(li);
+	function renderResult(mode: string) {
+		const box = $<HTMLElement>(`[data-result="${mode}"]`)!;
+		const result = currentResult(results[mode], signature(mode));
+		results[mode] = result;
+		box.hidden = !result;
+		if (!result) {
+			box.querySelector('[data-result-images]')!.replaceChildren();
+			renderedImageResults.delete(box);
+			return;
 		}
-	};
-
-	const renderImageResults = () => {
-		const box = $<HTMLElement>('[data-image-result="ke-gambar"]');
-		const list = $<HTMLOListElement>('[data-image-list]');
-		if (!box || !list) return;
-		list.innerHTML = '';
-		box.hidden = renderedImages.length === 0;
-
-		renderedImages.forEach((image) => {
-			const li = document.createElement('li');
-			li.className = 'file-card';
-
-			const name = document.createElement('span');
-			name.className = 'file-card__name';
-			name.textContent = image.name;
-
-			const size = document.createElement('span');
-			size.className = 'file-card__size';
-			size.textContent = formatBytes(image.bytes.byteLength);
-
-			const save = document.createElement('button');
-			save.type = 'button';
-			save.className = 'btn btn--secondary';
-			localizedText(save, () => tr(dict, 'download'));
-			save.setAttribute('aria-label', tr(dict,'downloadFile',{name:image.name}));
-			save.addEventListener('click', () => download(image.name, image.bytes, image.mime));
-
-			li.append(name, size, save);
-			list.append(li);
+		const size = result.files.reduce((sum, file) => sum + file.bytes.byteLength, 0);
+		box.querySelector<HTMLElement>('[data-result-name]')!.textContent = result.name;
+		box.querySelector<HTMLElement>('[data-result-meta]')!.textContent = tr(dict, mode === 'ke-gambar' ? 'imageResultMeta' : 'resultMeta', { size: formatBytes(size), pages: result.pages });
+		const comparison = box.querySelector<HTMLElement>('[data-result-comparison]')!;
+		comparison.hidden = result.before === undefined;
+		const warning = box.querySelector<HTMLElement>('[data-result-warning]')!;
+		warning.hidden = true;
+		if (result.before !== undefined) {
+			const change = compareSizes(result.before, size);
+			comparison.textContent = `${formatBytes(result.before)} → ${formatBytes(size)} · ${change.direction === 'equal' ? tr(dict, 'sameSize') : tr(dict, change.smaller ? 'saved' : 'larger', { saved: change.percent })}`;
+			warning.hidden = change.smaller;
+		}
+		const save = box.querySelector<HTMLButtonElement>('[data-result-download]')!;
+		save.textContent = tr(dict, mode === 'ke-gambar' ? 'downloadAll' : 'download');
+		save.dataset.i18n = `workspace.pdf.${mode === 'ke-gambar' ? 'downloadAll' : 'download'}`;
+		save.className = `btn btn--${warning.hidden ? 'primary' : 'secondary'}`;
+		save.disabled = zipping.has(mode);
+		const list = box.querySelector<HTMLOListElement>('[data-result-images]')!;
+		if (mode === 'ke-gambar' && renderedImageResults.get(box) !== result) {
+			list.replaceChildren();
+			result.files.forEach((file) => {
+				const row = document.createElement('li');
+				row.className = 'output-image';
+				const name = document.createElement('span');
+				name.textContent = `${file.name} · ${formatBytes(file.bytes.byteLength)}`;
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'btn btn--secondary';
+				button.addEventListener('click', () => download(file.name, file.bytes, file.mime));
+				row.append(name, button);
+				list.append(row);
+			});
+			renderedImageResults.set(box, result);
+		}
+		if (mode === 'ke-gambar') result.files.forEach((file, index) => {
+			const button = list.children[index]!.querySelector('button')!;
+			button.textContent = tr(dict, 'download');
+			button.setAttribute('aria-label', tr(dict, 'downloadFile', { name: file.name }));
 		});
-	};
+	}
 
 	document.querySelector<HTMLInputElement>('#gabung-input')?.addEventListener('change', (event) => {
 		addMergeFiles((event.target as HTMLInputElement).files);
@@ -624,6 +689,9 @@ const tabs = [
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('pisah', null);
+		if (!acceptedFiles([file], 'pisah', 'pdf').length) return;
+		const revision = nextRevision('pisah');
 
 		splitFile = null;
 		splitPageCount = 0;
@@ -632,19 +700,21 @@ const tabs = [
 
 		try {
 			const info = await readPdfInfo(file);
+			if (revision !== revisions.pisah) { revoke(info.previewUrl); return; }
 			revoke(splitPreviewUrl);
 			splitPreviewUrl = info.previewUrl;
 			splitFile = file;
 			splitPageCount = info.pages;
 			showPdfMeta('pisah', file, info.pages, info.previewUrl);
 			updateSplit();
-		} catch {
+		} catch (error) {
+			if (revision !== revisions.pisah) return;
 			revoke(splitPreviewUrl);
 			splitPreviewUrl = undefined;
 			splitFile = null;
 			splitPageCount = 0;
 			renderMetaCard('pisah', file, {
-				error: true,
+				error,
 			});
 			updateSplit();
 		}
@@ -657,27 +727,30 @@ const tabs = [
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('kompres', null);
+		if (!acceptedFiles([file], 'kompres', 'pdf').length) return;
+		const revision = nextRevision('kompres');
 
 		compressFile = null;
-		compressResult = null;
 		runButton('kompres')!.disabled = true;
-		renderCompare();
 		showPdfLoading('kompres', file);
 
 		try {
 			const info = await readPdfInfo(file);
+			if (revision !== revisions.kompres) { revoke(info.previewUrl); return; }
 			revoke(compressPreviewUrl);
 			compressPreviewUrl = info.previewUrl;
 			compressFile = file;
 			showPdfMeta('kompres', file, info.pages, info.previewUrl);
 			runButton('kompres')!.disabled = false;
-		} catch {
+		} catch (error) {
+			if (revision !== revisions.kompres) return;
 			revoke(compressPreviewUrl);
 			compressPreviewUrl = undefined;
 			compressFile = null;
 			runButton('kompres')!.disabled = true;
 			renderMetaCard('kompres', file, {
-				error: true,
+				error,
 			});
 		}
 	});
@@ -687,26 +760,29 @@ const tabs = [
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('ke-gambar', null);
+		if (!acceptedFiles([file], 'ke-gambar', 'pdf').length) return;
+		const revision = nextRevision('ke-gambar');
 
 		toImageFile = null;
-		renderedImages = [];
-		renderImageResults();
 		updateToImage();
 		showPdfLoading('ke-gambar', file);
 
 		try {
 			const info = await readPdfInfo(file);
+			if (revision !== revisions['ke-gambar']) { revoke(info.previewUrl); return; }
 			revoke(toImagePreviewUrl);
 			toImagePreviewUrl = info.previewUrl;
 			toImageFile = file;
 			showPdfMeta('ke-gambar', file, info.pages, info.previewUrl);
 			updateToImage();
-		} catch {
+		} catch (error) {
+			if (revision !== revisions['ke-gambar']) return;
 			revoke(toImagePreviewUrl);
 			toImagePreviewUrl = undefined;
 			toImageFile = null;
 			renderMetaCard('ke-gambar', file, {
-				error: true,
+				error,
 			});
 			updateToImage();
 		}
@@ -717,6 +793,9 @@ const tabs = [
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('halaman', null);
+		if (!acceptedFiles([file], 'halaman', 'pdf').length) return;
+		const revision = nextRevision('halaman');
 
 		pageFile = null;
 		pageCount = 0;
@@ -728,6 +807,7 @@ const tabs = [
 
 		try {
 			const info = await readPdfInfo(file);
+			if (revision !== revisions.halaman) { revoke(info.previewUrl); return; }
 			revoke(pagePreviewUrl);
 			pagePreviewUrl = info.previewUrl;
 			pageFile = file;
@@ -737,7 +817,8 @@ const tabs = [
 			showPdfMeta('halaman', file, info.pages, info.previewUrl);
 			renderPageList();
 			updatePageEdit();
-		} catch {
+		} catch (error) {
+			if (revision !== revisions.halaman) return;
 			revoke(pagePreviewUrl);
 			pagePreviewUrl = undefined;
 			pageFile = null;
@@ -746,7 +827,7 @@ const tabs = [
 			pageRemoved = [];
 			renderPageList();
 			renderMetaCard('halaman', file, {
-				error: true,
+				error,
 			});
 			updatePageEdit();
 		}
@@ -758,8 +839,6 @@ const tabs = [
 			document.querySelectorAll<HTMLButtonElement>('[data-image-format]').forEach((other) => {
 				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
 			});
-			renderedImages = [];
-			renderImageResults();
 		});
 	});
 
@@ -769,30 +848,8 @@ const tabs = [
 			document.querySelectorAll<HTMLButtonElement>('[data-dpi]').forEach((other) => {
 				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
 			});
-			renderedImages = [];
-			renderImageResults();
 		});
 	});
-
-	const renderCompare = () => {
-		const box = $<HTMLElement>('[data-compare="kompres"]');
-		if (!box || !compressResult || !compressFile) {
-			if (box) box.hidden = true;
-			return;
-		}
-		box.hidden = false;
-		const { before, after } = compressResult;
-		$<HTMLElement>('[data-before]')!.textContent = formatBytes(before);
-		$<HTMLElement>('[data-after]')!.textContent = formatBytes(after);
-		const saved = reductionPercent(before, after);
-		localizedText($<HTMLElement>('[data-delta]')!, () => saved > 0
-				? tr(dict,'saved',{saved})
-				: saved === 0
-					? tr(dict, 'sameSize')
-					: tr(dict,'larger',{saved:Math.abs(saved)}));
-		const warn = $<HTMLElement>('[data-warn="kompres"]');
-		if (warn) warn.hidden = after < before;
-	};
 
 	document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((button) => {
 		button.addEventListener('click', () => {
@@ -800,8 +857,6 @@ const tabs = [
 			document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((other) => {
 				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
 			});
-			compressResult = null;
-			renderCompare();
 		});
 	});
 
@@ -823,10 +878,12 @@ const tabs = [
 		});
 	});
 
-	const busy = new Set<string>();
-
-	const run = async (name: string, request: Parameters<typeof runPdfTask>[0], filename: string) => {
+	const run = async (name: string, prepare: () => Promise<Parameters<typeof runPdfTask>[0]>, filename: string) => {
 		if (busy.has(name)) return;
+		const inputSignature = signature(name);
+		const pages = name === 'gabung' ? mergeItems.reduce((sum, item) => sum + (item.pages ?? 0), 0) : name === 'gambar' ? imageItems.length : name === 'pisah' ? (() => { const parsed = parsePageRange($<HTMLInputElement>('#pisah-range')!.value, splitPageCount); return parsed.ok ? parsed.pages.length : 0; })() : name === 'halaman' ? pageCount - pageRemoved.filter(Boolean).length : singlePages[name] ?? 0;
+		const before = name === 'kompres' ? compressFile?.size : undefined;
+		delete results[name];
 		busy.add(name);
 		const button = runButton(name);
 		if (button) {
@@ -838,12 +895,17 @@ const tabs = [
 		setDropzoneState(zone, 'processing');
 		setError(name, null);
 		setProgress(name, 0, 0, ()=>tr(dict, 'preparing'));
+		syncWorkspace();
 
-		const task = runPdfTask(request, (done, total) => setProgress(name, done, total, ()=>''));
 		try {
+			const task = runPdfTask(await prepare(), (done, total) => setProgress(name, done, total, ()=>''));
 			const result = await task.promise;
-			download(filename, result.bytes);
-			toast(() => tr(dict, 'ready'), { tone: 'success' });
+			if (signature(name) !== inputSignature) return null;
+			results[name] = { signature: inputSignature, name: filename, pages: result.pageCount ?? pages, before, files: result.images ?? [{ name: filename, bytes: result.bytes, mime: 'application/pdf' }] };
+			renderResult(name);
+			$<HTMLElement>(`[data-result="${name}"]`)!.scrollIntoView({ block: 'center', behavior: 'instant' });
+			const imageCount = result.images?.length ?? 0;
+			toast(() => name === 'ke-gambar' ? tr(dict, 'imagesReady', { count: imageCount }) : tr(dict, 'ready'), { tone: 'success' });
 			return result;
 		} catch (error) {
 			setError(name, ()=>workspaceErrorMessage(error,tr(dict,'processFailed')));
@@ -857,12 +919,12 @@ const tabs = [
 				button.disabled = false;
 				button.removeAttribute('aria-busy');
 			}
+			syncWorkspace();
 		}
 	};
 
 	runButton('gabung')?.addEventListener('click', async () => {
-		const files = await Promise.all(mergeItems.map((item) => readBytes(item.file)));
-		await run('gabung', { op: 'merge', files }, 'gabungan.pdf');
+		await run('gabung', async () => ({ op: 'merge', files: await Promise.all(mergeItems.map((item) => readBytes(item.file))) }), 'gabungan.pdf');
 	});
 
 	runButton('pisah')?.addEventListener('click', async () => {
@@ -870,82 +932,39 @@ const tabs = [
 		const input = $<HTMLInputElement>('#pisah-range');
 		const parsed = parsePageRange(input?.value ?? '', splitPageCount);
 		if (!parsed.ok) return;
-		const file = await readBytes(splitFile);
-		await run('pisah', { op: 'split', file, pages: parsed.pages }, 'hasil-pisah.pdf');
+		const source = splitFile;
+		await run('pisah', async () => ({ op: 'split', file: await readBytes(source), pages: parsed.pages }), 'hasil-pisah.pdf');
 	});
 
 	runButton('gambar')?.addEventListener('click', async () => {
-		const images = await Promise.all(
+		await run('gambar', async () => ({ op: 'images', images: await Promise.all(
 			imageItems.map(async (item) => ({
 				bytes: await readBytes(item.file),
-				type: item.file.type === 'image/png' ? ('png' as const) : ('jpg' as const),
+				type: imageFileType(item.file)!,
 			})),
-		);
-		await run('gambar', { op: 'images', images, orientation, margin }, 'gambar.pdf');
+		), orientation, margin }), 'gambar.pdf');
 	});
 
 	runButton('kompres')?.addEventListener('click', async () => {
 		if (!compressFile) return;
 		const file = compressFile;
-		const bytes = await readBytes(file);
-		const result = await run(
+		await run(
 			'kompres',
-			{ op: 'compress', file: bytes, level: compressLevel },
+			async () => ({ op: 'compress', file: await readBytes(file), level: compressLevel }),
 			`${file.name.replace(/\.pdf$/i, '')}-kompres.pdf`,
 		);
-		if (result) {
-			compressResult = { before: file.size, after: result.bytes.byteLength };
-			renderCompare();
-		}
 	});
 
 	runButton('ke-gambar')?.addEventListener('click', async () => {
 		if (!toImageFile || busy.has('ke-gambar')) return;
-		busy.add('ke-gambar');
-		const button = runButton('ke-gambar');
-		if (button) button.disabled = true;
-		setError('ke-gambar', null);
-		setProgress('ke-gambar', 0, 0, ()=>tr(dict, 'preparing'));
-
 		const file = toImageFile;
-		const task = runPdfTask(
-			{
+		await run('ke-gambar', async () => ({
 				op: 'to-images',
 				file: await readBytes(file),
 				format: imageFormat,
 				scale: imageDpi / 72,
-			},
-			(done, total) => setProgress('ke-gambar', done, total, ()=>''),
-		);
-		try {
-			const result = await task.promise;
-			renderedImages = result.images ?? [];
-			renderImageResults();
-			toast(() => renderedImages.length > 1
-					? tr(dict,'imagesReady',{count:renderedImages.length})
-					: tr(dict, 'imageReady'),
-				{ tone: 'success' },
-			);
-		} catch (error) {
-			setError(
-				'ke-gambar',
-				()=>workspaceErrorMessage(error,tr(dict,'imagesFailed')),
-			);
-		} finally {
-			hideProgress('ke-gambar');
-			busy.delete('ke-gambar');
-			updateToImage();
-		}
+			}), 'halaman.zip');
 	});
-
-	document
-		.querySelector<HTMLButtonElement>('[data-download-all="ke-gambar"]')
-		?.addEventListener('click', async () => {
-			for (const image of renderedImages) {
-				download(image.name, image.bytes, image.mime);
-				await delay(300);
-			}
-		});
 
 	runButton('halaman')?.addEventListener('click', async () => {
 		if (!pageFile) return;
@@ -955,18 +974,271 @@ const tabs = [
 		const removed = pageRemoved.flatMap((value, index) => (value ? [index] : []));
 		await run(
 			'halaman',
-			{
+			async () => ({
 				op: 'edit',
 				file: await readBytes(file),
 				edits: { rotations: pageRotations, removed },
-			},
+			}),
 			`${file.name.replace(/\.pdf$/i, '')}-diubah.pdf`,
 		);
 	});
-document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,updateGabung);renderList('gambar',imageItems,updateGambar);renderPageList();renderImageResults();});
+	function syncWorkspace() {
+		const panels = document.querySelectorAll<HTMLElement>('.pdf-workspace [data-panel]');
+		panels.forEach((panel) => {
+			const mode = panel.dataset.panel as PdfMode;
+			const items = mode === 'gabung' ? mergeItems : mode === 'gambar' ? imageItems : null;
+			const meta = panel.querySelector<HTMLElement>('[data-meta]');
+			const filled = items ? items.length > 0 : !!meta && !meta.hidden;
+			const parsed = parsePageRange($<HTMLInputElement>('#pisah-range')?.value ?? '', splitPageCount, currentLang());
+			const hasFile = mode === 'pisah' ? !!splitFile : mode === 'kompres' ? !!compressFile : mode === 'ke-gambar' ? !!toImageFile : !!pageFile;
+			const action = describeAction(mode, {
+				files: items?.length ?? Number(filled),
+				pages: items ? items.reduce((sum, item) => sum + (item.pages ?? 0), 0) : singlePages[mode] ?? 0,
+				selected: mode === 'pisah' ? parsed.ok ? parsed.pages.length : 0 : pageCount - pageRemoved.filter(Boolean).length,
+				hasFile,
+				pending: items ? items.some((item) => item.status === 'reading') : !!meta?.querySelector('[data-state="reading"]'),
+				failed: items ? items.some((item) => item.status === 'failed') : !!meta?.querySelector('[data-state="failed"]'),
+				busy: busy.has(mode),
+				changed: pageRotations.some((angle) => angle !== 0) || pageRemoved.some(Boolean),
+				rangeValid: parsed.ok,
+			}, currentLang());
+			const summary = panel.querySelector<HTMLElement>('[data-summary]')!;
+			summary.id = `pdf-summary-${mode}`;
+			summary.textContent = action.reason ?? action.summary;
+			const button = runButton(mode)!;
+			renderResult(mode);
+			const hasResult = !!results[mode];
+			const actionKeys = { gabung: 'mergeDownload', pisah: 'splitDownload', kompres: 'compressDownload', gambar: 'createDownload', 'ke-gambar': 'toImages', halaman: 'saveDownload' } as const;
+			const labelKey = hasResult ? 'processAgain' : actionKeys[mode];
+			button.dataset.i18n = `workspace.pdf.${labelKey}`;
+			button.textContent = tr(dict, labelKey);
+			button.classList.toggle('btn--primary', !hasResult);
+			button.classList.toggle('btn--secondary', hasResult);
+			button.disabled = action.reason !== null;
+			button.setAttribute('aria-describedby', summary.id);
+			const clear = panel.querySelector<HTMLButtonElement>('[data-clear]')!;
+			clear.hidden = !filled;
+			clear.disabled = busy.has(mode);
+			const zone = panel.querySelector<HTMLElement>('[data-dropzone]')!;
+			zone.dataset.compact = String(filled);
+			setDropzoneState(zone, busy.has(mode) ? 'processing' : 'empty');
+			zone.querySelector<HTMLInputElement>('input')!.disabled = busy.has(mode);
+			const fileName = zone.querySelector<HTMLElement>('[data-dropzone-file]')!;
+			fileName.hidden = true;
+			fileName.textContent = '';
+			const pick = zone.querySelector<HTMLElement>('.dropzone__pick')!;
+			const key = items ? mode === 'gabung' ? 'addPdfs' : 'addImages' : 'replaceFile';
+			pick.dataset.i18n = `workspace.pdf.${filled ? key : 'pickFiles'}`;
+			pick.textContent = tr(dict, filled ? key : 'pickFiles');
+			panel.querySelectorAll<HTMLElement>('.file-controls, [data-page-grid], fieldset, .form-grid, #pisah-range').forEach((controls) => { controls.inert = busy.has(mode); });
+		});
+		splitGrid.setFile(splitFile, splitPageCount);
+		splitGrid.update({ selected: new Set(selectedPages($<HTMLInputElement>('#pisah-range')!.value, splitPageCount)), rotations: [], removed: [] });
+		renderPageList();
+	}
+
+	document.querySelectorAll<HTMLButtonElement>('[data-clear]').forEach((button) => {
+		button.addEventListener('click', () => {
+			const mode = button.dataset.clear as PdfMode;
+			if (busy.has(mode)) return;
+			nextRevision(mode);
+			delete results[mode];
+			renderResult(mode);
+			if (mode === 'gabung' || mode === 'gambar') {
+				const items = mode === 'gabung' ? mergeItems : imageItems;
+				items.splice(0).forEach((item) => { revoke(item.previewUrl); revoke(item.thumbUrl); });
+				renderList(mode, items, mode === 'gabung' ? updateGabung : updateGambar);
+			} else {
+				const meta = $<HTMLElement>(`[data-meta="${mode}"]`)!;
+				meta.hidden = true;
+				meta.replaceChildren();
+				singlePages[mode] = 0;
+				if (mode === 'pisah') {
+					splitFile = null;
+					splitPageCount = 0;
+					revoke(splitPreviewUrl);
+					splitPreviewUrl = undefined;
+					$<HTMLInputElement>('#pisah-range')!.value = '';
+					updateSplit();
+				}
+				if (mode === 'kompres') {
+					compressFile = null;
+					revoke(compressPreviewUrl);
+					compressPreviewUrl = undefined;
+				}
+				if (mode === 'ke-gambar') {
+					toImageFile = null;
+					revoke(toImagePreviewUrl);
+					toImagePreviewUrl = undefined;
+				}
+				if (mode === 'halaman') {
+					pageFile = null;
+					pageCount = 0;
+					pageRotations = [];
+					pageRemoved = [];
+					revoke(pagePreviewUrl);
+					pagePreviewUrl = undefined;
+					renderPageList();
+				}
+			}
+			$<HTMLInputElement>(`#${mode}-input`)!.value = '';
+			setError(mode, null);
+			syncWorkspace();
+		});
+	});
+	document.addEventListener('lang:change', () => {
+		renderList('gabung', mergeItems, updateGabung);
+		renderList('gambar', imageItems, updateGambar);
+		renderPageList();
+		syncWorkspace();
+	});
+	document.querySelectorAll<HTMLButtonElement>('[data-result-again]').forEach((button) => button.addEventListener('click', () => runButton(button.dataset.resultAgain!)?.click()));
+	document.querySelectorAll<HTMLButtonElement>('[data-result-reset]').forEach((button) => button.addEventListener('click', () => $<HTMLButtonElement>(`[data-clear="${button.dataset.resultReset}"]`)?.click()));
+	document.querySelectorAll<HTMLButtonElement>('[data-result-download]').forEach((button) => button.addEventListener('click', async () => {
+		const mode = button.dataset.resultDownload!;
+		const result = currentResult(results[mode], signature(mode));
+		if (!result || zipping.has(mode)) return;
+		if (mode !== 'ke-gambar') {
+			const file = result.files[0]!;
+			download(file.name, file.bytes, file.mime);
+			return;
+		}
+		zipping.add(mode);
+		renderResult(mode);
+		try {
+			const { zip } = await import('fflate');
+			const bytes = await new Promise<Uint8Array>((resolve, reject) => zip(Object.fromEntries(result.files.map((file) => [file.name, file.bytes])), { level: 0 }, (error, data) => error ? reject(error) : resolve(data)));
+			if (currentResult(results[mode], signature(mode)) === result) download(result.name, bytes, 'application/zip');
+		} catch {
+			setError(mode, () => tr(dict, 'zipFailed'));
+		} finally {
+			zipping.delete(mode);
+			renderResult(mode);
+		}
+	}));
+	const workspace = $<HTMLElement>('.pdf-workspace')!;
+	for (const event of ['click', 'input', 'change']) workspace.addEventListener(event, () => queueMicrotask(syncWorkspace));
+	syncWorkspace();
 </script>
 
 <style>
+	.pdf-workspace {
+		padding-bottom: calc(var(--space-8) * 2 + env(safe-area-inset-bottom, 0px));
+	}
+
+	[data-clear][hidden] {
+		display: none;
+	}
+
+	.file-section-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+		min-height: 44px;
+	}
+
+	.file-section-heading h2,
+	.section-heading,
+	.action-copy h2 {
+		font-size: 0.875rem;
+		font-weight: 600;
+		margin: 0;
+	}
+
+	.mode-explanation {
+		color: var(--text-muted);
+		margin: 0;
+	}
+
+	.pane-actions {
+		position: fixed;
+		inset: auto 0 0;
+		z-index: 35;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4);
+		padding: var(--space-3) max(var(--space-4), calc((100vw - 1184px) / 2)) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+		border-top: 1px solid var(--border-strong);
+		background: var(--surface);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.action-copy {
+		min-width: 0;
+	}
+
+	.action-copy p {
+		margin: var(--space-1) 0 0;
+		font-size: 0.875rem;
+	}
+
+	.pane-actions .btn {
+		flex-shrink: 0;
+		min-height: 44px;
+	}
+
+	:global(body:has(.pdf-workspace) .toast-region) {
+		bottom: calc(var(--space-8) + var(--space-4) + env(safe-area-inset-bottom, 0px));
+	}
+
+	.pdf-workspace :global([data-dropzone-file]),
+	.pdf-workspace :global(.dropzone__icon--done) {
+		display: none;
+	}
+
+	.pdf-workspace :global([data-dropzone][data-compact='true']) {
+		min-height: 0;
+		padding: var(--space-2);
+		align-items: flex-start;
+		border-style: solid;
+		background: var(--surface-2);
+	}
+
+	.pdf-workspace :global([data-compact='true'] .dropzone__label),
+	.pdf-workspace :global([data-compact='true'] .dropzone__icon),
+	.pdf-workspace :global([data-compact='true'] .field-hint) {
+		display: none;
+	}
+
+	.pdf-workspace :global(.dropzone__pick) {
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.pdf-workspace :global(.file-controls) {
+		display: flex;
+		gap: var(--space-1);
+	}
+
+	.pdf-workspace :global(.output-image) {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+		flex-wrap: wrap;
+		font-size: 0.875rem;
+	}
+
+	.pdf-workspace :global(.output-image .btn) { min-height: 44px; }
+
+	.pdf-workspace :global(.file-badge) {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+	}
+
+	.pdf-workspace :global([data-state='ready'] > .file-badge) {
+		color: var(--success);
+	}
+
+	.pdf-workspace :global([data-state='failed'] > .file-badge) {
+		color: var(--danger);
+	}
 	.pdf-panel {
 		display: flex;
 		flex-direction: column;
@@ -981,9 +1253,9 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		list-style: none;
 	}
 
-	.file-card {
+	.pdf-workspace :global(.file-card) {
 		display: grid;
-		grid-template-columns: 52px minmax(0, 1fr) 44px 44px 44px;
+		grid-template-columns: 48px minmax(0, 1fr) auto auto;
 		align-items: center;
 		gap: var(--space-2);
 		padding: var(--space-2) var(--space-3);
@@ -992,16 +1264,16 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		background: var(--surface);
 	}
 
-	.file-card[data-state='failed'] {
+	.pdf-workspace :global(.file-card[data-state='failed']) {
 		border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
 	}
 
-	.file-card__thumb {
+	.pdf-workspace :global(.file-card__thumb) {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 52px;
-		height: 66px;
+		width: 48px;
+		height: 56px;
 		overflow: hidden;
 		border: 1px solid var(--border);
 		border-radius: var(--radius-sm);
@@ -1011,59 +1283,59 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		font-size: 0.6875rem;
 	}
 
-	.file-card__thumb img {
+	.pdf-workspace :global(.file-card__thumb img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 	}
 
-	.file-card__info {
+	.pdf-workspace :global(.file-card__info) {
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
 		min-width: 0;
 	}
 
-	.file-card__meta {
+	.pdf-workspace :global(.file-card__meta) {
 		font-size: 0.75rem;
 		color: var(--text-muted);
 	}
 
-	.file-card__meta.is-ready {
+	.pdf-workspace :global(.file-card__meta.is-ready) {
 		color: var(--success);
 	}
 
-	.file-card__meta.is-failed {
+	.pdf-workspace :global(.file-card__meta.is-failed) {
 		color: var(--danger);
 	}
 
-	.file-card[draggable='true'] {
+	.pdf-workspace :global(.file-card[draggable='true']) {
 		cursor: grab;
 	}
 
-	.file-card--dragging {
+	.pdf-workspace :global(.file-card--dragging) {
 		opacity: 0.55;
 	}
 
-	.file-card--dragover {
+	.pdf-workspace :global(.file-card--dragover) {
 		border-color: var(--accent);
 		background: var(--accent-soft);
 	}
 
-	.file-card__name {
+	.pdf-workspace :global(.file-card__name) {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-size: 0.9375rem;
 	}
 
-	.file-card__size {
+	.pdf-workspace :global(.file-card__size) {
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		color: var(--text-muted);
 	}
 
-	.file-card .icon-button {
+	.pdf-workspace :global(.file-card .icon-button) {
 		width: 44px;
 		height: 44px;
 	}
@@ -1075,19 +1347,19 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		background: var(--surface);
 	}
 
-	.meta-card {
+	.pdf-workspace :global(.meta-card) {
 		display: grid;
-		grid-template-columns: 52px minmax(0, 1fr);
+		grid-template-columns: 48px minmax(0, 1fr) auto;
 		align-items: center;
 		gap: var(--space-3);
 	}
 
-	.meta-card__thumb {
+	.pdf-workspace :global(.meta-card__thumb) {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 52px;
-		height: 66px;
+		width: 48px;
+		height: 56px;
 		overflow: hidden;
 		border: 1px solid var(--border);
 		border-radius: var(--radius-sm);
@@ -1097,13 +1369,13 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		font-size: 0.6875rem;
 	}
 
-	.meta-card__thumb img {
+	.pdf-workspace :global(.meta-card__thumb img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 	}
 
-	.meta-card__info {
+	.pdf-workspace :global(.meta-card__info) {
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
@@ -1149,11 +1421,11 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		margin: 0;
 	}
 
-	[data-image-list] .file-card {
+	.pdf-workspace :global([data-image-list] .file-card) {
 		grid-template-columns: minmax(0, 1fr) auto auto;
 	}
 
-	[data-image-list] .file-card .btn {
+	.pdf-workspace :global([data-image-list] .file-card .btn) {
 		min-height: 44px;
 	}
 
@@ -1165,7 +1437,7 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		list-style: none;
 	}
 
-	.page-card {
+	.pdf-workspace :global(.page-card) {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto 44px auto;
 		align-items: center;
@@ -1176,28 +1448,39 @@ document.addEventListener('lang:change',()=>{renderList('gabung',mergeItems,upda
 		background: var(--surface);
 	}
 
-	.page-card--removed {
+	.pdf-workspace :global(.page-card--removed) {
 		opacity: 0.55;
 	}
 
-	.page-card--removed .page-card__name {
+	.pdf-workspace :global(.page-card--removed .page-card__name) {
 		text-decoration: line-through;
 	}
 
-	.page-card__name {
+	.pdf-workspace :global(.page-card__name) {
 		font-size: 0.9375rem;
 	}
 
-	.page-card__angle {
+	.pdf-workspace :global(.page-card__angle) {
 		font-family: var(--font-mono);
 		font-size: 0.75rem;
 		color: var(--text-muted);
 		font-variant-numeric: tabular-nums;
 	}
 
-	.page-card .icon-button {
+	.pdf-workspace :global(.page-card .icon-button) {
 		width: 44px;
 		height: 44px;
 		font-size: 0.75rem;
+	}
+	@media (max-width: 47.99rem) {
+		:global(body:has(.pdf-workspace) .toast-region) {
+			bottom: calc(var(--space-8) * 2 + var(--space-4) + env(safe-area-inset-bottom, 0px));
+		}
+		.pane-actions { flex-direction: column; align-items: stretch; gap: var(--space-2); }
+		.action-copy { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-1) var(--space-2); }
+		.action-copy p { margin: 0; }
+		.pdf-workspace :global(.file-card) { grid-template-columns: 48px minmax(0, 1fr) auto; }
+		.pdf-workspace :global(.file-controls) { grid-column: 2 / -1; justify-self: end; }
+		.pdf-workspace :global([data-image-list] .file-card) { grid-template-columns: minmax(0, 1fr) auto auto; }
 	}
 </style>

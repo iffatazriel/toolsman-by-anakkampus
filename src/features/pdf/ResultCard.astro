@@ -1,0 +1,28 @@
+---
+import dict from './i18n';
+interface Props { mode: string }
+const {mode} = Astro.props;
+---
+<section class="result-card" data-result={mode} hidden aria-live="polite" aria-labelledby={`result-title-${mode}`}>
+	<h2 id={`result-title-${mode}`} data-i18n="workspace.pdf.resultTitle">{dict.id.resultTitle}</h2>
+	<p class="result-name" data-result-name></p>
+	<p class="field-hint" data-result-meta></p>
+	<p data-result-comparison hidden></p>
+	<p class="alert" data-result-warning hidden data-i18n="workspace.pdf.keepOriginal">{dict.id.keepOriginal}</p>
+	<ol class="file-list" data-result-images aria-label={dict.id.imageResults} data-i18n-aria="workspace.pdf.imageResults"></ol>
+	<div class="result-actions">
+		<button type="button" class="btn btn--primary" data-result-download={mode} data-i18n="workspace.pdf.download">{dict.id.download}</button>
+		<button type="button" class="btn btn--secondary" data-result-again={mode} data-i18n="workspace.pdf.processAgain">{dict.id.processAgain}</button>
+		<button type="button" class="btn btn--ghost" data-result-reset={mode} data-i18n="workspace.pdf.startOver">{dict.id.startOver}</button>
+	</div>
+</section>
+<style>
+	.result-card[hidden] { display: none; }
+	.result-card { display: grid; gap: var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: var(--space-4); background: var(--surface-2); scroll-margin-block: 80px; }
+	h2 { margin: 0; font-size: 1rem; }
+	p { margin: 0; }
+	.result-name { overflow-wrap: anywhere; font-weight: 600; }
+	.result-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+	.btn { min-height: 44px; }
+	.file-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+</style>
