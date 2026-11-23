@@ -1,0 +1,67 @@
+---
+import Icon from '../../components/ui/Icon.astro';
+import dict from './i18n';
+
+const modes = [
+	{ id: 'gabung', label: 'merge', description: 'cardMerge', icon: 'list' },
+	{ id: 'pisah', label: 'split', description: 'cardSplit', icon: 'file-text' },
+	{ id: 'kompres', label: 'compress', description: 'cardCompress', icon: 'database' },
+	{ id: 'gambar', label: 'imagesPdf', description: 'cardImages', icon: 'image' },
+	{ id: 'ke-gambar', label: 'pdfImages', description: 'cardToImages', icon: 'image' },
+	{ id: 'halaman', label: 'edit', description: 'cardEdit', icon: 'pencil' },
+] as const;
+---
+
+<div class="mode-grid" role="tablist" aria-label={dict.id.tabs} data-i18n-aria="workspace.pdf.tabs">
+	{modes.map((mode, index) => (
+		<button type="button" class="mode-card" role="tab" id={`tab-${mode.id}`} aria-controls={`panel-${mode.id}`} aria-selected={index === 0 ? 'true' : 'false'} tabindex={index === 0 ? 0 : -1} data-tab={mode.id}>
+			<Icon name={mode.icon} size={20} />
+			<span class="mode-card__label" data-i18n={`workspace.pdf.${mode.label}`}>{dict.id[mode.label]}</span>
+			<span class="mode-card__description" data-i18n={`workspace.pdf.${mode.description}`}>{dict.id[mode.description]}</span>
+		</button>
+	))}
+</div>
+<div data-tab-panels><slot /></div>
+
+<script>
+	const list = document.querySelector<HTMLElement>('.pdf-workspace [role="tablist"]');
+	if (list) {
+		const tabs = [...list.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+		const panels = [...list.nextElementSibling!.querySelectorAll<HTMLElement>('[data-panel]')];
+		panels.forEach((panel) => {
+			panel.id = `panel-${panel.dataset.panel}`;
+			panel.setAttribute('role', 'tabpanel');
+			panel.setAttribute('aria-labelledby', `tab-${panel.dataset.panel}`);
+		});
+		const select = (tab: HTMLButtonElement, focus = false) => {
+			tabs.forEach((item) => {
+				item.setAttribute('aria-selected', String(item === tab));
+				item.tabIndex = item === tab ? 0 : -1;
+			});
+			panels.forEach((panel) => { panel.hidden = panel.dataset.panel !== tab.dataset.tab; });
+			if (focus) tab.focus();
+		};
+		list.addEventListener('click', (event) => {
+			const tab = (event.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
+			if (tab) select(tab);
+		});
+		list.addEventListener('keydown', (event) => {
+			const current = tabs.indexOf(document.activeElement as HTMLButtonElement);
+			const columns = matchMedia('(min-width: 48rem)').matches ? 3 : 2;
+			const offsets: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: columns, ArrowUp: -columns };
+			if (current < 0 || !(event.key in offsets || event.key === 'Home' || event.key === 'End')) return;
+			event.preventDefault();
+			const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (current + offsets[event.key]! + tabs.length) % tabs.length;
+			select(tabs[next]!, true);
+		});
+	}
+</script>
+
+<style>
+	.mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); padding: var(--space-3); }
+	.mode-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-1) var(--space-2); align-content: start; text-align: left; padding: var(--space-3); min-height: 44px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--text); cursor: pointer; }
+	.mode-card[aria-selected='true'] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+	.mode-card__label { font-weight: 600; font-size: .875rem; }
+	.mode-card__description { grid-column: 1 / -1; font-size: .75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	@media (min-width: 48rem) { .mode-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+</style>
