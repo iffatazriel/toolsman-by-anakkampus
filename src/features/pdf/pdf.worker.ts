@@ -66,6 +66,8 @@ export interface PreviewImage {
 }
 
 export type WorkerRequest =
+	| { id: number; op: 'thumbnail'; file: File; fileId: string; page: number }
+	| { id: number; op: 'release-thumbnails'; fileId: string }
 	| { id: number; op: 'merge'; files: ArrayBuffer[] }
 	| { id: number; op: 'split'; file: ArrayBuffer; pages: number[] }
 	| {
@@ -209,6 +211,56 @@ async function previewPdf(
 	return { preview: { mime: 'image/jpeg', bytes: previewBytes }, pageCount };
 }
 
+const thumbnailFiles = new Map<string, { task: ReturnType<typeof pdfjs.getDocument>; pages: Map<number, Uint8Array> }>();
+let thumbnailQueue: Promise<unknown> = Promise.resolve();
+
+function thumbnailJob<T>(job: () => Promise<T>): Promise<T> {
+	const result = thumbnailQueue.then(job);
+	thumbnailQueue = result.catch(() => {});
+	return result;
+}
+
+async function releaseThumbnails(fileId: string) {
+	const entry = thumbnailFiles.get(fileId);
+	thumbnailFiles.delete(fileId);
+	if (entry) await entry.task.destroy();
+}
+
+async function pageThumbnail(file: File, fileId: string, number: number) {
+	let entry = thumbnailFiles.get(fileId);
+	if (!entry) {
+		while (thumbnailFiles.size >= 2) await releaseThumbnails(thumbnailFiles.keys().next().value!);
+		entry = { task: pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), CanvasFactory: WorkerCanvasFactory }), pages: new Map() };
+		thumbnailFiles.set(fileId, entry);
+	}
+	thumbnailFiles.delete(fileId);
+	thumbnailFiles.set(fileId, entry);
+	try {
+		const doc = await entry.task.promise;
+		let bytes = entry.pages.get(number);
+		if (!bytes) {
+			const page = await doc.getPage(number);
+			const base = page.getViewport({ scale: 1 });
+			const viewport = page.getViewport({ scale: Math.min(.3, 160 / Math.max(base.width, base.height)) });
+			const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+			const context = canvas.getContext('2d');
+			if (!context) throw new WorkspaceError(dict, 'canvasUnavailable');
+			context.fillStyle = '#ffffff';
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			await page.render({ canvasContext: context as unknown as CanvasRenderingContext2D, canvas: canvas as unknown as HTMLCanvasElement, viewport }).promise;
+			bytes = new Uint8Array(await (await canvas.convertToBlob({ type: 'image/jpeg', quality: .7 })).arrayBuffer());
+			entry.pages.set(number, bytes);
+			if (entry.pages.size > 48) entry.pages.delete(entry.pages.keys().next().value!);
+			page.cleanup();
+			canvas.width = canvas.height = 0;
+		}
+		return { preview: { mime: 'image/jpeg' as const, bytes: bytes.slice() }, pageCount: doc.numPages };
+	} catch (error) {
+		await releaseThumbnails(fileId);
+		throw error;
+	}
+}
+
 self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
 	const request = event.data;
 	try {
@@ -217,7 +269,13 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
 		let images: OutputImage[] | undefined;
 		let preview: PreviewImage | undefined;
 
-		if (request.op === 'merge') {
+		if (request.op === 'thumbnail') {
+			const result = await thumbnailJob(() => pageThumbnail(request.file, request.fileId, request.page));
+			preview = result.preview;
+			pageCount = result.pageCount;
+		} else if (request.op === 'release-thumbnails') {
+			await thumbnailJob(() => releaseThumbnails(request.fileId));
+		} else if (request.op === 'merge') {
 			bytes = await mergePdfs(request.files);
 		} else if (request.op === 'split') {
 			bytes = await splitPdf(request.file, request.pages);

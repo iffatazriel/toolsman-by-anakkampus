@@ -4,6 +4,7 @@ import ModePicker from './ModePicker.astro';
 import Dropzone from '../../components/ui/Dropzone.astro';
 import Progress from '../../components/ui/Progress.astro';
 import ResultCard from './ResultCard.astro';
+import PageGrid from './PageGrid.astro';
 ---
 
 <div class="tool-shell pdf-workspace">
@@ -36,6 +37,7 @@ import ResultCard from './ResultCard.astro';
 				<input id="pisah-range" class="field-input" type="text" inputmode="numeric" placeholder={dict.id.rangePlaceholder} data-i18n-placeholder="workspace.pdf.rangePlaceholder" aria-describedby="pisah-range-hint" />
 				<p class="field-hint" id="pisah-range-hint" data-i18n="workspace.pdf.rangeHint">{dict.id.rangeHint}</p>
 				<p class="field-error" data-range-error="pisah" hidden role="alert"></p>
+				<PageGrid mode="pisah" />
 				<div class="pane-actions">
 					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="pisah" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="pisah" disabled data-i18n="workspace.pdf.splitDownload">{dict.id.splitDownload}</button>
@@ -154,7 +156,7 @@ import ResultCard from './ResultCard.astro';
 				<div class="pdf-meta" data-meta="halaman" hidden></div>
 				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
 				<p class="field-hint" data-i18n="workspace.pdf.editHint">{dict.id.editHint}</p>
-				<ol class="page-list" data-page-list aria-label={dict.id.pdfPages} data-i18n-aria="workspace.pdf.pdfPages"></ol>
+				<PageGrid mode="halaman" />
 				<div class="pane-actions">
 					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="halaman" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="halaman" disabled data-i18n="workspace.pdf.saveDownload">{dict.id.saveDownload}</button>
@@ -179,6 +181,8 @@ import ResultCard from './ResultCard.astro';
 	import { describeAction, type PdfMode } from './workspace-state';
 	import { compareSizes, currentResult, type WorkspaceResult } from './result-state';
 	import { supportedFile } from './file-errors';
+	import { PageGrid } from './page-grid';
+	import { selectedPages, toggleRange } from './page-selection';
 
 	type ReadState = 'reading' | 'ready' | 'failed';
 
@@ -420,6 +424,24 @@ import ResultCard from './ResultCard.astro';
 	const results: Partial<Record<string, WorkspaceResult>> = {};
 	const zipping = new Set<string>();
 	const nextRevision = (name: string) => (revisions[name] = (revisions[name] ?? 0) + 1);
+	const splitGrid = new PageGrid($<HTMLElement>('[data-page-grid="pisah"]')!, {
+		toggle: (page) => {
+			const input = $<HTMLInputElement>('#pisah-range')!;
+			input.value = toggleRange(input.value, splitPageCount, page);
+			updateSplit();
+		},
+	});
+	const editGrid = new PageGrid($<HTMLElement>('[data-page-grid="halaman"]')!, {
+		rotate: (index, delta) => {
+			pageRotations[index] = ((pageRotations[index] ?? 0) + delta + 360) % 360;
+			updatePageEdit();
+		},
+		remove: (index) => {
+			if (!pageRemoved[index] && pageCount - pageRemoved.filter(Boolean).length <= 1) return;
+			pageRemoved[index] = !pageRemoved[index];
+			updatePageEdit();
+		},
+	});
 
 
 	const updateGabung = () => {
@@ -584,49 +606,8 @@ import ResultCard from './ResultCard.astro';
 		renderMetaCard(name, file, { pages, previewUrl });
 
 	const renderPageList = () => {
-		const list = $<HTMLOListElement>('[data-page-list]');
-		if (!list) return;
-		list.innerHTML = '';
-
-		for (let index = 0; index < pageCount; index += 1) {
-			const li = document.createElement('li');
-			li.className = 'page-card';
-			if (pageRemoved[index]) li.classList.add('page-card--removed');
-
-			const name = document.createElement('span');
-			name.className = 'page-card__name';
-			localizedText(name, () => tr(dict,'page',{page:index+1}));
-
-			const angle = document.createElement('span');
-			angle.className = 'page-card__angle';
-			angle.textContent = `${pageRotations[index] ?? 0}°`;
-
-			const rotate = document.createElement('button');
-			rotate.type = 'button';
-			rotate.className = 'icon-button';
-			rotate.setAttribute('aria-label', tr(dict,'rotatePage',{page:index+1}));
-			rotate.textContent = '↻';
-			rotate.addEventListener('click', () => {
-				pageRotations[index] = ((pageRotations[index] ?? 0) + 90) % 360;
-				renderPageList();
-				updatePageEdit();
-			});
-
-			const remove = document.createElement('button');
-			remove.type = 'button';
-			remove.className = 'icon-button';
-			remove.setAttribute('aria-pressed', pageRemoved[index] ? 'true' : 'false');
-			localizedText(remove, () => pageRemoved[index] ? tr(dict, 'cancel') : tr(dict, 'remove'));
-			remove.setAttribute('aria-label', tr(dict,'removePage',{page:index+1}));
-			remove.addEventListener('click', () => {
-				pageRemoved[index] = !pageRemoved[index];
-				renderPageList();
-				updatePageEdit();
-			});
-
-			li.append(name, angle, rotate, remove);
-			list.append(li);
-		}
+		editGrid.setFile(pageFile, pageCount);
+		editGrid.update({ selected: new Set(), rotations: pageRotations, removed: pageRemoved });
 	};
 
 	function acceptedFiles(files: File[], mode: string, kind: 'pdf' | 'image') {
@@ -1041,8 +1022,11 @@ import ResultCard from './ResultCard.astro';
 			const key = items ? mode === 'gabung' ? 'addPdfs' : 'addImages' : 'replaceFile';
 			pick.dataset.i18n = `workspace.pdf.${filled ? key : 'pickFiles'}`;
 			pick.textContent = tr(dict, filled ? key : 'pickFiles');
-			panel.querySelectorAll<HTMLElement>('.file-controls, [data-page-list], fieldset, .form-grid, #pisah-range').forEach((controls) => { controls.inert = busy.has(mode); });
+			panel.querySelectorAll<HTMLElement>('.file-controls, [data-page-grid], fieldset, .form-grid, #pisah-range').forEach((controls) => { controls.inert = busy.has(mode); });
 		});
+		splitGrid.setFile(splitFile, splitPageCount);
+		splitGrid.update({ selected: new Set(selectedPages($<HTMLInputElement>('#pisah-range')!.value, splitPageCount)), rotations: [], removed: [] });
+		renderPageList();
 	}
 
 	document.querySelectorAll<HTMLButtonElement>('[data-clear]').forEach((button) => {
