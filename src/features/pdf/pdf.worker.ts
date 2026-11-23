@@ -1,5 +1,6 @@
 import { WorkspaceError } from '../../lib/i18n';
 import dict from './i18n';
+import { classifyPdfError, type PdfErrorCode } from './file-errors';
 import * as pdfjs from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import {
@@ -89,7 +90,7 @@ export type WorkerResponse =
 			images?: OutputImage[];
 			preview?: PreviewImage;
 	  }
-	| { id: number; type: 'error'; message: string };
+	| { id: number; type: 'error'; code: PdfErrorCode };
 
 async function renderPages(bytes: ArrayBuffer, level: CompressLevel, id: number): Promise<RenderedPage[]> {
 	const { scale, quality } = compressSettings(level);
@@ -254,7 +255,6 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
 		if (preview) transfer.push(preview.bytes.buffer as ArrayBuffer);
 		postMessage(response, { transfer });
 	} catch (error) {
-		const message = error instanceof Error ? error.message : dict.id.processFailed;
-		postMessage({ id: request.id, type: 'error', message } satisfies WorkerResponse);
+		postMessage({ id: request.id, type: 'error', code: classifyPdfError(error) } satisfies WorkerResponse);
 	}
 };

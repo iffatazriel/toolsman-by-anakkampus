@@ -3,6 +3,7 @@ import dict from './i18n';
 import ModePicker from './ModePicker.astro';
 import Dropzone from '../../components/ui/Dropzone.astro';
 import Progress from '../../components/ui/Progress.astro';
+import ResultCard from './ResultCard.astro';
 ---
 
 <div class="tool-shell pdf-workspace">
@@ -19,6 +20,7 @@ import Progress from '../../components/ui/Progress.astro';
 					<button type="button" class="btn btn--primary" data-run="gabung" disabled data-i18n="workspace.pdf.mergeDownload">{dict.id.mergeDownload}</button>
 				</div>
 				<div data-progress="gabung" hidden><Progress label={dict.id.merging} labelKey="workspace.pdf.merging" value={0} /></div>
+				<ResultCard mode="gabung" />
 				<p class="alert" data-error="gabung" role="alert" hidden><span></span></p>
 			</div>
 		</div>
@@ -39,6 +41,7 @@ import Progress from '../../components/ui/Progress.astro';
 					<button type="button" class="btn btn--primary" data-run="pisah" disabled data-i18n="workspace.pdf.splitDownload">{dict.id.splitDownload}</button>
 				</div>
 				<div data-progress="pisah" hidden><Progress label={dict.id.splitting} labelKey="workspace.pdf.splitting" value={0} /></div>
+				<ResultCard mode="pisah" />
 				<p class="alert" data-error="pisah" role="alert" hidden><span></span></p>
 			</div>
 		</div>
@@ -50,6 +53,7 @@ import Progress from '../../components/ui/Progress.astro';
 				<Dropzone id="kompres-input" label={dict.id.dropOne} labelKey="workspace.pdf.dropOne" accept="application/pdf" hint={dict.id.limits} hintKey="workspace.pdf.limits" />
 				<div class="pdf-meta" data-meta="kompres" hidden></div>
 				<h2 class="section-heading" data-i18n="workspace.pdf.optionsStep">{dict.id.optionsStep}</h2>
+				<p class="alert" data-i18n="workspace.pdf.compressNotice">{dict.id.compressNotice}</p>
 				<fieldset class="fieldset">
 					<legend class="field-label" data-i18n="workspace.pdf.level">{dict.id.level}</legend>
 					<div class="segmented" role="radiogroup" aria-label={dict.id.level} data-i18n-aria="workspace.pdf.level">
@@ -57,18 +61,16 @@ import Progress from '../../components/ui/Progress.astro';
 						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="sedang" data-i18n="workspace.pdf.medium">{dict.id.medium}</button>
 						<button type="button" class="segmented__btn" role="radio" aria-checked="false" data-level="maksimal" data-i18n="workspace.pdf.maximum">{dict.id.maximum}</button>
 					</div>
-					<p class="field-hint" data-i18n="workspace.pdf.compressHint">{dict.id.compressHint}</p>
+					<p class="field-hint" data-i18n="workspace.pdf.lightHelp">{dict.id.lightHelp}</p>
+					<p class="field-hint" data-i18n="workspace.pdf.mediumHelp">{dict.id.mediumHelp}</p>
+					<p class="field-hint" data-i18n="workspace.pdf.maximumHelp">{dict.id.maximumHelp}</p>
 				</fieldset>
-				<div class="compare" data-compare="kompres" hidden aria-live="polite">
-					<p class="compare__line"><span data-before></span> → <span data-after></span></p>
-					<p class="compare__delta" data-delta></p>
-					<p class="alert" data-warn="kompres" hidden><span data-i18n="workspace.pdf.notSmaller">{dict.id.notSmaller}</span></p>
-				</div>
 				<div class="pane-actions">
 					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="kompres" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="kompres" disabled data-i18n="workspace.pdf.compressDownload">{dict.id.compressDownload}</button>
 				</div>
 				<div data-progress="kompres" hidden><Progress label={dict.id.compressing} labelKey="workspace.pdf.compressing" value={0} /></div>
+				<ResultCard mode="kompres" />
 				<p class="alert" data-error="kompres" role="alert" hidden><span></span></p>
 			</div>
 		</div>
@@ -103,6 +105,7 @@ import Progress from '../../components/ui/Progress.astro';
 					<button type="button" class="btn btn--primary" data-run="gambar" disabled data-i18n="workspace.pdf.createDownload">{dict.id.createDownload}</button>
 				</div>
 				<div data-progress="gambar" hidden><Progress label={dict.id.creatingPdf} labelKey="workspace.pdf.creatingPdf" value={0} /></div>
+				<ResultCard mode="gambar" />
 				<p class="alert" data-error="gambar" role="alert" hidden><span></span></p>
 			</div>
 		</div>
@@ -131,20 +134,15 @@ import Progress from '../../components/ui/Progress.astro';
 						</div>
 					</div>
 				</div>
-				<p class="field-hint" data-i18n="workspace.pdf.dpiHint">{dict.id.dpiHint}</p>
+				<p class="field-hint" data-i18n="workspace.pdf.formatHelp">{dict.id.formatHelp}</p>
+				<p class="field-hint" data-i18n="workspace.pdf.dpiHelp">{dict.id.dpiHelp}</p>
 				<div class="pane-actions">
 					<div class="action-copy"><h2 data-i18n="workspace.pdf.processStep">{dict.id.processStep}</h2><p data-summary="ke-gambar" role="status"></p></div>
 					<button type="button" class="btn btn--primary" data-run="ke-gambar" disabled data-i18n="workspace.pdf.toImages">{dict.id.toImages}</button>
 				</div>
 				<div data-progress="ke-gambar" hidden><Progress label={dict.id.creatingImages} labelKey="workspace.pdf.creatingImages" value={0} /></div>
 				<p class="alert" data-error="ke-gambar" role="alert" hidden><span></span></p>
-				<div data-image-result="ke-gambar" hidden>
-					<div class="pane-actions">
-						<button type="button" class="btn btn--secondary" data-download-all="ke-gambar" data-i18n="workspace.pdf.downloadAll">{dict.id.downloadAll}</button>
-					</div>
-					<p class="field-hint" data-i18n="workspace.pdf.downloadsHint">{dict.id.downloadsHint}</p>
-					<ol class="file-list" data-image-list aria-label={dict.id.imageResults} data-i18n-aria="workspace.pdf.imageResults"></ol>
-				</div>
+				<ResultCard mode="ke-gambar" />
 			</div>
 		</div>
 
@@ -162,6 +160,7 @@ import Progress from '../../components/ui/Progress.astro';
 					<button type="button" class="btn btn--primary" data-run="halaman" disabled data-i18n="workspace.pdf.saveDownload">{dict.id.saveDownload}</button>
 				</div>
 				<div data-progress="halaman" hidden><Progress label={dict.id.saving} labelKey="workspace.pdf.saving" value={0} /></div>
+				<ResultCard mode="halaman" />
 				<p class="alert" data-error="halaman" role="alert" hidden><span></span></p>
 			</div>
 		</div>
@@ -172,12 +171,14 @@ import Progress from '../../components/ui/Progress.astro';
  import {tr, currentLang, workspaceErrorMessage} from "../../lib/i18n";
  import {localizedText} from "../../lib/i18n-client";
  import dict from "./i18n";
-	import { formatBytes, parsePageRange, reductionPercent } from '../../lib/page-range';
+	import { formatBytes, parsePageRange } from '../../lib/page-range';
 	import { setDropzoneState } from '../../lib/dropzone';
 	import { toast } from '../../lib/toast';
 	import { runPdfTask } from './pdf-client';
 	import type { CompressLevel, Margin, Orientation } from './pdf-ops';
 	import { describeAction, type PdfMode } from './workspace-state';
+	import { compareSizes, currentResult, type WorkspaceResult } from './result-state';
+	import { supportedFile } from './file-errors';
 
 	type ReadState = 'reading' | 'ready' | 'failed';
 
@@ -188,7 +189,7 @@ import Progress from '../../components/ui/Progress.astro';
 		pages?: number;
 		previewUrl?: string;
 		thumbUrl?: string;
-		error?: boolean;
+		error?: unknown;
 	};
 
 	const $ = <T extends HTMLElement>(selector: string, root: ParentNode = document) =>
@@ -400,12 +401,10 @@ import Progress from '../../components/ui/Progress.astro';
 	let compressLevel: CompressLevel = 'ringan';
 	let orientation: Orientation = 'auto';
 	let margin: Margin = 'small';
-	let compressResult: { before: number; after: number } | null = null;
 
 	let toImageFile: File | null = null;
 	let imageFormat: 'png' | 'jpeg' = 'png';
 	let imageDpi = 150;
-	let renderedImages: { name: string; mime: string; bytes: Uint8Array }[] = [];
 
 	let pageFile: File | null = null;
 	let pageCount = 0;
@@ -418,9 +417,10 @@ import Progress from '../../components/ui/Progress.astro';
 	const singlePages: Record<string, number> = {};
 	const revisions: Record<string, number> = {};
 	const busy = new Set<string>();
+	const results: Partial<Record<string, WorkspaceResult>> = {};
+	const zipping = new Set<string>();
 	const nextRevision = (name: string) => (revisions[name] = (revisions[name] ?? 0) + 1);
 
-	const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 	const updateGabung = () => {
 		runButton('gabung')!.disabled =
@@ -475,9 +475,11 @@ import Progress from '../../components/ui/Progress.astro';
 				item.pages = info.pages;
 				item.previewUrl = info.previewUrl;
 				item.status = 'ready';
-			} catch {
+			} catch (error) {
+				if (!mergeItems.includes(item)) continue;
 				item.status = 'failed';
-				item.error = true;
+				item.error = error;
+				setError('gabung', () => workspaceErrorMessage(error, tr(dict, 'corruptPdf')));
 			}
 			done();
 		}
@@ -485,7 +487,8 @@ import Progress from '../../components/ui/Progress.astro';
 
 	const addMergeFiles = (files: FileList | null) => {
 		if (!files) return;
-		const added: Named[] = Array.from(files).map((file) => ({
+		setError('gabung', null);
+		const added: Named[] = acceptedFiles(Array.from(files), 'gabung', 'pdf').map((file) => ({
 			file,
 			id: nextUid(),
 			status: 'reading',
@@ -501,7 +504,8 @@ import Progress from '../../components/ui/Progress.astro';
 
 	const addImageFiles = (files: FileList | null) => {
 		if (!files) return;
-		Array.from(files).forEach((file) =>
+		setError('gambar', null);
+		acceptedFiles(Array.from(files), 'gambar', 'image').forEach((file) =>
 			imageItems.push({
 				file,
 				id: nextUid(),
@@ -516,7 +520,7 @@ import Progress from '../../components/ui/Progress.astro';
 	const renderMetaCard = (
 		name: string,
 		file: File,
-		options: { loading?: boolean; pages?: number; previewUrl?: string; error?: boolean },
+		options: { loading?: boolean; pages?: number; previewUrl?: string; error?: unknown },
 	) => {
 		const meta = $<HTMLElement>(`[data-meta="${name}"]`);
 		if (!meta) return;
@@ -555,7 +559,7 @@ import Progress from '../../components/ui/Progress.astro';
 		if (options.loading) {
 			sub.textContent = formatBytes(file.size);
 		} else if (options.error) {
-			localizedText(sub, () => tr(dict, 'unreadableLong'));
+			localizedText(sub, () => workspaceErrorMessage(options.error, tr(dict, 'corruptPdf')));
 			sub.classList.add('is-failed');
 		} else {
 			localizedText(sub, () => tr(dict,'pageMeta',{pages:options.pages??0,size:formatBytes(file.size)}));
@@ -625,36 +629,61 @@ import Progress from '../../components/ui/Progress.astro';
 		}
 	};
 
-	const renderImageResults = () => {
-		const box = $<HTMLElement>('[data-image-result="ke-gambar"]');
-		const list = $<HTMLOListElement>('[data-image-list]');
-		if (!box || !list) return;
-		list.innerHTML = '';
-		box.hidden = renderedImages.length === 0;
+	function acceptedFiles(files: File[], mode: string, kind: 'pdf' | 'image') {
+		const rejected = files.filter((file) => !supportedFile(file, kind));
+		if (rejected.length) setError(mode, () => rejected.map((file) => tr(dict, kind === 'pdf' ? 'notPdf' : 'notImage', { name: file.name })).join(' · '));
+		return files.filter((file) => supportedFile(file, kind));
+	}
 
-		renderedImages.forEach((image) => {
-			const li = document.createElement('li');
-			li.className = 'file-card';
+	function signature(mode: string) {
+		if (mode === 'gabung') return JSON.stringify(mergeItems.map((item) => [item.id, item.status]));
+		if (mode === 'gambar') return JSON.stringify([imageItems.map((item) => item.id), orientation, margin]);
+		return JSON.stringify([revisions[mode], mode === 'pisah' ? $<HTMLInputElement>('#pisah-range')?.value : mode === 'kompres' ? compressLevel : mode === 'ke-gambar' ? [imageFormat, imageDpi] : [pageRotations, pageRemoved]]);
+	}
 
+	function renderResult(mode: string) {
+		const box = $<HTMLElement>(`[data-result="${mode}"]`)!;
+		const result = currentResult(results[mode], signature(mode));
+		results[mode] = result;
+		box.hidden = !result;
+		if (!result) {
+			box.querySelector('[data-result-images]')!.replaceChildren();
+			return;
+		}
+		const size = result.files.reduce((sum, file) => sum + file.bytes.byteLength, 0);
+		box.querySelector<HTMLElement>('[data-result-name]')!.textContent = result.name;
+		box.querySelector<HTMLElement>('[data-result-meta]')!.textContent = tr(dict, mode === 'ke-gambar' ? 'imageResultMeta' : 'resultMeta', { size: formatBytes(size), pages: result.pages });
+		const comparison = box.querySelector<HTMLElement>('[data-result-comparison]')!;
+		comparison.hidden = result.before === undefined;
+		const warning = box.querySelector<HTMLElement>('[data-result-warning]')!;
+		warning.hidden = true;
+		if (result.before !== undefined) {
+			const change = compareSizes(result.before, size);
+			comparison.textContent = `${formatBytes(result.before)} → ${formatBytes(size)} · ${change.direction === 'equal' ? tr(dict, 'sameSize') : tr(dict, change.smaller ? 'saved' : 'larger', { saved: change.percent })}`;
+			warning.hidden = change.smaller;
+		}
+		const save = box.querySelector<HTMLButtonElement>('[data-result-download]')!;
+		save.textContent = tr(dict, mode === 'ke-gambar' ? 'downloadAll' : 'download');
+		save.dataset.i18n = `workspace.pdf.${mode === 'ke-gambar' ? 'downloadAll' : 'download'}`;
+		save.className = `btn btn--${warning.hidden ? 'primary' : 'secondary'}`;
+		save.disabled = zipping.has(mode);
+		const list = box.querySelector<HTMLOListElement>('[data-result-images]')!;
+		list.replaceChildren();
+		if (mode === 'ke-gambar') result.files.forEach((file) => {
+			const row = document.createElement('li');
+			row.className = 'output-image';
 			const name = document.createElement('span');
-			name.className = 'file-card__name';
-			name.textContent = image.name;
-
-			const size = document.createElement('span');
-			size.className = 'file-card__size';
-			size.textContent = formatBytes(image.bytes.byteLength);
-
-			const save = document.createElement('button');
-			save.type = 'button';
-			save.className = 'btn btn--secondary';
-			localizedText(save, () => tr(dict, 'download'));
-			save.setAttribute('aria-label', tr(dict,'downloadFile',{name:image.name}));
-			save.addEventListener('click', () => download(image.name, image.bytes, image.mime));
-
-			li.append(name, size, save);
-			list.append(li);
+			name.textContent = `${file.name} · ${formatBytes(file.bytes.byteLength)}`;
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'btn btn--secondary';
+			button.textContent = tr(dict, 'download');
+			button.setAttribute('aria-label', tr(dict, 'downloadFile', { name: file.name }));
+			button.addEventListener('click', () => download(file.name, file.bytes, file.mime));
+			row.append(name, button);
+			list.append(row);
 		});
-	};
+	}
 
 	document.querySelector<HTMLInputElement>('#gabung-input')?.addEventListener('change', (event) => {
 		addMergeFiles((event.target as HTMLInputElement).files);
@@ -671,6 +700,8 @@ import Progress from '../../components/ui/Progress.astro';
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('pisah', null);
+		if (!acceptedFiles([file], 'pisah', 'pdf').length) return;
 		const revision = nextRevision('pisah');
 
 		splitFile = null;
@@ -687,14 +718,14 @@ import Progress from '../../components/ui/Progress.astro';
 			splitPageCount = info.pages;
 			showPdfMeta('pisah', file, info.pages, info.previewUrl);
 			updateSplit();
-		} catch {
+		} catch (error) {
 			if (revision !== revisions.pisah) return;
 			revoke(splitPreviewUrl);
 			splitPreviewUrl = undefined;
 			splitFile = null;
 			splitPageCount = 0;
 			renderMetaCard('pisah', file, {
-				error: true,
+				error,
 			});
 			updateSplit();
 		}
@@ -707,12 +738,12 @@ import Progress from '../../components/ui/Progress.astro';
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('kompres', null);
+		if (!acceptedFiles([file], 'kompres', 'pdf').length) return;
 		const revision = nextRevision('kompres');
 
 		compressFile = null;
-		compressResult = null;
 		runButton('kompres')!.disabled = true;
-		renderCompare();
 		showPdfLoading('kompres', file);
 
 		try {
@@ -723,14 +754,14 @@ import Progress from '../../components/ui/Progress.astro';
 			compressFile = file;
 			showPdfMeta('kompres', file, info.pages, info.previewUrl);
 			runButton('kompres')!.disabled = false;
-		} catch {
+		} catch (error) {
 			if (revision !== revisions.kompres) return;
 			revoke(compressPreviewUrl);
 			compressPreviewUrl = undefined;
 			compressFile = null;
 			runButton('kompres')!.disabled = true;
 			renderMetaCard('kompres', file, {
-				error: true,
+				error,
 			});
 		}
 	});
@@ -740,11 +771,11 @@ import Progress from '../../components/ui/Progress.astro';
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('ke-gambar', null);
+		if (!acceptedFiles([file], 'ke-gambar', 'pdf').length) return;
 		const revision = nextRevision('ke-gambar');
 
 		toImageFile = null;
-		renderedImages = [];
-		renderImageResults();
 		updateToImage();
 		showPdfLoading('ke-gambar', file);
 
@@ -756,13 +787,13 @@ import Progress from '../../components/ui/Progress.astro';
 			toImageFile = file;
 			showPdfMeta('ke-gambar', file, info.pages, info.previewUrl);
 			updateToImage();
-		} catch {
+		} catch (error) {
 			if (revision !== revisions['ke-gambar']) return;
 			revoke(toImagePreviewUrl);
 			toImagePreviewUrl = undefined;
 			toImageFile = null;
 			renderMetaCard('ke-gambar', file, {
-				error: true,
+				error,
 			});
 			updateToImage();
 		}
@@ -773,6 +804,8 @@ import Progress from '../../components/ui/Progress.astro';
 		const file = input.files?.[0] ?? null;
 		input.value = '';
 		if (!file) return;
+		setError('halaman', null);
+		if (!acceptedFiles([file], 'halaman', 'pdf').length) return;
 		const revision = nextRevision('halaman');
 
 		pageFile = null;
@@ -795,7 +828,7 @@ import Progress from '../../components/ui/Progress.astro';
 			showPdfMeta('halaman', file, info.pages, info.previewUrl);
 			renderPageList();
 			updatePageEdit();
-		} catch {
+		} catch (error) {
 			if (revision !== revisions.halaman) return;
 			revoke(pagePreviewUrl);
 			pagePreviewUrl = undefined;
@@ -805,7 +838,7 @@ import Progress from '../../components/ui/Progress.astro';
 			pageRemoved = [];
 			renderPageList();
 			renderMetaCard('halaman', file, {
-				error: true,
+				error,
 			});
 			updatePageEdit();
 		}
@@ -817,8 +850,6 @@ import Progress from '../../components/ui/Progress.astro';
 			document.querySelectorAll<HTMLButtonElement>('[data-image-format]').forEach((other) => {
 				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
 			});
-			renderedImages = [];
-			renderImageResults();
 		});
 	});
 
@@ -828,30 +859,8 @@ import Progress from '../../components/ui/Progress.astro';
 			document.querySelectorAll<HTMLButtonElement>('[data-dpi]').forEach((other) => {
 				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
 			});
-			renderedImages = [];
-			renderImageResults();
 		});
 	});
-
-	const renderCompare = () => {
-		const box = $<HTMLElement>('[data-compare="kompres"]');
-		if (!box || !compressResult || !compressFile) {
-			if (box) box.hidden = true;
-			return;
-		}
-		box.hidden = false;
-		const { before, after } = compressResult;
-		$<HTMLElement>('[data-before]')!.textContent = formatBytes(before);
-		$<HTMLElement>('[data-after]')!.textContent = formatBytes(after);
-		const saved = reductionPercent(before, after);
-		localizedText($<HTMLElement>('[data-delta]')!, () => saved > 0
-				? tr(dict,'saved',{saved})
-				: saved === 0
-					? tr(dict, 'sameSize')
-					: tr(dict,'larger',{saved:Math.abs(saved)}));
-		const warn = $<HTMLElement>('[data-warn="kompres"]');
-		if (warn) warn.hidden = after < before;
-	};
 
 	document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((button) => {
 		button.addEventListener('click', () => {
@@ -859,8 +868,6 @@ import Progress from '../../components/ui/Progress.astro';
 			document.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((other) => {
 				other.setAttribute('aria-checked', other === button ? 'true' : 'false');
 			});
-			compressResult = null;
-			renderCompare();
 		});
 	});
 
@@ -882,8 +889,12 @@ import Progress from '../../components/ui/Progress.astro';
 		});
 	});
 
-	const run = async (name: string, request: Parameters<typeof runPdfTask>[0], filename: string) => {
+	const run = async (name: string, prepare: () => Promise<Parameters<typeof runPdfTask>[0]>, filename: string) => {
 		if (busy.has(name)) return;
+		const inputSignature = signature(name);
+		const pages = name === 'gabung' ? mergeItems.reduce((sum, item) => sum + (item.pages ?? 0), 0) : name === 'gambar' ? imageItems.length : name === 'pisah' ? (() => { const parsed = parsePageRange($<HTMLInputElement>('#pisah-range')!.value, splitPageCount); return parsed.ok ? parsed.pages.length : 0; })() : name === 'halaman' ? pageCount - pageRemoved.filter(Boolean).length : singlePages[name] ?? 0;
+		const before = name === 'kompres' ? compressFile?.size : undefined;
+		delete results[name];
 		busy.add(name);
 		const button = runButton(name);
 		if (button) {
@@ -897,11 +908,15 @@ import Progress from '../../components/ui/Progress.astro';
 		setProgress(name, 0, 0, ()=>tr(dict, 'preparing'));
 		syncWorkspace();
 
-		const task = runPdfTask(request, (done, total) => setProgress(name, done, total, ()=>''));
 		try {
+			const task = runPdfTask(await prepare(), (done, total) => setProgress(name, done, total, ()=>''));
 			const result = await task.promise;
-			download(filename, result.bytes);
-			toast(() => tr(dict, 'ready'), { tone: 'success' });
+			if (signature(name) !== inputSignature) return null;
+			results[name] = { signature: inputSignature, name: filename, pages: result.pageCount ?? pages, before, files: result.images ?? [{ name: filename, bytes: result.bytes, mime: 'application/pdf' }] };
+			renderResult(name);
+			$<HTMLElement>(`[data-result="${name}"]`)!.scrollIntoView({ block: 'center', behavior: 'instant' });
+			const imageCount = result.images?.length ?? 0;
+			toast(() => name === 'ke-gambar' ? tr(dict, 'imagesReady', { count: imageCount }) : tr(dict, 'ready'), { tone: 'success' });
 			return result;
 		} catch (error) {
 			setError(name, ()=>workspaceErrorMessage(error,tr(dict,'processFailed')));
@@ -920,8 +935,7 @@ import Progress from '../../components/ui/Progress.astro';
 	};
 
 	runButton('gabung')?.addEventListener('click', async () => {
-		const files = await Promise.all(mergeItems.map((item) => readBytes(item.file)));
-		await run('gabung', { op: 'merge', files }, 'gabungan.pdf');
+		await run('gabung', async () => ({ op: 'merge', files: await Promise.all(mergeItems.map((item) => readBytes(item.file))) }), 'gabungan.pdf');
 	});
 
 	runButton('pisah')?.addEventListener('click', async () => {
@@ -929,83 +943,39 @@ import Progress from '../../components/ui/Progress.astro';
 		const input = $<HTMLInputElement>('#pisah-range');
 		const parsed = parsePageRange(input?.value ?? '', splitPageCount);
 		if (!parsed.ok) return;
-		const file = await readBytes(splitFile);
-		await run('pisah', { op: 'split', file, pages: parsed.pages }, 'hasil-pisah.pdf');
+		const source = splitFile;
+		await run('pisah', async () => ({ op: 'split', file: await readBytes(source), pages: parsed.pages }), 'hasil-pisah.pdf');
 	});
 
 	runButton('gambar')?.addEventListener('click', async () => {
-		const images = await Promise.all(
+		await run('gambar', async () => ({ op: 'images', images: await Promise.all(
 			imageItems.map(async (item) => ({
 				bytes: await readBytes(item.file),
-				type: item.file.type === 'image/png' ? ('png' as const) : ('jpg' as const),
+				type: /\.png$/i.test(item.file.name) ? ('png' as const) : ('jpg' as const),
 			})),
-		);
-		await run('gambar', { op: 'images', images, orientation, margin }, 'gambar.pdf');
+		), orientation, margin }), 'gambar.pdf');
 	});
 
 	runButton('kompres')?.addEventListener('click', async () => {
 		if (!compressFile) return;
 		const file = compressFile;
-		const bytes = await readBytes(file);
-		const result = await run(
+		await run(
 			'kompres',
-			{ op: 'compress', file: bytes, level: compressLevel },
+			async () => ({ op: 'compress', file: await readBytes(file), level: compressLevel }),
 			`${file.name.replace(/\.pdf$/i, '')}-kompres.pdf`,
 		);
-		if (result) {
-			compressResult = { before: file.size, after: result.bytes.byteLength };
-			renderCompare();
-		}
 	});
 
 	runButton('ke-gambar')?.addEventListener('click', async () => {
 		if (!toImageFile || busy.has('ke-gambar')) return;
-		busy.add('ke-gambar');
-		const button = runButton('ke-gambar');
-		if (button) button.disabled = true;
-		setError('ke-gambar', null);
-		setProgress('ke-gambar', 0, 0, ()=>tr(dict, 'preparing'));
-		syncWorkspace();
-
 		const file = toImageFile;
-		const task = runPdfTask(
-			{
+		await run('ke-gambar', async () => ({
 				op: 'to-images',
 				file: await readBytes(file),
 				format: imageFormat,
 				scale: imageDpi / 72,
-			},
-			(done, total) => setProgress('ke-gambar', done, total, ()=>''),
-		);
-		try {
-			const result = await task.promise;
-			renderedImages = result.images ?? [];
-			renderImageResults();
-			toast(() => renderedImages.length > 1
-					? tr(dict,'imagesReady',{count:renderedImages.length})
-					: tr(dict, 'imageReady'),
-				{ tone: 'success' },
-			);
-		} catch (error) {
-			setError(
-				'ke-gambar',
-				()=>workspaceErrorMessage(error,tr(dict,'imagesFailed')),
-			);
-		} finally {
-			hideProgress('ke-gambar');
-			busy.delete('ke-gambar');
-			updateToImage();
-		}
+			}), 'halaman.zip');
 	});
-
-	document
-		.querySelector<HTMLButtonElement>('[data-download-all="ke-gambar"]')
-		?.addEventListener('click', async () => {
-			for (const image of renderedImages) {
-				download(image.name, image.bytes, image.mime);
-				await delay(300);
-			}
-		});
 
 	runButton('halaman')?.addEventListener('click', async () => {
 		if (!pageFile) return;
@@ -1015,11 +985,11 @@ import Progress from '../../components/ui/Progress.astro';
 		const removed = pageRemoved.flatMap((value, index) => (value ? [index] : []));
 		await run(
 			'halaman',
-			{
+			async () => ({
 				op: 'edit',
 				file: await readBytes(file),
 				edits: { rotations: pageRotations, removed },
-			},
+			}),
 			`${file.name.replace(/\.pdf$/i, '')}-diubah.pdf`,
 		);
 	});
@@ -1047,6 +1017,14 @@ import Progress from '../../components/ui/Progress.astro';
 			summary.id = `pdf-summary-${mode}`;
 			summary.textContent = action.reason ?? action.summary;
 			const button = runButton(mode)!;
+			renderResult(mode);
+			const hasResult = !!results[mode];
+			const actionKeys = { gabung: 'mergeDownload', pisah: 'splitDownload', kompres: 'compressDownload', gambar: 'createDownload', 'ke-gambar': 'toImages', halaman: 'saveDownload' } as const;
+			const labelKey = hasResult ? 'processAgain' : actionKeys[mode];
+			button.dataset.i18n = `workspace.pdf.${labelKey}`;
+			button.textContent = tr(dict, labelKey);
+			button.classList.toggle('btn--primary', !hasResult);
+			button.classList.toggle('btn--secondary', hasResult);
 			button.disabled = action.reason !== null;
 			button.setAttribute('aria-describedby', summary.id);
 			const clear = panel.querySelector<HTMLButtonElement>('[data-clear]')!;
@@ -1063,7 +1041,7 @@ import Progress from '../../components/ui/Progress.astro';
 			const key = items ? mode === 'gabung' ? 'addPdfs' : 'addImages' : 'replaceFile';
 			pick.dataset.i18n = `workspace.pdf.${filled ? key : 'pickFiles'}`;
 			pick.textContent = tr(dict, filled ? key : 'pickFiles');
-			panel.querySelectorAll<HTMLElement>('.file-controls, [data-page-list], fieldset, .form-grid').forEach((controls) => { controls.inert = busy.has(mode); });
+			panel.querySelectorAll<HTMLElement>('.file-controls, [data-page-list], fieldset, .form-grid, #pisah-range').forEach((controls) => { controls.inert = busy.has(mode); });
 		});
 	}
 
@@ -1072,6 +1050,8 @@ import Progress from '../../components/ui/Progress.astro';
 			const mode = button.dataset.clear as PdfMode;
 			if (busy.has(mode)) return;
 			nextRevision(mode);
+			delete results[mode];
+			renderResult(mode);
 			if (mode === 'gabung' || mode === 'gambar') {
 				const items = mode === 'gabung' ? mergeItems : imageItems;
 				items.splice(0).forEach((item) => { revoke(item.previewUrl); revoke(item.thumbUrl); });
@@ -1091,17 +1071,13 @@ import Progress from '../../components/ui/Progress.astro';
 				}
 				if (mode === 'kompres') {
 					compressFile = null;
-					compressResult = null;
 					revoke(compressPreviewUrl);
 					compressPreviewUrl = undefined;
-					renderCompare();
 				}
 				if (mode === 'ke-gambar') {
 					toImageFile = null;
-					renderedImages = [];
 					revoke(toImagePreviewUrl);
 					toImagePreviewUrl = undefined;
-					renderImageResults();
 				}
 				if (mode === 'halaman') {
 					pageFile = null;
@@ -1122,9 +1098,34 @@ import Progress from '../../components/ui/Progress.astro';
 		renderList('gabung', mergeItems, updateGabung);
 		renderList('gambar', imageItems, updateGambar);
 		renderPageList();
-		renderImageResults();
 		syncWorkspace();
 	});
+	document.querySelectorAll<HTMLButtonElement>('[data-result-again]').forEach((button) => button.addEventListener('click', () => runButton(button.dataset.resultAgain!)?.click()));
+	document.querySelectorAll<HTMLButtonElement>('[data-result-reset]').forEach((button) => button.addEventListener('click', () => $<HTMLButtonElement>(`[data-clear="${button.dataset.resultReset}"]`)?.click()));
+	document.querySelectorAll<HTMLButtonElement>('[data-result-download]').forEach((button) => button.addEventListener('click', async () => {
+		const mode = button.dataset.resultDownload!;
+		const result = currentResult(results[mode], signature(mode));
+		if (!result || zipping.has(mode)) return;
+		if (mode !== 'ke-gambar') {
+			const file = result.files[0]!;
+			download(file.name, file.bytes, file.mime);
+			return;
+		}
+		zipping.add(mode);
+		renderResult(mode);
+		try {
+			const { zip } = await import('fflate');
+			const bytes = await new Promise<Uint8Array>((resolve, reject) => zip(Object.fromEntries(result.files.map((file) => [file.name, file.bytes])), { level: 0 }, (error, data) => error ? reject(error) : resolve(data)));
+			if (currentResult(results[mode], signature(mode)) === result) download(result.name, bytes, 'application/zip');
+		} catch {
+			setError(mode, () => tr(dict, 'zipFailed'));
+		} finally {
+			zipping.delete(mode);
+			renderResult(mode);
+		}
+	}));
+	const workspace = $<HTMLElement>('.pdf-workspace')!;
+	for (const event of ['click', 'input', 'change']) workspace.addEventListener(event, () => queueMicrotask(syncWorkspace));
 	syncWorkspace();
 </script>
 
@@ -1219,6 +1220,17 @@ import Progress from '../../components/ui/Progress.astro';
 		display: flex;
 		gap: var(--space-1);
 	}
+
+	.pdf-workspace :global(.output-image) {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+		flex-wrap: wrap;
+		font-size: 0.875rem;
+	}
+
+	.pdf-workspace :global(.output-image .btn) { min-height: 44px; }
 
 	.pdf-workspace :global(.file-badge) {
 		font-size: 0.6875rem;

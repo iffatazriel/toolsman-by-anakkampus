@@ -36,7 +36,7 @@ function getWorker(): Worker {
 		}
 		pending.delete(message.id);
 		if (message.type === 'error') {
-			task.reject(new WorkspaceError(dict,'processFailed'));
+			task.reject(new WorkspaceError(dict, message.code === 'password' ? 'passwordPdf' : message.code === 'corrupt' ? 'corruptPdf' : 'processFailed'));
 		} else {
 			task.resolve({
 				bytes: message.bytes,
