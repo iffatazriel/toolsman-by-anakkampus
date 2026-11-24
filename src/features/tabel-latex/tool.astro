@@ -76,6 +76,7 @@ import dict from './i18n';
 	source.addEventListener('input', schedule);
 	options.addEventListener('input', schedule);
 	direction.addEventListener('change', render); format.addEventListener('change', render);
+	document.addEventListener('lang:change', render);
 	document.getElementById('table-clear')!.addEventListener('click', () => { source.value = ''; render(); source.focus(); });
 	copy.addEventListener('click', async () => { const copied = await copyText(output.value); localizedText(status, () => tr(dict, copied ? 'copied' : 'copyFailed')); });
 	download.addEventListener('click', () => { const reverse = direction.value === 'reverse'; downloadText(reverse ? 'tabel.md' : 'tabel.tex', output.value, 'text/plain;charset=utf-8'); });
