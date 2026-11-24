@@ -59,7 +59,7 @@ import { cronTimezones } from './cron';
 			<div class="cron-expression">
 				<p class="field-label" data-i18n="workspace.cron.cronExpression">{dict.id.cronExpression}</p>
 				<code id="cron-expression">0 9 * * *</code>
-				<button type="button" class="btn btn--secondary" id="cron-copy" data-i18n="workspace.cron.copy">{dict.id.copy}</button>
+				<button type="button" class="btn btn--secondary" id="cron-copy" data-task-action data-i18n="workspace.cron.copy">{dict.id.copy}</button>
 			</div>
 
 			<p class="cron-explain" id="cron-explain" aria-live="polite"></p>

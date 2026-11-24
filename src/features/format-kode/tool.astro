@@ -14,7 +14,7 @@ import dict from './i18n';
 		<div class="pane">
 			<label class="field-label" for="format-input" data-i18n="workspace.format-kode.input">{dict.id.input}</label>
 			<textarea class="code-area" id="format-input" spellcheck="false" maxlength="500000" aria-describedby="format-hint" data-i18n-placeholder="workspace.format-kode.inputPlaceholder" placeholder={dict.id.inputPlaceholder}></textarea>
-			<div class="pane-actions"><button class="btn btn--primary" type="button" id="format-run" data-i18n="workspace.format-kode.format">{dict.id.format}</button><button class="btn btn--secondary" type="button" id="format-minify" data-i18n="workspace.format-kode.minify" disabled>{dict.id.minify}</button></div>
+			<div class="pane-actions"><button class="btn btn--primary" type="button" id="format-run" data-task-action data-i18n="workspace.format-kode.format">{dict.id.format}</button><button class="btn btn--secondary" type="button" id="format-minify" data-i18n="workspace.format-kode.minify" disabled>{dict.id.minify}</button></div>
 			<p class="field-hint" id="format-status" role="status"></p>
 			<p class="field-error" id="format-error" role="alert" hidden></p>
 		</div>

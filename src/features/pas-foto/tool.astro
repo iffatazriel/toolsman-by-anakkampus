@@ -94,7 +94,7 @@ import Progress from '../../components/ui/Progress.astro';
 
 	<div class="photo-step" data-step="4" hidden>
 		<div class="pane-actions">
-			<button type="button" class="btn btn--primary" id="foto-png" data-i18n="workspace.pas-foto.png">{dict.id.png}</button>
+			<button type="button" class="btn btn--primary" id="foto-png" data-task-action data-i18n="workspace.pas-foto.png">{dict.id.png}</button>
 			<button type="button" class="btn btn--secondary" id="foto-jpg" data-i18n="workspace.pas-foto.jpg">{dict.id.jpg}</button>
 		</div>
 		<p class="field-hint" id="foto-dims"></p>
@@ -115,14 +115,14 @@ import Progress from '../../components/ui/Progress.astro';
 		</div>
 		<div class="pane-actions">
 			<button type="button" class="btn btn--secondary" id="sheet-png" disabled data-i18n="workspace.pas-foto.sheetPng">{dict.id.sheetPng}</button>
-			<button type="button" class="btn btn--primary" id="sheet-jpg" disabled data-i18n="workspace.pas-foto.sheetJpg">{dict.id.sheetJpg}</button>
+			<button type="button" class="btn btn--primary" id="sheet-jpg" data-task-action disabled data-i18n="workspace.pas-foto.sheetJpg">{dict.id.sheetJpg}</button>
 		</div>
 		<p class="field-hint" data-i18n="workspace.pas-foto.sheetHint">{dict.id.sheetHint}</p>
 	</div>
 
 	<div class="step-nav">
 		<button type="button" class="btn btn--secondary" id="foto-back" disabled data-i18n="workspace.pas-foto.back">{dict.id.back}</button>
-		<button type="button" class="btn btn--primary" id="foto-next" disabled data-i18n="workspace.pas-foto.next">{dict.id.next}</button>
+		<button type="button" class="btn btn--primary" id="foto-next" data-task-action disabled data-i18n="workspace.pas-foto.next">{dict.id.next}</button>
 	</div>
 </div>
 

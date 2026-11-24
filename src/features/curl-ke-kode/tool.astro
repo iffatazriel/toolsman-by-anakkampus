@@ -10,7 +10,7 @@ import dict from './i18n';
 			<p class="field-hint" data-i18n="workspace.curl-ke-kode.hint">{dict.id.hint}</p>
 			<label class="field-label" for="curl-target" data-i18n="workspace.curl-ke-kode.target">{dict.id.target}</label>
 			<select class="field-input" id="curl-target"><option value="fetch">JavaScript Fetch</option><option value="axios">Axios (Node.js / browser)</option></select>
-			<div class="actions"><button type="button" class="btn btn--primary" id="curl-convert" data-i18n="workspace.curl-ke-kode.convert">{dict.id.convert}</button><button type="button" class="btn btn--secondary" id="curl-clear" data-i18n="workspace.curl-ke-kode.clear">{dict.id.clear}</button></div>
+			<div class="actions"><button type="button" class="btn btn--primary" id="curl-convert" data-task-action data-i18n="workspace.curl-ke-kode.convert">{dict.id.convert}</button><button type="button" class="btn btn--secondary" id="curl-clear" data-i18n="workspace.curl-ke-kode.clear">{dict.id.clear}</button></div>
 			<p class="field-error" role="alert" id="curl-error" hidden></p>
 		</section>
 		<section class="pane">

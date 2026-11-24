@@ -1,5 +1,6 @@
 import { defineWorkspaceDictionary } from '../../lib/i18n';
 export default defineWorkspaceDictionary({
+	packageHint: "Tambahkan \\usepackage{{name}} di preambel.",
 	direction: "Arah konversi",
 	reverse: "LaTeX tabular sederhana → Markdown",
 	format: "Format input",
@@ -54,6 +55,7 @@ export default defineWorkspaceDictionary({
 	unbalanced: "Kurung kurawal LaTeX tidak seimbang.",
 	noHeader: "Tabular belum berisi header.",
 }, {
+	packageHint: "Add \\usepackage{{name}} to the preamble.",
 	direction: "Conversion direction",
 	reverse: "Simple LaTeX tabular → Markdown",
 	format: "Input format",

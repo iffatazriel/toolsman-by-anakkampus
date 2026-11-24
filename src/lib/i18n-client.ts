@@ -12,6 +12,9 @@ import {
 	type Lang,
 	type WorkspaceDictionary,
 } from './i18n';
+import { promptAiLabel, promptCategoryLabel, promptLevelLabel } from './prompt-taxonomy';
+import { translateShellCopy } from './shell-copy';
+import { localizedUsage } from './tool-usage';
 
 const workspaceLoaders = import.meta.glob<{ default: WorkspaceDictionary }>('../features/*/i18n.ts');
 const liveText = new WeakMap<HTMLElement, () => string>();
@@ -83,11 +86,9 @@ export function applyLanguage(lang: Lang): void {
 		const tagline = container.querySelector<HTMLElement>('[data-tool-tagline]');
 		if (tagline) tagline.textContent = text.tagline;
 
-		container.querySelectorAll<HTMLElement>('[data-tool-usage-index]').forEach((item) => {
-			const index = Number(item.dataset.toolUsageIndex);
-			const value = text.usage[index];
-			if (value) item.textContent = value;
-		});
+		const usage = [...container.querySelectorAll<HTMLElement>('[data-tool-usage-index]')];
+		const steps = localizedUsage(slug, usage.map(item => item.dataset.usageSource ?? ''), lang);
+		usage.forEach((item, index) => { item.textContent = steps[index]; });
 
 		const notReady = container.querySelector<HTMLElement>('[data-i18n="tool.notReadyBody"]');
 		if (notReady) notReady.dataset.nameValue = text.name;
@@ -127,6 +128,15 @@ export function applyLanguage(lang: Lang): void {
 
 	document.querySelectorAll<HTMLElement>('[data-category-label]').forEach((element) => {
 		element.textContent = categoryName(lang, element.dataset.categoryLabel ?? '');
+	});
+	document.querySelectorAll<HTMLElement>('[data-prompt-category-label]').forEach(element => {
+		element.textContent = promptCategoryLabel(element.dataset.promptCategoryLabel ?? '', lang);
+	});
+	document.querySelectorAll<HTMLOptionElement>('[data-prompt-ai] option:not([value="semua"])').forEach(option => {
+		option.textContent = promptAiLabel(option.value, lang);
+	});
+	document.querySelectorAll<HTMLOptionElement>('[data-prompt-level] option:not([value="semua"])').forEach(option => {
+		option.textContent = promptLevelLabel(option.value, lang);
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-footer-slug]').forEach((element) => {
@@ -189,6 +199,7 @@ export function applyLanguage(lang: Lang): void {
 		const render = liveValue.get(element);
 		if (render) element.value = render();
 	});
+	translateShellCopy(lang);
 	document.dispatchEvent(new CustomEvent('lang:change', { detail: { lang } }));
 }
 
