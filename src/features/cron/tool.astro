@@ -8,6 +8,7 @@ import { cronTimezones } from './cron';
 		<div class="pane">
 			<div class="pane__head">
 				<h2 class="pane__title" data-i18n="workspace.cron.expression">{dict.id.expression}</h2>
+				<label class="sr-only" for="cron-preset" data-i18n="workspace.cron.preset">{dict.id.preset}</label>
 				<select class="field-input cron-preset" id="cron-preset">
 					<option value="" data-i18n="workspace.cron.choose">{dict.id.choose}</option>
 					<option value="* * * * *" data-i18n="workspace.cron.presetMinute">{dict.id.presetMinute}</option>
