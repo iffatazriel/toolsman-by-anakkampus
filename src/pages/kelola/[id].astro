@@ -10,7 +10,7 @@ const id = Astro.params.id ?? '';
 ---
 
 <Layout title={dict.id.manageTitle} description={dict.id.manageDescription} noindex>
-	<main class="container manage-page" id="main" data-manage-id={id}>
+	<div class="container manage-page" data-manage-id={id}>
 		<h1 data-i18n="workspace.kirim-file.manageTitle">{dict.id.manageTitle}</h1>
 		<p data-i18n="workspace.kirim-file.managePrivacy">{dict.id.managePrivacy}</p>
 		<p><a href="/tools/kirim-file/" data-i18n="workspace.kirim-file.back">{dict.id.back}</a></p>
@@ -38,7 +38,7 @@ const id = Astro.params.id ?? '';
 			<p data-i18n="workspace.kirim-file.deleteHint">{dict.id.deleteHint}</p>
 			<div class="actions"><button type="button" class="btn btn--secondary" id="manage-cancel" autofocus data-i18n="workspace.kirim-file.dismiss">{dict.id.dismiss}</button><button type="button" class="btn btn--danger" id="manage-confirm-delete" data-i18n="workspace.kirim-file.deleteConfirm">{dict.id.deleteConfirm}</button></div>
 		</Modal>
-	</main>
+	</div>
 </Layout>
 
 <script>

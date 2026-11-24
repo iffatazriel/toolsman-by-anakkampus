@@ -173,6 +173,13 @@ const faq = [
 	const slug = marker?.dataset.recentTool ?? '';
 	if (slug !== '') recordRecent(localStorage, slug);
 
+	const mobileBar = document.querySelector<HTMLElement>('[data-mobile-bar]');
+	if (mobileBar) {
+		new ResizeObserver(() => {
+			document.body.style.setProperty('--tool-bar-height', `${mobileBar.offsetHeight}px`);
+		}).observe(mobileBar);
+	}
+
 	// Bar aksi ponsel: satu aksi yang berguna di semua alat, menyalin URL
 	// halaman supaya bisa ditempel ke chat.
 	document.querySelector<HTMLButtonElement>('[data-copy-page]')?.addEventListener('click', async () => {

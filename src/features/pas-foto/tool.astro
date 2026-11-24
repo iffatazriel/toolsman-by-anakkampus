@@ -254,6 +254,9 @@ import Progress from '../../components/ui/Progress.astro';
 	};
 
 	const processPhoto = async (file: File) => {
+		const errorBox = $<HTMLElement>('[data-photo-error]')!;
+		errorBox.hidden = true;
+		let decoded = false;
 		const url = URL.createObjectURL(file);
 		const image = new Image();
 		image.src = url;
@@ -265,9 +268,9 @@ import Progress from '../../components/ui/Progress.astro';
 		if (previewUrl) URL.revokeObjectURL(previewUrl);
 		previewUrl = URL.createObjectURL(file);
 		if (photoPreview && photoPreviewImg && photoPreviewName) {
-			photoPreviewImg.src = previewUrl;
+			photoPreviewImg.removeAttribute('src');
 			photoPreviewName.textContent = `${file.name} · ${formatBytes(file.size)}`;
-			photoPreview.hidden = false;
+			photoPreview.hidden = true;
 			setPhotoStatus(()=>tr(dict,'reading'), 'loading');
 		}
 
@@ -280,6 +283,11 @@ import Progress from '../../components/ui/Progress.astro';
 
 		try {
 			await image.decode();
+			decoded = true;
+			if (photoPreview && photoPreviewImg) {
+				photoPreviewImg.src = previewUrl;
+				photoPreview.hidden = false;
+			}
 			const removeBackground = await loadPhotoModule((_key, current, total) => {
 				const percent = total > 0 ? Math.round((current / total) * 100) : 0;
 				bar.style.width = `${percent}%`;
@@ -302,12 +310,13 @@ import Progress from '../../components/ui/Progress.astro';
 		} catch (error) {
 			modelBox.hidden = true;
 			setDropzoneState(zone, 'empty');
-			const message = ()=>tr(dict,'failed');
-			setPhotoStatus(()=>tr(dict,'failedMessage',{message:message()}), 'failed');
-			const errorBox = $<HTMLElement>('[data-photo-error]')!;
+			if (photoPreview) photoPreview.hidden = true;
+			photoPreviewImg?.removeAttribute('src');
+			if (previewUrl) URL.revokeObjectURL(previewUrl);
+			previewUrl = null;
+			const message = ()=>tr(dict, decoded ? 'failed' : 'invalidImage');
 			localizedText(errorBox,message);
 			errorBox.hidden = false;
-			toast(message, { tone: 'error' });
 		} finally {
 			URL.revokeObjectURL(url);
 		}

@@ -1,6 +1,7 @@
 import { defineWorkspaceDictionary } from '../../lib/i18n';
 export default defineWorkspaceDictionary({
 	code: "Kode",
+	language: "Bahasa kode",
 	plain: "Teks biasa",
 	source: "Kode yang akan dijadikan gambar",
 	theme: "Tema gambar",
@@ -21,6 +22,7 @@ export default defineWorkspaceDictionary({
 	downloaded: "Gambar kode diunduh.",
 }, {
 	code: "Code",
+	language: "Code language",
 	plain: "Plain text",
 	source: "Code to turn into an image",
 	theme: "Image theme",
