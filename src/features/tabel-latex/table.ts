@@ -1,4 +1,4 @@
-import { WorkspaceError } from '../../lib/i18n';
+import { WorkspaceError, tr } from '../../lib/i18n';
 import dict from './i18n';
 export type Alignment = 'l' | 'c' | 'r';
 export interface ParsedTable { headers: string[]; rows: string[][]; alignments: Alignment[] }
@@ -116,8 +116,8 @@ export function toLatex(table: ParsedTable, options: LatexOptions = defaultOptio
 	if (normalized.rows.length) lines.push(options.booktabs ? '\\midrule' : '\\hline', ...normalized.rows.map((values) => row(values)));
 	lines.push(options.booktabs ? '\\bottomrule' : '\\hline', '\\end{tabular}');
 	const notes: string[] = [];
-	if (options.booktabs) notes.push('% Tambahkan \\usepackage{booktabs} di preambel.');
-	if (/[mb]\{/.test(columns)) notes.push('% Tambahkan \\usepackage{array} di preambel.');
+	if (options.booktabs) notes.push(`% ${tr(dict, 'packageHint', { name: 'booktabs' })}`);
+	if (/[mb]\{/.test(columns)) notes.push(`% ${tr(dict, 'packageHint', { name: 'array' })}`);
 	if (options.wrap) {
 		const wrapped = ['\\begin{table}[htbp]', '\\centering'];
 		if (options.caption.trim()) wrapped.push(`\\caption{${escapeLatex(options.caption.trim())}}`);

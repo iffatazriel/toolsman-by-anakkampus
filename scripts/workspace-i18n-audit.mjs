@@ -1,11 +1,16 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { auditShell } from './shell-i18n-audit.mjs';
 
 const root = new URL('../src/features/', import.meta.url);
 const marker = /\b(?:kamu|salin|unduh|unggah|pilih|tempel|berkas|hasil|gagal|mengolah|periksa|kata|bahasa|jumlah|karakter|tanpa|spasi|ubah|kalimat|huruf|besar|kecil|hapus|simpan|batal|kosong|masukkan|tambah|semua|belum|sudah|tidak|hanya|untuk|dengan|atau|ukuran|baris|warna|gambar|mulai|berhenti|mengunduh|memuat|menyalin|maksimal|pertahankan|standar)\b/i;
 const check = process.argv.includes('--check');
 const selected = new Set(process.argv.slice(2).filter((arg) => !arg.startsWith('--')));
 let failed = false;
+
+const shellIssues = auditShell();
+console.log(`shell: ${shellIssues.length} untranslated copy candidates`);
+if (check && shellIssues.length) { failed = true; shellIssues.forEach(issue => console.error(issue)); }
 
 function filesAt(directory) {
 	return readdirSync(directory, { withFileTypes: true }).flatMap((item) => {

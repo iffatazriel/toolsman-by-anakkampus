@@ -15,14 +15,14 @@ import Tabs from '../../components/ui/Tabs.astro';
 				<label class="field-label"><span data-i18n="workspace.bilangan-subnet.twos">{dict.id.twos}</span><select id="number-bits" class="field-input"><option value="0" data-i18n="workspace.bilangan-subnet.noBits">{dict.id.noBits}</option>{[8,16,32,64].map((n) => <option value={n}>{n} bit signed</option>)}</select></label>
 			</div>
 			<p class="field-hint" data-i18n="workspace.bilangan-subnet.numberHint">{dict.id.numberHint}</p>
-			<button type="button" class="btn btn--primary" id="number-run" data-i18n="workspace.bilangan-subnet.convert">{dict.id.convert}</button>
+			<button type="button" class="btn btn--primary" id="number-run" data-task-action data-i18n="workspace.bilangan-subnet.convert">{dict.id.convert}</button>
 			<p class="field-error" role="alert" id="number-error" hidden></p>
 			<label class="field-label" for="number-output" data-i18n="workspace.bilangan-subnet.allBases">{dict.id.allBases}</label><textarea readonly class="code-area" id="number-output"></textarea>
 			<button type="button" class="btn btn--secondary" id="number-copy" disabled data-i18n="workspace.bilangan-subnet.copy">{dict.id.copy}</button>
 		</section>
 		<section data-panel="subnet" class="pane" hidden>
 			<div class="option-row"><label class="field-label"><span data-i18n="workspace.bilangan-subnet.ip">{dict.id.ip}</span><input class="field-input" id="subnet-ip" value="192.168.1.10/24" /></label><label class="field-label"><span data-i18n="workspace.bilangan-subnet.mask">{dict.id.mask}</span><input class="field-input" id="subnet-mask" placeholder={dict.id.maskPlaceholder} data-i18n-placeholder="workspace.bilangan-subnet.maskPlaceholder" /></label></div>
-			<button type="button" class="btn btn--primary" id="subnet-run" data-i18n="workspace.bilangan-subnet.calculate">{dict.id.calculate}</button>
+			<button type="button" class="btn btn--primary" id="subnet-run" data-task-action data-i18n="workspace.bilangan-subnet.calculate">{dict.id.calculate}</button>
 			<p class="field-error" role="alert" id="subnet-error" hidden></p>
 			<label class="field-label" for="subnet-output" data-i18n="workspace.bilangan-subnet.networkResult">{dict.id.networkResult}</label><textarea readonly class="code-area" id="subnet-output"></textarea>
 			<p class="field-hint" data-i18n="workspace.bilangan-subnet.networkHint">{dict.id.networkHint}</p>

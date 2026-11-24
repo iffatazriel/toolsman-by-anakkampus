@@ -15,7 +15,7 @@ const jsonLd = {
 	inLanguage: 'id-ID',
 };
 
-const examples = ['gabung pdf', 'flowchart', 'pas foto merah'];
+const examples = [{text:'gabung pdf',key:'home.example.pdf'}, {text:'flowchart',key:undefined}, {text:'pas foto merah',key:'home.example.photo'}];
 ---
 
 <Layout
@@ -59,12 +59,12 @@ const examples = ['gabung pdf', 'flowchart', 'pas foto merah'];
 					</p>
 				</div>
 
-				<div class="hero__examples" role="group" aria-label="Contoh pencarian">
+				<div class="hero__examples" role="group" aria-label="Contoh pencarian" data-i18n-aria="home.examplesAria">
 					<span class="hero__examples-label" data-i18n="home.examplesLabel">Coba:</span>
 					{
 						examples.map((example) => (
-							<button type="button" class="chip chip--example" data-hero-example={example}>
-								{example}
+								<button type="button" class="chip chip--example" data-hero-example={example.text} data-i18n={example.key}>
+									{example.text}
 							</button>
 						))
 					}
@@ -184,7 +184,7 @@ const examples = ['gabung pdf', 'flowchart', 'pas foto merah'];
 		if (input) {
 			document.querySelectorAll<HTMLButtonElement>('[data-hero-example]').forEach((chip) => {
 				chip.addEventListener('click', () => {
-					const value = chip.dataset.heroExample ?? '';
+					const value = chip.textContent?.trim() ?? '';
 					input.value = value;
 					input.dispatchEvent(new Event('input', { bubbles: true }));
 					document.querySelector('#katalog')?.scrollIntoView({ block: 'start' });

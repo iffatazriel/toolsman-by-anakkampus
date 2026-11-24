@@ -1125,6 +1125,16 @@
 		.tool-mobile-bar {
 			display: flex;
 		}
+		.tool-mobile-bar[data-task-bar] {
+			position: fixed;
+			right: 0;
+			left: 0;
+		}
+		.tool-mobile-bar .btn { flex-shrink: 0; max-width: 60%; white-space: normal; }
+		body:has([data-task-bar]) { padding-bottom: calc(var(--tool-bar-height, 76px) + var(--space-4)); }
+		body:has([data-mobile-bar]) .toast-region {
+			bottom: calc(var(--space-4) + var(--tool-bar-height, 64px) + env(safe-area-inset-bottom, 0px));
+		}
 	}
 
 	.workspace {
@@ -1179,11 +1189,10 @@
 	}
 
 	.plan-list span:last-child {
-		font-family: var(--font-mono);
-		font-size: 0.6875rem;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--text-muted);
+		font-family: var(--font-body);
+		font-size: 0.9375rem;
+		line-height: 1.6;
+		color: var(--text);
 	}
 
 	.related {

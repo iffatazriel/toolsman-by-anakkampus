@@ -66,7 +66,10 @@ describe('batch B workspace localization', () => {
 		const table = parseTable('| Nama | Nilai |\n| --- | --- |\n| kamu | 3 |');
 		const options = { booktabs: true, wrap: false, boldHeader: true, caption: '', label: '', columns: '' };
 		const id = toLatex(table, options);
-		setCurrentLang('en'); expect(toLatex(table, options)).toBe(id);
+		setCurrentLang('en');
+		const en = toLatex(table, options);
+		expect(en.replace(/^%.*\n/gm, '')).toBe(id.replace(/^%.*\n/gm, ''));
+		expect(en).toContain('% Add \\usepackage{booktabs} to the preamble.');
 		expect(id).toContain('kamu'); expect(id).toContain('\\begin{tabular}');
 	});
 });

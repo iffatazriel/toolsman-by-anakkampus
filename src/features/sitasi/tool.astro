@@ -21,7 +21,7 @@ import dict from './i18n';
 			<label class="field-label">DOI<input class="field-input" name="doi" placeholder="10.1234/contoh" maxlength="1000" /></label>
 			<label class="field-label">URL<input class="field-input" name="url" type="url" placeholder="https://…" maxlength="2000" /></label>
 			<label class="field-label" id="citation-access-field" hidden><span data-i18n="workspace.sitasi.accessed">{dict.id.accessed}</span><input class="field-input" name="accessed" type="date" /></label>
-			<button class="btn btn--primary" type="submit" data-i18n="workspace.sitasi.add">{dict.id.add}</button>
+			<button class="btn btn--primary" type="submit" data-task-action data-i18n="workspace.sitasi.add">{dict.id.add}</button>
 		</form>
 		<div class="pane">
 			<h2 class="pane__title" data-i18n="workspace.sitasi.bibliography">{dict.id.bibliography}</h2>

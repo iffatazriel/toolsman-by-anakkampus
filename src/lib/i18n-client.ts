@@ -12,6 +12,8 @@ import {
 	type Lang,
 	type WorkspaceDictionary,
 } from './i18n';
+import { promptAiLabel, promptCategoryLabel, promptLevelLabel } from './prompt-taxonomy';
+import { translateShellCopy } from './shell-copy';
 
 const workspaceLoaders = import.meta.glob<{ default: WorkspaceDictionary }>('../features/*/i18n.ts');
 const liveText = new WeakMap<HTMLElement, () => string>();
@@ -88,6 +90,16 @@ export function applyLanguage(lang: Lang): void {
 			const value = text.usage[index];
 			if (value) item.textContent = value;
 		});
+		const usage = container.querySelector<HTMLElement>('[data-tool-usage]');
+		if (usage) {
+			usage.replaceChildren(...text.usage.map((step, index) => {
+				const item = document.createElement('li');
+				const number = document.createElement('span'); number.textContent = `${index + 1}.`;
+				const body = document.createElement('span'); body.textContent = step;
+				item.append(number, body);
+				return item;
+			}));
+		}
 
 		const notReady = container.querySelector<HTMLElement>('[data-i18n="tool.notReadyBody"]');
 		if (notReady) notReady.dataset.nameValue = text.name;
@@ -127,6 +139,15 @@ export function applyLanguage(lang: Lang): void {
 
 	document.querySelectorAll<HTMLElement>('[data-category-label]').forEach((element) => {
 		element.textContent = categoryName(lang, element.dataset.categoryLabel ?? '');
+	});
+	document.querySelectorAll<HTMLElement>('[data-prompt-category-label]').forEach(element => {
+		element.textContent = promptCategoryLabel(element.dataset.promptCategoryLabel ?? '', lang);
+	});
+	document.querySelectorAll<HTMLOptionElement>('[data-prompt-ai] option:not([value="semua"])').forEach(option => {
+		option.textContent = promptAiLabel(option.value, lang);
+	});
+	document.querySelectorAll<HTMLOptionElement>('[data-prompt-level] option:not([value="semua"])').forEach(option => {
+		option.textContent = promptLevelLabel(option.value, lang);
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-footer-slug]').forEach((element) => {
@@ -189,6 +210,7 @@ export function applyLanguage(lang: Lang): void {
 		const render = liveValue.get(element);
 		if (render) element.value = render();
 	});
+	translateShellCopy(lang);
 	document.dispatchEvent(new CustomEvent('lang:change', { detail: { lang } }));
 }
 
