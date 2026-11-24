@@ -1,20 +1,31 @@
 ---
+import Icon from './Icon.astro';
+import type { IconName } from '../../lib/icons';
+
 interface Props {
 	label: string;
 	value: string;
 	pressed?: boolean;
 	count?: number;
+	icon?: IconName;
 }
 
-const { label, value, pressed = false, count } = Astro.props;
+const { label, value, pressed = false, count, icon } = Astro.props;
 ---
 
 <button
 	type="button"
 	class="chip"
 	data-filter={value}
+	data-category={value}
 	aria-pressed={pressed ? 'true' : 'false'}
 >
+	{icon && <Icon name={icon} size={16} />}
 	<span data-filter-label>{label}</span>
 	{count !== undefined && <span class="chip__count">{count}</span>}
 </button>
+
+<style>
+	.chip { min-height: 44px; gap: var(--space-1); }
+	.chip :global(svg) { color: var(--cat, var(--text-muted)); flex-shrink: 0; }
+</style>

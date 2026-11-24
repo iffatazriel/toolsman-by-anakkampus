@@ -1,7 +1,7 @@
 import type { ToolMeta } from '../../lib/tool-types';
 
 export const meta: ToolMeta = {
-	slug: 'kalkulator-ipk', name: 'Kalkulator IPK', category: 'utilitas', icon: 'table',
+	slug: 'kalkulator-ipk', name: 'Kalkulator IPK', category: 'kuliah', icon: 'table',
 	tagline: 'Hitung IPS per semester, IPK kumulatif, dan rata-rata nilai yang kamu perlukan untuk mengejar target IPK.',
 	keywords: ['ipk', 'ips', 'gpa', 'sks', 'semester', 'nilai', 'kuliah', 'target ipk'],
 	status: 'siap', privacy: 'lokal',

@@ -7,6 +7,7 @@ import { tools } from '../lib/tools';
 import { siteConfig } from '../../site.config';
 
 const githubUrl = siteConfig.githubUrl.trim();
+const isHome = Astro.url.pathname === '/';
 ---
 
 <header class="site-header">
@@ -17,7 +18,7 @@ const githubUrl = siteConfig.githubUrl.trim();
 
 		<button
 			type="button"
-			class="search-trigger"
+			class:list={['search-trigger', isHome && 'search-trigger--home']}
 			data-open-palette
 			aria-haspopup="dialog"
 			aria-label="Cari alat"
@@ -60,6 +61,12 @@ const githubUrl = siteConfig.githubUrl.trim();
 <CommandPalette tools={tools} />
 
 <style>
+	@media (min-width: 1024px) {
+		.search-trigger--home { display: none; }
+	}
+	@media (pointer: coarse), (hover: none) {
+		.search-trigger__hint { display: none; }
+	}
 	.header-link {
 		display: inline-flex;
 		align-items: center;

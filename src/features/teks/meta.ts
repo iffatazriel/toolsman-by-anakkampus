@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'teks',
 	name: 'Toolkit Teks',
-	category: 'utilitas',
+	category: 'teks',
 	tagline:
 		'Ubah huruf besar-kecil, buat slug dan nama variabel, hasilkan lorem ipsum, serta hitung kata dan karakter.',
 	keywords: [

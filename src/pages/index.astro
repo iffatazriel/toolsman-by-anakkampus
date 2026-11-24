@@ -1,6 +1,6 @@
 ---
 import Catalog from '../components/Catalog.astro';
-import HeroWorkbench from '../components/HeroWorkbench.astro';
+import ProductPreview from '../components/ProductPreview.astro';
 import Icon from '../components/ui/Icon.astro';
 import Layout from '../layouts/Layout.astro';
 import { tools } from '../lib/tools';
@@ -31,8 +31,7 @@ const examples = [{text:'gabung pdf',key:'home.example.pdf'}, {text:'flowchart',
 				</h1>
 
 				<p class="hero__lede" data-i18n="home.heroLede" data-count-value={tools.length}>
-					{tools.length} alat: kanvas gambar, diagram, PDF, pas foto, kirim file,
-					generator teks, sampai penghitung hash. Gratis, tanpa akun.
+					{tools.length} alat untuk kuliah dan koding. Gratis, tanpa akun.
 				</p>
 
 				<div class="hero__search">
@@ -47,7 +46,7 @@ const examples = [{text:'gabung pdf',key:'home.example.pdf'}, {text:'flowchart',
 							id="catalog-search"
 							class="field-input hero__input"
 							type="search"
-							placeholder="mis. gabung pdf atau flowchart"
+							placeholder="mis. gabung pdf"
 							autocomplete="off"
 							aria-describedby="catalog-search-hint"
 							data-i18n-placeholder="home.searchPlaceholder"
@@ -70,14 +69,18 @@ const examples = [{text:'gabung pdf',key:'home.example.pdf'}, {text:'flowchart',
 					}
 				</div>
 
-				<p class="hero__privacy" data-i18n="home.heroPrivacy">
-					File diproses di perangkatmu, kecuali Kirim File.
-				</p>
 			</div>
 
-			<HeroWorkbench />
+			<ProductPreview />
 		</div>
 	</section>
+	<div class="value-strip">
+		<ul class="container value-strip__items">
+			<li><Icon name="check" /><span data-i18n="home.valueFree">Gratis tanpa akun</span></li>
+			<li><Icon name="shield" /><span data-i18n="home.valueLocal">File tetap di perangkatmu (kecuali Kirim File)</span></li>
+			<li><Icon name="braces" /><span data-i18n="home.valuePattern">Satu pola untuk semua alat</span></li>
+		</ul>
+	</div>
 
 	<section class="shelf container" data-shelf="favorites" aria-labelledby="favorit-title" hidden>
 		<div class="section-head">
@@ -96,38 +99,6 @@ const examples = [{text:'gabung pdf',key:'home.example.pdf'}, {text:'flowchart',
 	</section>
 
 	<Catalog tools={tools} />
-
-	<section class="principles" aria-labelledby="principles-title">
-		<div class="container">
-			<h2 class="section-title" id="principles-title" data-i18n="home.principlesTitle">Aturan yang kami pakai</h2>
-			<p class="hero__lede" data-i18n="home.principlesLede">Ini yang menentukan bentuk Toolsman.</p>
-
-			<div class="principles__grid">
-				<div>
-					<h3 class="principle__title" data-i18n="home.p1Title">Gratis dan tanpa akun</h3>
-					<p class="principle__body" data-i18n="home.p1Body">
-						Semua alat bisa dipakai tanpa daftar. Tidak ada batas harian yang
-						ujungnya menyuruh kamu bikin akun.
-					</p>
-				</div>
-				<div>
-					<h3 class="principle__title" data-i18n="home.p2Title">File tetap di perangkatmu</h3>
-					<p class="principle__body" data-i18n="home.p2Body">
-						Draw, diagram, PDF, pas foto, generator, utilitas, dan QR memproses isi
-						di browser. Kirim File memakai server karena link harus bisa dibuka
-						orang lain, dan itu ditandai di kartunya.
-					</p>
-				</div>
-				<div>
-					<h3 class="principle__title" data-i18n="home.p3Title">Satu pola untuk semua alat</h3>
-					<p class="principle__body" data-i18n="home.p3Body">
-						Tiap halaman alat punya susunan yang sama: area kerja, panel opsi, satu
-						tombol utama. Kamu tidak perlu belajar ulang tiap alat.
-					</p>
-				</div>
-			</div>
-		</div>
-	</section>
 
 	<script>
 		import { readFavorites, readRecent } from '../lib/favorites';
@@ -195,6 +166,18 @@ const examples = [{text:'gabung pdf',key:'home.example.pdf'}, {text:'flowchart',
 	</script>
 
 	<style>
+		.value-strip { border-bottom: 1px solid var(--border); background: var(--surface); }
+		.value-strip__items { display: grid; gap: var(--space-4); padding-block: var(--space-5); list-style: none; }
+		.value-strip__items li { display: flex; align-items: center; gap: var(--space-3); font-size: 0.875rem; }
+		.value-strip__items :global(svg) { flex-shrink: 0; color: var(--text-muted); }
+		@media (min-width: 768px) { .value-strip__items { grid-template-columns: 0.8fr 1.4fr 1fr; } }
+		@media (pointer: coarse), (hover: none) {
+			.hero__kbd, #catalog-search-hint { display: none; }
+			.hero__input { padding-right: var(--space-4); }
+		}
+		@media (max-width: 767px) {
+			.chip--example { min-width: 7rem; justify-content: center; }
+		}
 		.shelf {
 			padding-top: var(--space-6);
 		}

@@ -2,13 +2,10 @@ import type { IconName } from './icons';
 
 export type ToolCategory =
 	| 'gambar'
-	| 'diagram'
-	| 'dokumen'
-	| 'foto'
-	| 'berbagi'
-	| 'generator'
-	| 'utilitas'
-	| 'ai';
+	| 'kuliah'
+	| 'developer'
+	| 'teks'
+	| 'utilitas';
 
 export type ToolStatus = 'rencana' | 'siap';
 export type PrivacyMode = 'lokal' | 'server';
@@ -30,16 +27,23 @@ export interface ToolMeta {
 	faq?: { q: string; a: string }[];
 }
 
-export const categories: { id: ToolCategory; label: string }[] = [
-	{ id: 'gambar', label: 'Gambar' },
-	{ id: 'diagram', label: 'Diagram' },
-	{ id: 'dokumen', label: 'Dokumen' },
-	{ id: 'foto', label: 'Foto' },
-	{ id: 'berbagi', label: 'Berbagi' },
-	{ id: 'generator', label: 'Generator' },
-	{ id: 'utilitas', label: 'Utilitas' },
-	{ id: 'ai', label: 'AI' },
+export const categories: { id: ToolCategory; label: string; icon: IconName }[] = [
+	{ id: 'gambar', label: 'Gambar & Foto', icon: 'image' },
+	{ id: 'kuliah', label: 'Kuliah & Dokumen', icon: 'file-text' },
+	{ id: 'developer', label: 'Developer', icon: 'code' },
+	{ id: 'teks', label: 'Teks & AI', icon: 'sparkles' },
+	{ id: 'utilitas', label: 'Utilitas & Berbagi', icon: 'link' },
 ];
+
+const legacyCategories: Record<string, ToolCategory> = {
+	diagram: 'kuliah', dokumen: 'kuliah', foto: 'gambar',
+	berbagi: 'utilitas', generator: 'teks', ai: 'teks',
+};
+
+export function normalizeCategory(value: string | null): ToolCategory | 'semua' {
+	if (categories.some(category => category.id === value)) return value as ToolCategory;
+	return value && Object.hasOwn(legacyCategories, value) ? legacyCategories[value] : 'semua';
+}
 
 export const privacyLabel: Record<PrivacyMode, string> = {
 	lokal: 'Di perangkatmu',
@@ -50,9 +54,6 @@ export const badgeLabel: Record<ToolBadge, string> = {
 	baru: 'Baru',
 	beta: 'Beta',
 };
-
-/** Alat yang tampil lebih besar di grid bento beranda. */
-export const featuredSlugs = ['draw', 'pas-foto', 'pdf', 'kirim-file'] as const;
 
 export const privacyNote: Record<PrivacyMode, string> = {
 	lokal: 'File diproses di browser, tidak diunggah ke server.',

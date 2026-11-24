@@ -63,13 +63,10 @@
 	--info: light-dark(#2b6cb0, #63a4e8);
 
 	--cat-gambar: #7c5cfc;
-	--cat-diagram: #0ea5a4;
-	--cat-dokumen: #e5484d;
-	--cat-foto: #e5539b;
-	--cat-berbagi: #2f80ed;
-	--cat-generator: #e8890c;
+	--cat-kuliah: #0d8988;
+	--cat-developer: #2f80ed;
+	--cat-teks: #b16a09;
 	--cat-utilitas: #6d7f4b;
-	--cat-ai: #4f46e5;
 
 	--space-1: 4px;
 	--space-2: 8px;
@@ -102,26 +99,17 @@
 [data-category="gambar"] {
 	--cat: var(--cat-gambar);
 }
-[data-category="diagram"] {
-	--cat: var(--cat-diagram);
+[data-category="kuliah"] {
+	--cat: var(--cat-kuliah);
 }
-[data-category="dokumen"] {
-	--cat: var(--cat-dokumen);
+[data-category="developer"] {
+	--cat: var(--cat-developer);
 }
-[data-category="foto"] {
-	--cat: var(--cat-foto);
-}
-[data-category="berbagi"] {
-	--cat: var(--cat-berbagi);
-}
-[data-category="generator"] {
-	--cat: var(--cat-generator);
+[data-category="teks"] {
+	--cat: var(--cat-teks);
 }
 [data-category="utilitas"] {
 	--cat: var(--cat-utilitas);
-}
-[data-category="ai"] {
-	--cat: var(--cat-ai);
 }
 
 @layer base {
@@ -716,18 +704,6 @@
 		color: var(--text);
 	}
 
-	.tool-card--featured {
-		padding: var(--space-6);
-	}
-
-	.tool-card--featured .tool-card__name {
-		font-size: 1.25rem;
-	}
-
-	.tool-card--featured .tool-card__desc {
-		font-size: 0.9375rem;
-	}
-
 	/* Beranda */
 	.hero {
 		padding-top: var(--space-7);
@@ -861,6 +837,7 @@
 	.tool-grid {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
+		grid-auto-rows: 1fr;
 		gap: var(--space-4);
 		margin: var(--space-5) 0 0;
 		padding: 0;
@@ -885,15 +862,9 @@
 		}
 	}
 
-	/* Bento: empat alat unggulan memakai dua kolom di layar lebar,
-	   sisanya satu kolom supaya katalog tetap padat. */
 	@media (min-width: 768px) {
 		.tool-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-
-		.tool-grid__item--featured {
-			grid-column: span 2;
 		}
 	}
 
@@ -901,23 +872,9 @@
 		.tool-grid {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
-
-		.tool-grid__item--featured {
-			grid-column: span 2;
-		}
 	}
 
 	@media (min-width: 1280px) {
-		.tool-grid {
-			grid-template-columns: repeat(4, minmax(0, 1fr));
-		}
-
-		.tool-grid__item--featured {
-			grid-column: span 2;
-		}
-		.hero {
-			padding-top: var(--space-9);
-		}
 		.hero__title {
 			font-size: 3rem;
 			line-height: 1.15;

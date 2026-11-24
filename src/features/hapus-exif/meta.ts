@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'hapus-exif',
 	name: 'Hapus Metadata Foto',
-	category: 'foto',
+	category: 'gambar',
 	tagline:
 		'Buang EXIF, GPS, XMP, dan komentar dari JPG atau PNG sebelum fotonya dibagikan. Data gambar tidak dikompres ulang.',
 	keywords: [

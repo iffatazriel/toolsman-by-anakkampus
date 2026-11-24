@@ -1,0 +1,45 @@
+---
+const previews = [{ name: 'PDF', slug: 'pdf' }, { name: 'Mermaid', slug: 'diagram' }];
+const blank = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+---
+
+<div class="product-preview" aria-hidden="true">
+	{previews.map(({ name, slug }) => (
+		<div class={`product-window product-window--${slug}`}>
+			<div class="product-window__title"><span class="product-window__dots">● ● ●</span><span>{name}</span></div>
+			<picture data-product-picture>
+				<source media="(min-width: 1024px) and (prefers-color-scheme: dark)" srcset={`/media/home/${slug}-dark.webp`} data-dark-source />
+				<source media="(min-width: 1024px)" srcset={`/media/home/${slug}-light.webp`} />
+				<img src={blank} width="960" height="530" alt="" decoding="async" fetchpriority="low" />
+			</picture>
+		</div>
+	))}
+</div>
+
+<style>
+	.product-preview { display: none; }
+	@media (min-width: 1024px) {
+		.product-preview { display: block; position: relative; aspect-ratio: 1.04; min-width: 0; }
+		.product-window { position: absolute; width: 92%; overflow: hidden; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-md); }
+		.product-window--pdf { top: 0; right: 0; transform: rotate(2deg); z-index: 2; }
+		.product-window--diagram { bottom: 0; left: 0; transform: rotate(-2deg); }
+		.product-window__title { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border); font: 0.6875rem var(--font-mono); color: var(--text-muted); }
+		.product-window__dots { font-size: 0.5rem; letter-spacing: 2px; color: var(--border-strong); }
+		img { display: block; width: 100%; height: auto; }
+	}
+	@media (prefers-reduced-motion: reduce) { .product-window { transform: none; } }
+</style>
+
+<script>
+	const root = document.documentElement;
+	const dark = matchMedia('(prefers-color-scheme: dark)');
+	const sync = () => {
+		const active = root.dataset.theme ? root.dataset.theme === 'dark' : dark.matches;
+		document.querySelectorAll<HTMLSourceElement>('[data-dark-source]').forEach(source => {
+			source.media = active ? '(min-width: 1024px)' : 'not all';
+		});
+	};
+	sync();
+	new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+	dark.addEventListener('change', sync);
+</script>

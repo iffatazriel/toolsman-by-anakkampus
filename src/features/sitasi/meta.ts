@@ -1,7 +1,7 @@
 import type { ToolMeta } from '../../lib/tool-types';
 
 export const meta: ToolMeta = {
-	slug: 'sitasi', name: 'Generator Sitasi', category: 'utilitas', icon: 'file-text',
+	slug: 'sitasi', name: 'Generator Sitasi', category: 'kuliah', icon: 'file-text',
 	tagline: 'Susun daftar pustaka APA 7 atau IEEE dari buku, jurnal, dan halaman web. Simpan di browser dan ekspor BibTeX.',
 	keywords: ['sitasi', 'citation', 'apa', 'ieee', 'daftar pustaka', 'bibtex', 'referensi'],
 	status: 'siap', privacy: 'lokal',

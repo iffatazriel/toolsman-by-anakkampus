@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'hash',
 	name: 'Hash Teks & Berkas',
-	category: 'utilitas',
+	category: 'developer',
 	tagline:
 		'Hitung SHA-256, SHA-512, SHA-384, atau SHA-1 dari teks dan berkas, lalu bandingkan dengan hash yang kamu punya.',
 	keywords: [

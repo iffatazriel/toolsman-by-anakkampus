@@ -3,13 +3,10 @@ import { absoluteUrl } from './site';
 
 const applicationCategory: Record<ToolMeta['category'], string> = {
 	gambar: 'DesignApplication',
-	diagram: 'DesignApplication',
-	dokumen: 'BusinessApplication',
-	foto: 'MultimediaApplication',
-	berbagi: 'UtilitiesApplication',
-	generator: 'DeveloperApplication',
+	kuliah: 'EducationalApplication',
+	developer: 'DeveloperApplication',
+	teks: 'BusinessApplication',
 	utilitas: 'UtilitiesApplication',
-	ai: 'EducationalApplication',
 };
 
 export function toolJsonLd(tool: ToolMeta): Record<string, unknown> {

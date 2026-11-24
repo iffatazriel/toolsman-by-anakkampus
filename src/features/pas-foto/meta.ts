@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'pas-foto',
 	name: 'Pas Foto',
-	category: 'foto',
+	category: 'gambar',
 	tagline:
 		'Ganti latar pas foto jadi merah, biru, atau putih, haluskan tepi, atur ukuran 2×3 sampai 4×6, lalu susun lembar cetak 4R atau A4.',
 	keywords: [

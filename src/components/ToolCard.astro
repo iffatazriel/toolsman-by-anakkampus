@@ -5,23 +5,22 @@ import Icon from './ui/Icon.astro';
 
 interface Props {
 	tool: ToolMeta;
-	featured?: boolean;
 }
 
-const { tool, featured = false } = Astro.props;
+const { tool } = Astro.props;
 // Lencana hanya untuk pengecualian: alat server dan alat bertanda khusus.
 const showServerBadge = tool.privacy === 'server';
 const showBadge = tool.badge;
 ---
 
 <div
-	class:list={['tool-card', featured && 'tool-card--featured']}
+	class="tool-card"
 	data-category={tool.category}
 	data-tool-card={tool.slug}
 >
 	<a class="tool-card__link" href={`/tools/${tool.slug}/`} data-category={tool.category}>
 		<span class="tool-card__top">
-			<span class="tool-tile"><Icon name={tool.icon} size={featured ? 24 : 20} /></span>
+			<span class="tool-tile"><Icon name={tool.icon} size={20} /></span>
 			<span class="category-label" data-category-label={tool.category}>{categoryLabel(tool.category)}</span>
 		</span>
 		<span class="tool-card__name">{tool.name}</span>
