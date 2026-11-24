@@ -1,5 +1,6 @@
 import { defineWorkspaceDictionary } from '../../lib/i18n';
 export default defineWorkspaceDictionary({
+	pngError: "Gagal membuat PNG. Coba diagram lebih kecil atau unduh SVG.",
 	readOnly: "Diagram ini dibuka dari link dan hanya-baca.",
 	draft: "Buka sebagai draf",
 	chooseTemplate: "Pilih template…",
@@ -48,6 +49,7 @@ export default defineWorkspaceDictionary({
 	syntax: "Ada kesalahan sintaks Mermaid.",
 	unknownSyntax: "Sintaks Mermaid tidak dikenali.",
 }, {
+	pngError: "Could not create PNG. Try a smaller diagram or download SVG.",
 	readOnly: "This diagram was opened from a link and is read-only.",
 	draft: "Open as draft",
 	chooseTemplate: "Choose a template…",
