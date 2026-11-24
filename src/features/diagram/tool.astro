@@ -171,6 +171,11 @@ import dict from './i18n';
 		let renderId = 0;
 		let saveTimer: number | undefined;
 		let zoom = 1;
+		let fitting = true;
+		const availableWidth = () => {
+			const style = getComputedStyle(preview);
+			return preview.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+		};
 		const renderHost = document.querySelector<HTMLElement>('.diagram-render-host')!;
 		const zoomButtons = document.querySelectorAll<HTMLButtonElement>('[data-diagram-zoom]');
 		const setZoom = (value: number) => {
@@ -183,11 +188,19 @@ import dict from './i18n';
 			svg.style.height = `${box.height * zoom}px`;
 			document.getElementById('diagram-zoom-level')!.textContent = `${Math.round(zoom * 100)}%`;
 		};
+		const fitPreview = () => {
+			const svg = preview.querySelector('svg');
+			if (fitting && svg && preview.clientWidth > 0) {
+				setZoom(diagramScale('fit', zoom, availableWidth(), svg.viewBox.baseVal.width));
+			}
+		};
+		new ResizeObserver(fitPreview).observe(preview);
 		zoomButtons.forEach(button => {
 			button.disabled = true;
 			button.addEventListener('click', () => {
 				const svg = preview.querySelector('svg');
-				if (svg) setZoom(diagramScale(button.dataset.diagramZoom!, zoom, preview.clientWidth - 34, svg.viewBox.baseVal.width));
+				fitting = button.dataset.diagramZoom === 'fit';
+				if (svg) setZoom(diagramScale(button.dataset.diagramZoom!, zoom, availableWidth(), svg.viewBox.baseVal.width));
 			});
 		});
 
@@ -244,7 +257,8 @@ import dict from './i18n';
 				svgText = svg;
 				preview.innerHTML = svg;
 				const width = preview.querySelector('svg')!.viewBox.baseVal.width;
-				setZoom(diagramScale('initial', 1, preview.clientWidth - 34, width));
+				fitting = true;
+				setZoom(diagramScale('fit', 1, availableWidth(), width));
 				setError(null);
 				setButtons(true);
 			} catch (error) {
