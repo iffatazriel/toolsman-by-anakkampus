@@ -104,7 +104,7 @@ const faq = [
 						<ul class="plan-list" data-tool-usage>
 							{tool.usage.map((step, index) => (
 								<li>
-									<span data-tool-usage-index={index}>{step}</span>
+						<span data-tool-usage-index={index} data-usage-source={step}>{step}</span>
 								</li>
 							))}
 						</ul>

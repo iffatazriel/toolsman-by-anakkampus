@@ -14,6 +14,7 @@ import {
 } from './i18n';
 import { promptAiLabel, promptCategoryLabel, promptLevelLabel } from './prompt-taxonomy';
 import { translateShellCopy } from './shell-copy';
+import { localizedUsage } from './tool-usage';
 
 const workspaceLoaders = import.meta.glob<{ default: WorkspaceDictionary }>('../features/*/i18n.ts');
 const liveText = new WeakMap<HTMLElement, () => string>();
@@ -85,21 +86,9 @@ export function applyLanguage(lang: Lang): void {
 		const tagline = container.querySelector<HTMLElement>('[data-tool-tagline]');
 		if (tagline) tagline.textContent = text.tagline;
 
-		container.querySelectorAll<HTMLElement>('[data-tool-usage-index]').forEach((item) => {
-			const index = Number(item.dataset.toolUsageIndex);
-			const value = text.usage[index];
-			if (value) item.textContent = value;
-		});
-		const usage = container.querySelector<HTMLElement>('[data-tool-usage]');
-		if (usage) {
-			usage.replaceChildren(...text.usage.map((step, index) => {
-				const item = document.createElement('li');
-				const number = document.createElement('span'); number.textContent = `${index + 1}.`;
-				const body = document.createElement('span'); body.textContent = step;
-				item.append(number, body);
-				return item;
-			}));
-		}
+		const usage = [...container.querySelectorAll<HTMLElement>('[data-tool-usage-index]')];
+		const steps = localizedUsage(slug, usage.map(item => item.dataset.usageSource ?? ''), lang);
+		usage.forEach((item, index) => { item.textContent = steps[index]; });
 
 		const notReady = container.querySelector<HTMLElement>('[data-i18n="tool.notReadyBody"]');
 		if (notReady) notReady.dataset.nameValue = text.name;
