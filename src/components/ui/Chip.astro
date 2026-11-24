@@ -26,6 +26,6 @@ const { label, value, pressed = false, count, icon } = Astro.props;
 </button>
 
 <style>
-	.chip { min-height: 44px; }
+	.chip { min-height: 44px; gap: var(--space-1); }
 	.chip :global(svg) { color: var(--cat, var(--text-muted)); flex-shrink: 0; }
 </style>
