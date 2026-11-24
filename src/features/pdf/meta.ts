@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'pdf',
 	name: 'Alat PDF',
-	category: 'dokumen',
+	category: 'kuliah',
 	tagline:
 		'Gabung, pisah, dan kompres PDF langsung di browser. File tidak dikirim ke server.',
 	keywords: [

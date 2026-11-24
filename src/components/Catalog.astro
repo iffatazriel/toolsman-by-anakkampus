@@ -1,6 +1,6 @@
 ---
 import type { ToolMeta } from '../lib/tool-types';
-import { categories, featuredSlugs } from '../lib/tool-types';
+import { categories } from '../lib/tool-types';
 import ToolCard from './ToolCard.astro';
 import Chip from './ui/Chip.astro';
 
@@ -10,46 +10,34 @@ interface Props {
 
 const { tools } = Astro.props;
 
-const counts = new Map(categories.map((category) => [
-	category.id,
-	tools.filter((tool) => tool.category === category.id).length,
-]));
-
-const featured = new Set<string>(featuredSlugs);
 ---
 
 <section class="catalog container" id="katalog" aria-labelledby="katalog-title">
 	<div class="section-head">
-		<h2 class="section-title" id="katalog-title" data-i18n="catalog.title">Alat di daftar MVP</h2>
-		<p class="section-meta" data-i18n="catalog.meta" data-count-value={tools.length}>{tools.length} modul</p>
+		<h2 class="section-title" id="katalog-title" data-i18n="catalog.title">Semua alat</h2>
 	</div>
 
-	<p class="catalog-intro" data-i18n="catalog.intro" data-count-value={tools.length}>
-		{tools.length} alat di bawah ini bisa langsung dipakai. File diproses di browser,
-		kecuali Kirim File yang memakai server dan ditandai di kartunya.
-	</p>
-
-	<div class="chip-row" role="group" aria-label="Filter kategori">
-		<Chip label="Semua" value="semua" count={tools.length} pressed />
+	<div class="chip-row" role="group" aria-label="Filter kategori" data-i18n-aria="catalog.categories">
+		<Chip label="Semua" value="semua" pressed />
 		{categories.map((category) => (
-			<Chip label={category.label} value={category.id} count={counts.get(category.id) ?? 0} />
+			<Chip label={category.label} value={category.id} icon={category.icon} />
 		))}
 	</div>
 
-	<p class="catalog-count" aria-live="polite" data-count>{tools.length} alat</p>
+	<p class="catalog-count" aria-live="polite" data-count hidden></p>
 
 	<ul class="tool-grid" data-tool-grid>
 		{
 			tools.map((tool, index) => (
 				<li
-					class:list={['tool-grid__item', featured.has(tool.slug) && 'tool-grid__item--featured']}
+					class="tool-grid__item"
 					data-tool
 					data-name={tool.name}
 					data-category={tool.category}
 					data-keywords={tool.keywords.join('|')}
 					style={`--i:${index}`}
 				>
-					<ToolCard tool={tool} featured={featured.has(tool.slug)} />
+					<ToolCard tool={tool} />
 				</li>
 			))
 		}
@@ -80,13 +68,6 @@ const featured = new Set<string>(featuredSlugs);
 </section>
 
 <style>
-	.catalog-intro {
-		max-width: 62ch;
-		margin-top: var(--space-2);
-		font-size: 0.875rem;
-		color: var(--text-muted);
-	}
-
 	.catalog-count {
 		margin-top: var(--space-4);
 		font-family: var(--font-mono);
@@ -98,8 +79,10 @@ const featured = new Set<string>(featuredSlugs);
 </style>
 
 <script>
-	import { fill, readLang, t } from '../lib/i18n';
+	import { categoryText, fill, readLang, t } from '../lib/i18n';
+	import type { ToolCategory } from '../lib/tool-types';
 	import { matches } from '../lib/search';
+	import { normalizeCategory } from '../lib/tool-types';
 
 	const FILTER_KEY = 'toolsman-filter';
 
@@ -116,18 +99,21 @@ const featured = new Set<string>(featuredSlugs);
 		const emptyBody = document.querySelector<HTMLElement>('[data-empty-body]');
 		const reset = document.querySelector<HTMLButtonElement>('[data-catalog-reset]');
 		const total = items.length;
-		const validCategories = new Set(chips.map((chip) => chip.dataset.filter ?? 'semua'));
-
 		const readFilter = (): string => {
+			const params = new URLSearchParams(location.search);
+			if (params.has('category')) return normalizeCategory(params.get('category'));
 			try {
-				const stored = localStorage.getItem(FILTER_KEY);
-				return stored && validCategories.has(stored) ? stored : 'semua';
+				return normalizeCategory(localStorage.getItem(FILTER_KEY));
 			} catch {
 				return 'semua';
 			}
 		};
 
 		const writeFilter = (value: string): void => {
+			const url = new URL(location.href);
+			if (value === 'semua') url.searchParams.delete('category');
+			else url.searchParams.set('category', value);
+			history.replaceState(null, '', url);
 			try {
 				localStorage.setItem(FILTER_KEY, value);
 			} catch {
@@ -151,6 +137,7 @@ const featured = new Set<string>(featuredSlugs);
 				const fields = [
 					item.dataset.name ?? '',
 					item.dataset.category ?? '',
+					categoryText[readLang()][item.dataset.category as ToolCategory] ?? '',
 					...(item.dataset.keywords ?? '').split('|'),
 				];
 				const hit =
@@ -163,9 +150,10 @@ const featured = new Set<string>(featuredSlugs);
 			const lang = readLang();
 			const filtered = query.trim() !== '' || category !== 'semua';
 			if (count) {
+				count.hidden = !filtered;
 				count.textContent = filtered
 					? fill(t(lang, 'catalog.countFiltered'), { visible, total })
-					: fill(t(lang, 'catalog.count'), { n: total });
+					: '';
 			}
 			if (empty) empty.hidden = visible !== 0;
 			if (emptyBody) {

@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'diagram',
 	name: 'Diagram Mermaid',
-	category: 'diagram',
+	category: 'kuliah',
 	tagline:
 		'Tulis flowchart, ERD, atau sequence dalam teks, diagramnya muncul di panel sebelah.',
 	keywords: [

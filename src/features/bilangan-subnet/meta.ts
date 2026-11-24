@@ -1,7 +1,7 @@
 import type { ToolMeta } from '../../lib/tool-types';
 
 export const meta: ToolMeta = {
-	slug: 'bilangan-subnet', name: 'Bilangan & Subnet', category: 'utilitas', icon: 'network', status: 'siap', privacy: 'lokal',
+	slug: 'bilangan-subnet', name: 'Bilangan & Subnet', category: 'developer', icon: 'network', status: 'siap', privacy: 'lokal',
 	tagline: 'Konversi bilangan besar antarbasis dengan BigInt, lihat komplemen dua, dan hitung atau bagi subnet IPv4.',
 	keywords: ['biner', 'oktal', 'desimal', 'hex', 'bigint', 'subnet', 'ipv4', 'cidr', 'network', 'komplemen dua'],
 	usage: ['Pilih tab bilangan atau subnet IPv4.', 'Isi bilangan dan basisnya, atau IPv4 beserta CIDR atau mask.', 'Periksa hasil dan salin. Pembagian subnet dibatasi 256 baris agar browser kamu tetap ringan.'],

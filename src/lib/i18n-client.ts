@@ -123,7 +123,7 @@ export function applyLanguage(lang: Lang): void {
 
 		const base = item.dataset.baseSearch ?? item.dataset.search ?? '';
 		item.dataset.baseSearch = base;
-		if (text) item.dataset.search = `${base} ${text.name} ${text.tagline}`;
+		if (text) item.dataset.search = `${base} ${text.name} ${text.tagline} ${categoryName(lang, item.dataset.category ?? '')}`;
 	});
 
 	document.querySelectorAll<HTMLElement>('[data-category-label]').forEach((element) => {
@@ -187,7 +187,7 @@ export function applyLanguage(lang: Lang): void {
 
 	document.querySelectorAll<HTMLElement>('[data-lang-toggle]').forEach((element) => {
 		element.textContent = lang.toUpperCase();
-		element.setAttribute('aria-label', t(lang, 'lang.label'));
+		element.setAttribute('aria-label', `${lang.toUpperCase()} — ${t(lang, 'lang.label')}`);
 		element.setAttribute('title', t(lang, 'lang.label'));
 	});
 	document.querySelectorAll<HTMLElement>('[data-i18n-live]').forEach((element) => {

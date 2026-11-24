@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'kirim-file',
 	name: 'Kirim File',
-	category: 'berbagi',
+	category: 'utilitas',
 	tagline:
 		'Unggah file, dapat link yang hilang sendiri setelah 1 jam, 24 jam, atau 7 hari. Berkas besar diunggah per bagian dan bisa dilanjutkan, plus opsi kata sandi dan sekali unduh.',
 	keywords: [

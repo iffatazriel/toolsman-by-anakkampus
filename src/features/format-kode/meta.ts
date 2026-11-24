@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'format-kode',
 	name: 'Format Kode',
-	category: 'utilitas',
+	category: 'developer',
 	tagline: 'Rapikan SQL, JSON, JavaScript, TypeScript, HTML, dan CSS. Perkecil JSON atau CSS tanpa mengirim kode ke server.',
 	keywords: ['formatter', 'format kode', 'sql', 'mysql', 'postgresql', 'sqlite', 'json', 'javascript', 'typescript', 'html', 'css', 'prettier', 'minify'],
 	privacy: 'lokal',

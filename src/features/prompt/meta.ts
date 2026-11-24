@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'prompt',
 	name: 'Bank Prompt',
-	category: 'ai',
+	category: 'teks',
 	tagline:
 		'Cari prompt AI siap pakai untuk belajar, laporan, kode, dan karier. Isi variabelnya, lihat hasil akhirnya, lalu salin. Semua di browser.',
 	badge: 'baru',

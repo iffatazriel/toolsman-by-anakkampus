@@ -42,7 +42,7 @@ describe('kamus i18n', () => {
 	});
 
 	it('menerjemahkan semua kategori', () => {
-		for (const category of ['gambar', 'diagram', 'dokumen', 'foto', 'berbagi', 'generator', 'utilitas', 'ai'] as const) {
+		for (const category of ['gambar', 'kuliah', 'developer', 'teks', 'utilitas'] as const) {
 			expect(categoryText.id[category]).toBeTruthy();
 			expect(categoryText.en[category]).toBeTruthy();
 		}

@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'json-schema',
 	name: 'Validator JSON Schema',
-	category: 'utilitas',
+	category: 'developer',
 	tagline:
 		'Validasi JSON terhadap JSON Schema dan baca error per path dalam bahasa Indonesia. Semua diproses di browser.',
 	keywords: [

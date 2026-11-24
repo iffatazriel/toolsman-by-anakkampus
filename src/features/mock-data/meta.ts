@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'mock-data',
 	name: 'Data Palsu',
-	category: 'utilitas',
+	category: 'developer',
 	tagline:
 		'Hasilkan data uji JSON atau CSV dengan seed yang bisa diulang. Nama, email, telepon, kota, tanggal, dan angka dalam satu klik.',
 	keywords: [

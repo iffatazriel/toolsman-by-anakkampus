@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'cron',
 	name: 'Cron Builder',
-	category: 'utilitas',
+	category: 'developer',
 	tagline:
 		'Susun ekspresi cron 5 field, lihat 5 jadwal berikutnya di zona waktu pilihanmu, dan baca penjelasannya dalam bahasa Indonesia.',
 	keywords: [

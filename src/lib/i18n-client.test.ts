@@ -5,6 +5,14 @@ import { currentLang, defineWorkspaceDictionary, registerWorkspaceDictionary, se
 afterEach(() => { vi.unstubAllGlobals(); setCurrentLang('id'); });
 
 describe('workspace attribute hooks', () => {
+	it('includes the visible language code in the toggle accessible name', () => {
+		const toggle = { textContent: '', setAttribute: vi.fn() };
+		vi.stubGlobal('document', { documentElement: { lang: 'id' }, querySelector: () => null, querySelectorAll: (selector: string) => selector === '[data-lang-toggle]' ? [toggle] : [], dispatchEvent: vi.fn() });
+		for (const lang of ['id', 'en'] as const) {
+			applyLanguage(lang);
+			expect(toggle.setAttribute).toHaveBeenCalledWith('aria-label', expect.stringContaining(toggle.textContent));
+		}
+	});
 	it('updates static and live text, placeholder, aria, title and alt while preserving unknown namespaces', () => {
 		const dict = defineWorkspaceDictionary({ label: 'Hasil', placeholder: 'Tempel teks', aria: 'Ubah teks', title: 'Salin hasil' }, { label: 'Result', placeholder: 'Paste text', aria: 'Transform text', title: 'Copy result' });
 		registerWorkspaceDictionary('hooks', dict);

@@ -1,7 +1,7 @@
 import type { ToolMeta } from '../../lib/tool-types';
 
 export const meta: ToolMeta = {
-	slug: 'tabel-latex', name: 'Tabel Markdown ke LaTeX', category: 'dokumen', icon: 'table', status: 'siap', privacy: 'lokal',
+	slug: 'tabel-latex', name: 'Tabel Markdown ke LaTeX', category: 'kuliah', icon: 'table', status: 'siap', privacy: 'lokal',
 	tagline: 'Ubah tabel Markdown, CSV, atau TSV dari spreadsheet menjadi LaTeX dengan pratinjau, perataan, dan escape otomatis.',
 	keywords: ['tabel', 'markdown', 'latex', 'tabular', 'csv', 'tsv', 'excel', 'sheets', 'booktabs'],
 	usage: ['Tempel tabel Markdown, CSV, atau TSV. Baris pertama dipakai sebagai header.', 'Atur garis, caption, label, dan kolom sambil memeriksa pratinjau.', 'Salin atau unduh .tex. Pilih arah balik untuk mengubah tabular sederhana ke Markdown.'],

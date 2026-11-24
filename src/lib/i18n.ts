@@ -57,11 +57,14 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'footer.copyright': '© {year} Toolsman',
 		'footer.made': 'Dibuat untuk anak kampus',
 		'home.searchLabel': 'Cari alat',
-		'home.searchPlaceholder': 'mis. gabung pdf atau flowchart',
+		'home.searchPlaceholder': 'mis. gabung pdf',
 		'home.searchHint': 'Tekan / atau Ctrl K untuk membuka pencarian dari halaman mana saja.',
 		'home.heroTitle': 'Semua perkakas kuliahmu, satu kotak.',
 		'home.heroLede':
-			'{n} alat: kanvas gambar, diagram, PDF, pas foto, kirim file, generator teks, sampai penghitung hash. Gratis, tanpa akun.',
+			'{n} alat untuk kuliah dan koding. Gratis, tanpa akun.',
+		'home.valueFree': 'Gratis tanpa akun',
+		'home.valueLocal': 'File tetap di perangkatmu (kecuali Kirim File)',
+		'home.valuePattern': 'Satu pola untuk semua alat',
 		'home.heroPrivacy': 'File diproses di perangkatmu, kecuali Kirim File.',
 		'home.examplesLabel': 'Coba:',
 		'home.example.pdf': 'gabung pdf',
@@ -86,7 +89,8 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'home.p3Title': 'Satu pola untuk semua alat',
 		'home.p3Body':
 			'Tiap halaman alat punya susunan yang sama: area kerja, panel opsi, satu tombol utama. Kamu tidak perlu belajar ulang tiap alat.',
-		'catalog.title': 'Alat di daftar MVP',
+		'catalog.title': 'Semua alat',
+		'catalog.categories': 'Filter kategori',
 		'catalog.meta': '{n} modul',
 		'catalog.intro':
 			'{n} alat di bawah ini bisa langsung dipakai. File diproses di browser, kecuali Kirim File yang memakai server dan ditandai di kartunya.',
@@ -146,11 +150,14 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'footer.copyright': '© {year} Toolsman',
 		'footer.made': 'Made for campus kids',
 		'home.searchLabel': 'Search tools',
-		'home.searchPlaceholder': 'e.g. merge pdf or flowchart',
+		'home.searchPlaceholder': 'e.g. merge pdf',
 		'home.searchHint': 'Press / or Ctrl K to open search from any page.',
 		'home.heroTitle': 'All your study tools, one box.',
 		'home.heroLede':
-			'{n} tools: drawing canvas, diagrams, PDF, ID photos, file sharing, text generators, and hash checks. Free, no account.',
+			'{n} tools for studying and coding. Free, no account.',
+		'home.valueFree': 'Free, no account',
+		'home.valueLocal': 'Files stay on your device (except File Sharing)',
+		'home.valuePattern': 'One pattern for every tool',
 		'home.heroPrivacy': 'Files are processed on your device, except Send File.',
 		'home.examplesLabel': 'Try:',
 		'home.example.pdf': 'merge pdf',
@@ -175,7 +182,8 @@ export const ui: Record<Lang, Record<string, string>> = {
 		'home.p3Title': 'One pattern for every tool',
 		'home.p3Body':
 			'Each tool page has the same shape: a workspace, an options panel, and one main action. You do not relearn the interface for each tool.',
-		'catalog.title': 'Tools in the MVP list',
+		'catalog.title': 'All tools',
+		'catalog.categories': 'Filter categories',
 		'catalog.meta': '{n} modules',
 		'catalog.intro':
 			'The {n} tools below are ready to use. Files are processed in the browser, except Send File which uses a server and says so on its card.',
@@ -221,24 +229,18 @@ export const ui: Record<Lang, Record<string, string>> = {
 
 export const categoryText: Record<Lang, Record<ToolCategory, string>> = {
 	id: {
-		gambar: 'Gambar',
-		diagram: 'Diagram',
-		dokumen: 'Dokumen',
-		foto: 'Foto',
-		berbagi: 'Berbagi',
-		generator: 'Generator',
-		utilitas: 'Utilitas',
-		ai: 'AI',
+		gambar: 'Gambar & Foto',
+		kuliah: 'Kuliah & Dokumen',
+		developer: 'Developer',
+		teks: 'Teks & AI',
+		utilitas: 'Utilitas & Berbagi',
 	},
 	en: {
-		gambar: 'Images',
-		diagram: 'Diagrams',
-		dokumen: 'Documents',
-		foto: 'Photos',
-		berbagi: 'Sharing',
-		generator: 'Generators',
-		utilitas: 'Utilities',
-		ai: 'AI',
+		gambar: 'Images & Photos',
+		kuliah: 'Study & Docs',
+		developer: 'Developer',
+		teks: 'Text & AI',
+		utilitas: 'Utilities & Sharing',
 	},
 };
 

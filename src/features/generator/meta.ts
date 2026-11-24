@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'generator',
 	name: 'Generator Teks',
-	category: 'generator',
+	category: 'teks',
 	tagline:
 		'Tulis Markdown dengan pratinjau, susun README, rapikan JSON, konversi JSON/CSV/YAML, buat .gitignore, dan hasilkan berkas LICENSE. Semua jalan di browser, teks tidak dikirim ke server.',
 	keywords: [

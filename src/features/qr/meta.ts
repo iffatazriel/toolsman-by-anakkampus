@@ -3,7 +3,7 @@ import type { ToolMeta } from '../../lib/tool-types';
 export const meta: ToolMeta = {
 	slug: 'qr',
 	name: 'QR Code',
-	category: 'generator',
+	category: 'utilitas',
 	tagline:
 		'Ubah teks atau tautan jadi QR code, lalu unduh sebagai PNG atau SVG. Tidak ada isi yang dikirim ke server.',
 	keywords: [
