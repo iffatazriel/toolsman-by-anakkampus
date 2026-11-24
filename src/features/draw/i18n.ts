@@ -1,6 +1,9 @@
 import { defineWorkspaceDictionary } from '../../lib/i18n';
 export default defineWorkspaceDictionary({
 	preparing: "Menyiapkan kanvas gambar…",
+	menu: "Menu kanvas",
+	colors: "Pilihan warna",
+	canvasActions: "Kontrol kanvas",
 	export: "Ekspor gambar",
 	copyImage: "Salin gambar",
 	downloadPng: "Unduh PNG",
@@ -35,6 +38,9 @@ export default defineWorkspaceDictionary({
 	tooLarge: "Kanvas terlalu besar untuk link ({length} dari {limit} karakter). Hapus beberapa elemen atau gambar, lalu coba lagi.",
 }, {
 	preparing: "Preparing the drawing canvas…",
+	menu: "Canvas menu",
+	colors: "Color options",
+	canvasActions: "Canvas controls",
 	export: "Export drawing",
 	copyImage: "Copy image",
 	downloadPng: "Download PNG",

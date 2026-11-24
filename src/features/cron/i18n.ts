@@ -1,6 +1,7 @@
 import { defineWorkspaceDictionary } from '../../lib/i18n';
 export default defineWorkspaceDictionary({
 	expression: "Ekspresi",
+	preset: "Contoh jadwal",
 	choose: "Pilih contoh…",
 	presetMinute: "Setiap menit",
 	preset15: "Setiap 15 menit",
@@ -43,6 +44,7 @@ export default defineWorkspaceDictionary({
 	invalid: "Ekspresi atau zona waktu tidak valid. Periksa nilai tiap bagian.",
 }, {
 	expression: "Expression",
+	preset: "Schedule preset",
 	choose: "Choose a preset…",
 	presetMinute: "Every minute",
 	preset15: "Every 15 minutes",

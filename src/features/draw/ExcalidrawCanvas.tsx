@@ -49,6 +49,28 @@ export default function ExcalidrawCanvas() {
 	}, []);
 	const initial = useRef<Scene | null>(null);
 	const saveTimer = useRef<number | undefined>(undefined);
+	const canvasHost = useRef<HTMLDivElement | null>(null);
+
+	useEffect(() => {
+		const host = canvasHost.current;
+		if (!host) return;
+		const labelControls = () => {
+			host.querySelector('.main-menu-trigger')?.setAttribute('aria-label', dict[lang].menu);
+			host.querySelectorAll<HTMLElement>('.color-picker-container').forEach(picker => {
+				picker.setAttribute('role', 'group');
+				picker.removeAttribute('aria-modal');
+				picker.setAttribute('aria-label', picker.closest('fieldset')?.querySelector('legend')?.textContent || dict[lang].colors);
+			});
+			host.querySelectorAll<HTMLElement>('footer').forEach(footer => {
+				footer.setAttribute('role', 'group');
+				footer.setAttribute('aria-label', dict[lang].canvasActions);
+			});
+		};
+		labelControls();
+		const observer = new MutationObserver(labelControls);
+		observer.observe(host, { childList: true, subtree: true });
+		return () => observer.disconnect();
+	}, [lang]);
 
 	useEffect(() => {
 		let active = true;
@@ -244,7 +266,7 @@ export default function ExcalidrawCanvas() {
 					{dict[lang][status]}
 				</span>
 			</div>
-			<div className="draw-canvas">
+			<div className="draw-canvas" ref={canvasHost}>
 				{Excalidraw ? (
 					<Excalidraw
 						langCode={lang === 'id' ? 'id-ID' : 'en'}

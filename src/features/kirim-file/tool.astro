@@ -361,7 +361,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 					image.loading = 'lazy';
 					thumb.append(image);
 				} else {
-					const extension = file.name.split(tr(dict, 'aboutSuffix')).pop() ?? 'file';
+					const extension = file.name.includes('.') ? file.name.split('.').pop()! : 'file';
 					thumb.textContent = extension.slice(0, 4).toUpperCase();
 				}
 
@@ -371,6 +371,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 				const name = document.createElement('span');
 				name.className = 'share-item__name';
 				name.textContent = file.name;
+				name.title = file.name;
 
 				const meta = document.createElement('span');
 				meta.className = 'share-item__meta';
@@ -770,6 +771,10 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		gap: var(--space-4);
 	}
 
+	.share-shell :global([data-dropzone-file]) {
+		display: none;
+	}
+
 	.share-list {
 		display: flex;
 		flex-direction: column;
@@ -783,7 +788,7 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		display: none;
 	}
 
-	.share-item {
+	.share-list :global(.share-item) {
 		display: grid;
 		grid-template-columns: 48px minmax(0, 1fr) 44px;
 		align-items: center;
@@ -795,11 +800,11 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		font-size: 0.875rem;
 	}
 
-	.share-item[data-state='failed'] {
+	.share-list :global(.share-item[data-state='failed']) {
 		border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
 	}
 
-	.share-item__thumb {
+	.share-list :global(.share-item__thumb) {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -814,24 +819,26 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		font-size: 0.625rem;
 	}
 
-	.share-item__thumb img {
+	.share-list :global(.share-item__thumb img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 	}
 
-	.share-item__info {
+	.share-list :global(.share-item__info) {
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
 		min-width: 0;
 	}
 
-	.share-item__name {
-		overflow-wrap: anywhere;
+	.share-list :global(.share-item__name) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	.share-item__meta {
+	.share-list :global(.share-item__meta) {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1);
@@ -839,25 +846,25 @@ import Dropzone from '../../components/ui/Dropzone.astro';
 		color: var(--text-muted);
 	}
 
-	.share-item__state {
+	.share-list :global(.share-item__state) {
 		color: var(--text-muted);
 		font-variant-numeric: tabular-nums;
 	}
 
-	.share-item__state.is-done {
+	.share-list :global(.share-item__state.is-done) {
 		color: var(--success);
 	}
 
-	.share-item__state.is-failed {
+	.share-list :global(.share-item__state.is-failed) {
 		color: var(--danger);
 	}
 
-	.share-item__remove {
+	.share-list :global(.share-item__remove) {
 		width: 44px;
 		height: 44px;
 	}
 
-	.share-item progress {
+	.share-list :global(.share-item progress) {
 		grid-column: 1 / -1;
 		width: 100%;
 		height: 8px;

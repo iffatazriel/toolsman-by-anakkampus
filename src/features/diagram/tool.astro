@@ -2,6 +2,7 @@
 import dict from './i18n';
 ---
 <div class="tool-shell diagram-shell">
+	<div class="diagram-render-host" aria-hidden="true" inert></div>
 	<div class="share-banner" data-share-banner hidden>
 		<p data-i18n="workspace.diagram.readOnly">{dict.id.readOnly}</p>
 		<button type="button" class="btn btn--secondary" data-share-edit data-i18n="workspace.diagram.draft">{dict.id.draft}</button>
@@ -113,9 +114,16 @@ import dict from './i18n';
 			<div class="pane__head">
 				<h2 class="pane__title" data-i18n="workspace.diagram.preview">{dict.id.preview}</h2>
 			</div>
+			<div class="diagram-zoom" role="group" aria-label={dict.id.zoomControls} data-i18n-aria="workspace.diagram.zoomControls">
+				<button class="btn btn--secondary" type="button" data-diagram-zoom="fit" data-i18n="workspace.diagram.fit">{dict.id.fit}</button>
+				<button class="btn btn--secondary" type="button" data-diagram-zoom="out" aria-label={dict.id.zoomOut} data-i18n-aria="workspace.diagram.zoomOut">−</button>
+				<output id="diagram-zoom-level" aria-live="polite">100%</output>
+				<button class="btn btn--secondary" type="button" data-diagram-zoom="in" aria-label={dict.id.zoomIn} data-i18n-aria="workspace.diagram.zoomIn">+</button>
+				<button class="btn btn--secondary" type="button" data-diagram-zoom="reset" aria-label={dict.id.actualSize} data-i18n-aria="workspace.diagram.actualSize">100%</button>
+			</div>
 			<div class="diagram-loading" id="diagram-loading" hidden>
 				<span class="spinner" aria-hidden="true"></span><span data-i18n="workspace.diagram.loading">{dict.id.loading}</span></div>
-			<div class="preview diagram-preview" id="diagram-preview" aria-live="polite"></div>
+			<div class="preview diagram-preview" id="diagram-preview" tabindex="0" role="region" aria-label={dict.id.preview} data-i18n-aria="workspace.diagram.preview" aria-live="polite"></div>
 		</div>
 	</div>
 </div>
@@ -136,6 +144,8 @@ import dict from './i18n';
 	} from '../../lib/share-session';
 	import { getTemplate } from './templates';
 	import { extractLineFromMermaidError } from './error-line';
+	import { diagramScale } from './zoom';
+	import { pngSize } from './png-size';
 
 	const STORAGE_KEY = 'toolsman-diagram-draft';
 	const isDark = () => {
@@ -161,6 +171,44 @@ import dict from './i18n';
 		let svgText = '';
 		let renderId = 0;
 		let saveTimer: number | undefined;
+		let zoom = 1;
+		let fitting: 'auto' | 'fit' | false = 'auto';
+		let fittedWidth = 0;
+		const availableWidth = () => {
+			const style = getComputedStyle(preview);
+			return preview.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+		};
+		const renderHost = document.querySelector<HTMLElement>('.diagram-render-host')!;
+		const zoomButtons = document.querySelectorAll<HTMLButtonElement>('[data-diagram-zoom]');
+		const setZoom = (value: number) => {
+			const svg = preview.querySelector('svg');
+			if (!svg) return;
+			zoom = value;
+			const box = svg.viewBox.baseVal;
+			svg.style.maxWidth = 'none';
+			svg.style.width = `${box.width * zoom}px`;
+			svg.style.height = `${box.height * zoom}px`;
+			document.getElementById('diagram-zoom-level')!.textContent = `${Math.round(zoom * 100)}%`;
+		};
+		const fitPreview = () => {
+			const svg = preview.querySelector('svg');
+			const available = availableWidth();
+			if (Math.abs(available - fittedWidth) < 1) return;
+			fittedWidth = available;
+			if (fitting && svg && preview.clientWidth > 0) {
+				setZoom(diagramScale(fitting === 'auto' ? 'initial' : 'fit', zoom, available, svg.viewBox.baseVal.width));
+			}
+		};
+		new ResizeObserver(fitPreview).observe(preview);
+		zoomButtons.forEach(button => {
+			button.disabled = true;
+			button.addEventListener('click', () => {
+				const svg = preview.querySelector('svg');
+				fitting = button.dataset.diagramZoom === 'fit' ? 'fit' : false;
+				fittedWidth = availableWidth();
+				if (svg) setZoom(diagramScale(button.dataset.diagramZoom!, zoom, availableWidth(), svg.viewBox.baseVal.width));
+			});
+		});
 
 		const loadMermaid = () => {
 			mermaidPromise ??= import('mermaid').then((module) => {
@@ -168,6 +216,7 @@ import dict from './i18n';
 					startOnLoad: false,
 					securityLevel: 'strict',
 					theme: isDark() ? 'dark' : 'default',
+					themeVariables: isDark() ? { edgeLabelBackground: '#252320' } : {},
 				});
 				return module.default;
 			});
@@ -189,6 +238,7 @@ import dict from './i18n';
 		const setButtons = (enabled: boolean) => {
 			pngButton.disabled = !enabled;
 			svgButton.disabled = !enabled;
+			zoomButtons.forEach(button => { button.disabled = !enabled; });
 		};
 
 		const render = async () => {
@@ -208,10 +258,14 @@ import dict from './i18n';
 			try {
 				const mermaid = await loadMermaid();
 				await mermaid.parse(code);
-				const { svg } = await mermaid.render(`diagram-${current}`, code);
+				const { svg } = await mermaid.render(`diagram-${current}`, code, renderHost);
 				if (current !== renderId) return;
 				svgText = svg;
 				preview.innerHTML = svg;
+				const width = preview.querySelector('svg')!.viewBox.baseVal.width;
+				fitting = 'auto';
+				fittedWidth = availableWidth();
+				setZoom(diagramScale('initial', 1, availableWidth(), width));
 				setError(null);
 				setButtons(true);
 			} catch (error) {
@@ -275,26 +329,30 @@ import dict from './i18n';
 
 		pngButton.addEventListener('click', async () => {
 			if (!svgText) return;
-			const svgEl = preview.querySelector('svg');
-			const box = svgEl?.getBoundingClientRect();
-			const width = Math.max(1, Math.round(box?.width ?? 800));
-			const height = Math.max(1, Math.round(box?.height ?? 600));
+			try {
+			const svgEl = new DOMParser().parseFromString(svgText, 'image/svg+xml').documentElement as unknown as SVGSVGElement;
+			const box = svgEl.viewBox.baseVal;
+			const width = Math.max(1, Math.round(box.width));
+			const height = Math.max(1, Math.round(box.height));
+			svgEl.setAttribute('width', String(width));
+			svgEl.setAttribute('height', String(height));
 			const image = new Image();
-			const url = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' }));
-			image.src = url;
+			image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(svgEl))}`;
 			await image.decode();
 			const canvas = document.createElement('canvas');
-			canvas.width = width * 2;
-			canvas.height = height * 2;
+			const size = pngSize(box.width, box.height);
+			canvas.width = size.width;
+			canvas.height = size.height;
 			const context = canvas.getContext('2d');
-			if (!context) return;
+			if (!context) throw new Error('Canvas unavailable');
 			context.fillStyle = '#ffffff';
 			context.fillRect(0, 0, canvas.width, canvas.height);
 			context.drawImage(image, 0, 0, canvas.width, canvas.height);
-			URL.revokeObjectURL(url);
-			canvas.toBlob((blob) => {
-				if (blob) download('diagram.png', blob);
-			}, 'image/png');
+			const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('PNG encoding failed')), 'image/png'));
+			download('diagram.png', blob);
+			} catch {
+				toast(() => tr(dict, 'pngError'), { tone: 'error' });
+			}
 		});
 
 		const shareBanner = document.querySelector<HTMLElement>('[data-share-banner]');
@@ -554,16 +612,40 @@ import dict from './i18n';
 	}
 
 	.diagram-preview {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		scrollbar-gutter: stable;
+		display: block;
 		min-height: 360px;
+		max-height: 65dvh;
 		overflow: auto;
 	}
 
-	.diagram-preview svg {
-		max-width: 100%;
-		height: auto;
+	.diagram-preview :global(svg) {
+		margin: auto;
+		transition: none !important;
+	}
+
+	.diagram-render-host {
+		position: fixed;
+		left: -100000px;
+		top: 0;
+		width: 1000px;
+		pointer-events: none;
+	}
+
+	.diagram-render-host :global(*) {
+		transition: none !important;
+	}
+
+	.diagram-zoom {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-2);
+	}
+
+	.diagram-zoom .btn {
+		min-width: 44px;
 	}
 
 	.diagram-loading {

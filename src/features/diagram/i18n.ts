@@ -1,5 +1,6 @@
 import { defineWorkspaceDictionary } from '../../lib/i18n';
 export default defineWorkspaceDictionary({
+	pngError: "Gagal membuat PNG. Coba diagram lebih kecil atau unduh SVG.",
 	readOnly: "Diagram ini dibuka dari link dan hanya-baca.",
 	draft: "Buka sebagai draf",
 	chooseTemplate: "Pilih template…",
@@ -16,6 +17,11 @@ export default defineWorkspaceDictionary({
 	panels: "Panel diagram",
 	code: "Kode",
 	preview: "Pratinjau",
+	zoomControls: "Ukuran pratinjau",
+	fit: "Muat lebar",
+	zoomIn: "Perbesar",
+	zoomOut: "Perkecil",
+	actualSize: "Ukuran asli (100%)",
 	saved: "Tersimpan otomatis",
 	mermaidCode: "Kode Mermaid",
 	loading: "Memuat diagram…",
@@ -43,6 +49,7 @@ export default defineWorkspaceDictionary({
 	syntax: "Ada kesalahan sintaks Mermaid.",
 	unknownSyntax: "Sintaks Mermaid tidak dikenali.",
 }, {
+	pngError: "Could not create PNG. Try a smaller diagram or download SVG.",
 	readOnly: "This diagram was opened from a link and is read-only.",
 	draft: "Open as draft",
 	chooseTemplate: "Choose a template…",
@@ -59,6 +66,11 @@ export default defineWorkspaceDictionary({
 	panels: "Diagram panels",
 	code: "Code",
 	preview: "Preview",
+	zoomControls: "Preview zoom",
+	fit: "Fit width",
+	zoomIn: "Zoom in",
+	zoomOut: "Zoom out",
+	actualSize: "Actual size (100%)",
 	saved: "Saved automatically",
 	mermaidCode: "Mermaid code",
 	loading: "Loading diagram…",
