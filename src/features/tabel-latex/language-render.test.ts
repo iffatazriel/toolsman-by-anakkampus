@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, expect, it, vi } from 'vitest';
+import ts from 'typescript';
 import { setCurrentLang, tr, workspaceErrorMessage } from '../../lib/i18n';
 import dict from './i18n';
 import { latexToTable, parseTable, resolveColumns, toLatex, toMarkdown } from './table';
@@ -20,7 +21,8 @@ it('regenerates the displayed, copied and downloaded output on language changes,
 	const source = readFileSync(new URL('./tool.astro', import.meta.url), 'utf8');
 	const script = source.match(/<script>([\s\S]*?)<\/script>/)![1].replace(/^\s*import .*?;$/gm, '');
 	const dependencies = { copyText, tr, workspaceErrorMessage, localizedText, dict, downloadText, latexToTable, parseTable, resolveColumns, toLatex, toMarkdown };
-	new Function(...Object.keys(dependencies), script)(...Object.values(dependencies));
+	const javascript = ts.transpileModule(script, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+	new Function(...Object.keys(dependencies), javascript)(...Object.values(dependencies));
 	const change = document.addEventListener.mock.calls.find(([event]) => event === 'lang:change')![1];
 	expect(get('table-output').value).toContain('% Tambahkan');
 	setCurrentLang('en'); change();
