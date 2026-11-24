@@ -4,5 +4,6 @@ export function diagramScale(action: string, current: number, available: number,
 	if (action === 'fit') return fit;
 	if (action === 'initial') return Math.max(0.75, fit);
 	if (action === 'reset') return 1;
-	return Math.min(4, Math.max(0.1, current * (action === 'in' ? 1.25 : 0.8)));
+	const minimum = Math.min(fit, 0.1, current);
+	return Math.min(4, Math.max(minimum, current * (action === 'in' ? 1.25 : 0.8)));
 }
