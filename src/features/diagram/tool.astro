@@ -172,6 +172,7 @@ import dict from './i18n';
 		let saveTimer: number | undefined;
 		let zoom = 1;
 		let fitting: 'auto' | 'fit' | false = 'auto';
+		let fittedWidth = 0;
 		const availableWidth = () => {
 			const style = getComputedStyle(preview);
 			return preview.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -190,8 +191,11 @@ import dict from './i18n';
 		};
 		const fitPreview = () => {
 			const svg = preview.querySelector('svg');
+			const available = availableWidth();
+			if (Math.abs(available - fittedWidth) < 1) return;
+			fittedWidth = available;
 			if (fitting && svg && preview.clientWidth > 0) {
-				setZoom(diagramScale(fitting === 'auto' ? 'initial' : 'fit', zoom, availableWidth(), svg.viewBox.baseVal.width));
+				setZoom(diagramScale(fitting === 'auto' ? 'initial' : 'fit', zoom, available, svg.viewBox.baseVal.width));
 			}
 		};
 		new ResizeObserver(fitPreview).observe(preview);
@@ -200,6 +204,7 @@ import dict from './i18n';
 			button.addEventListener('click', () => {
 				const svg = preview.querySelector('svg');
 				fitting = button.dataset.diagramZoom === 'fit' ? 'fit' : false;
+				fittedWidth = availableWidth();
 				if (svg) setZoom(diagramScale(button.dataset.diagramZoom!, zoom, availableWidth(), svg.viewBox.baseVal.width));
 			});
 		});
@@ -258,6 +263,7 @@ import dict from './i18n';
 				preview.innerHTML = svg;
 				const width = preview.querySelector('svg')!.viewBox.baseVal.width;
 				fitting = 'auto';
+				fittedWidth = availableWidth();
 				setZoom(diagramScale('initial', 1, availableWidth(), width));
 				setError(null);
 				setButtons(true);
@@ -601,6 +607,7 @@ import dict from './i18n';
 	}
 
 	.diagram-preview {
+		scrollbar-gutter: stable;
 		display: block;
 		min-height: 360px;
 		max-height: 65dvh;
