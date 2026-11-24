@@ -329,8 +329,7 @@ import dict from './i18n';
 			svgEl.setAttribute('width', String(width));
 			svgEl.setAttribute('height', String(height));
 			const image = new Image();
-			const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svgEl)], { type: 'image/svg+xml;charset=utf-8' }));
-			image.src = url;
+			image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(svgEl))}`;
 			await image.decode();
 			const canvas = document.createElement('canvas');
 			canvas.width = width * 2;
@@ -340,7 +339,6 @@ import dict from './i18n';
 			context.fillStyle = '#ffffff';
 			context.fillRect(0, 0, canvas.width, canvas.height);
 			context.drawImage(image, 0, 0, canvas.width, canvas.height);
-			URL.revokeObjectURL(url);
 			canvas.toBlob((blob) => {
 				if (blob) download('diagram.png', blob);
 			}, 'image/png');
